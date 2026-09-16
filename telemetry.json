@@ -1,18 +1,42 @@
 {
-  "version": "1.03",
-  "global_tokens_ingested": 1,
+  "version": "1.04",
   "community_sentience_stage": 1,
+  "global_tokens_ingested": 0,
   "active_nodes": [
-    { "id": "NODE_01", "name": "Cache Valley Relay", "status": "ONLINE", "sector": "Cache County" },
-    { "id": "NODE_02", "name": "Box Elder Relay", "status": "ONLINE", "sector": "Box Elder County" }
+    {
+      "id": "NODE_01",
+      "name": "Cache Valley Relay",
+      "sector": "Cache County",
+      "status": "ONLINE",
+      "faction": "The Rat Pack (Forensic Tap)"
+    },
+    {
+      "id": "NODE_02",
+      "name": "Box Elder Relay",
+      "sector": "Box Elder County",
+      "status": "ONLINE",
+      "faction": "RSI (Armored Fortress)"
+    }
   ],
   "dormant_nodes": [
-    { "id": "NODE_03", "name": "Weber Canyon Relay", "status": "OFFLINE", "sector": "Weber County" },
-    { "id": "NODE_04", "name": "Bear Lake Ridge Relay", "status": "OFFLINE", "sector": "Rich County" }
+    {
+      "id": "NODE_03",
+      "name": "Weber Canyon Relay",
+      "sector": "Weber County",
+      "status": "OFFLINE",
+      "carrier": "CORRUPTED"
+    },
+    {
+      "id": "NODE_04",
+      "name": "Bear Lake Ridge Relay",
+      "sector": "Rich County",
+      "status": "OFFLINE",
+      "carrier": "NO_SIGNAL"
+    }
   ],
   "latest_breakthrough": {
-    "finder": "Nezzmuk",
-    "token": "TOKEN-RLY-702",
+    "finder": "SYSTEM_INIT",
+    "token": "NONE",
     "timestamp": "2026-09-16"
   }
 }

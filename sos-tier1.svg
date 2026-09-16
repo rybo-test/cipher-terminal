@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <rect width="400" height="120" fill="#070a07" stroke="#00ff66" stroke-width="3" rx="6"/>
+  <rect x="8" y="8" width="384" height="104" fill="#0d140d" stroke="#00772e" stroke-width="1" rx="4"/>
+  <circle cx="58" cy="60" r="36" fill="#040804" stroke="#00ff66" stroke-width="2"/>
+  <text x="58" y="55" fill="#00ff66" font-family="Courier New, monospace" font-size="15" font-weight="bold" text-anchor="middle">S.O.S.</text>
+  <text x="58" y="74" fill="#88cc88" font-family="Courier New, monospace" font-size="11" text-anchor="middle">NODE-01</text>
+  <text x="110" y="38" fill="#ffffff" font-family="Courier New, monospace" font-size="16" font-weight="bold" letter-spacing="1">PROVISIONAL BEAN</text>
+  <text x="110" y="58" fill="#00ff66" font-family="Courier New, monospace" font-size="12">CLEARANCE: LEVEL 01 [VERIFIED]</text>
+  <text x="110" y="76" fill="#88cc88" font-family="Courier New, monospace" font-size="11">RELAY: CACHE VALLEY FORENSIC TAP</text>
+  <text x="110" y="94" fill="#ffcc00" font-family="Courier New, monospace" font-size="10">SYSOP: C.I.P.H.E.R. PROTOCOL // Y2K</text>
+</svg>

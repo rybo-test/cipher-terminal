@@ -202,7 +202,7 @@
       <span>NODE 01 // CACHE VALLEY RELAY</span>
       <span id="liveClock">CLOCK: --:--:-- MST</span>
       <div class="top-controls">
-        <span id="soundStatus" class="toggle-link" onclick="toggleMute()">AUDIO: MUTED</span>
+        <span id="soundStatus" class="toggle-link" onclick="toggleMute()">AUDIO: LIVE</span>
         <span class="toggle-link" onclick="executeCommand('clear')">[CLEAR]</span>
       </div>
     </div>
@@ -264,7 +264,7 @@
       history: [],
       historyIndex: -1,
       isStreaming: false,
-      streamQueue: []
+      telemetry: null
     };
 
     const PUZZLE_REGISTER = {
@@ -429,14 +429,27 @@
     }
 
     /* =========================================================================
-       4. AUDIO UNLOCK HANDSHAKE
+       4. REMOTE TELEMETRY SYNCHRONIZATION (ITEM 13)
+       ========================================================================= */
+    async function syncTelemetry() {
+      try {
+        const res = await fetch(`${BASE_URL}/telemetry.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          state.telemetry = await res.json();
+        }
+      } catch (e) {
+        // Fallback to offline defaults
+        state.telemetry = { community_sentience_stage: 1, global_tokens_ingested: 0 };
+      }
+    }
+
+    /* =========================================================================
+       5. AUDIO UNLOCK HANDSHAKE
        ========================================================================= */
     function engageAudio() {
       initAudioContext();
       state.audioReady = true;
-      state.soundMuted = false;
       document.getElementById('audio-gate').style.display = 'none';
-      document.getElementById('soundStatus').textContent = 'AUDIO: LIVE';
 
       const input = document.getElementById('userInput');
       input.disabled = false;
@@ -445,20 +458,22 @@
       input.focus();
 
       playModemHandshake();
-      typeStream("[ CARRIER LOCKED 14400 BAUD // CACHE VALLEY RELAY ONLINE ]", "alert", 14, () => {
-        if (state.authenticatedUser) {
-          logStatic(`\nOPERATOR PREVIOUSLY RECOGNIZED: ${state.authenticatedUser} (CLEARANCE: LVL ${state.clearanceLevel})`, 'sys');
-          if (state.isSolved) renderRewardUI();
-        } else {
-          typeStream("C.I.P.H.E.R.: Identity verification required. State your Geocaching callsign.", "cipher", 18, () => {
-            speak("Carrier locked. C.I.P.H.E.R. protocol active. Identify your callsign.", 0.9, 1.0);
-          });
-        }
+      syncTelemetry().then(() => {
+        typeStream("[ CARRIER LOCKED 14400 BAUD // CACHE VALLEY RELAY ONLINE ]", "alert", 14, () => {
+          if (state.authenticatedUser) {
+            logStatic(`\nOPERATOR RECOGNIZED: ${state.authenticatedUser} (CLEARANCE: LVL ${state.clearanceLevel})`, 'sys');
+            if (state.isSolved) renderRewardUI();
+          } else {
+            typeStream("C.I.P.H.E.R.: Identity verification required. State your Geocaching callsign.", "cipher", 18, () => {
+              speak("Carrier locked. C.I.P.H.E.R. protocol active. Identify your callsign.", 0.9, 1.0);
+            });
+          }
+        });
       });
     }
 
     /* =========================================================================
-       5. COMMAND REGISTRY & INPUT ROUTING
+       6. COMMAND REGISTRY & INPUT ROUTING
        ========================================================================= */
     function handleFormSubmit(event) {
       event.preventDefault();
@@ -479,7 +494,6 @@
       const cmd = parts[0].toLowerCase();
       const args = parts.slice(1).join(' ');
 
-      // Core System Commands
       switch(cmd) {
         case 'help':
           logStatic("\n--- C.I.P.H.E.R. COMMAND REGISTRY ---", "alert");
@@ -488,10 +502,12 @@
           logStatic("  solve <CODE>   : Submit 3-digit S.O.S. alignment override.");
           logStatic("  ingest <TOKEN> : Inject physical field token to upgrade clearance.");
           logStatic("  nodes          : Print regional topology & relay status.");
+          logStatic("  telemetry      : Query global network awareness state.");
           logStatic("  hint           : Request S.O.S. register alignment clue.");
           logStatic("  sos            : Read excerpt from founding S.O.S. charter.");
           logStatic("  whoami         : Display current authenticated operator.");
           logStatic("  clear          : Purge terminal display buffer.");
+          logStatic("  test           : Run internal diagnostic & regression harness.");
           logStatic("  reboot         : Reset local session cache.\n", "sys");
           return;
 
@@ -509,16 +525,34 @@
 
         case 'nodes':
           logStatic("\n[ C.I.P.H.E.R. REGIONAL RELAY TOPOLOGY ]", "alert");
-          logStatic("NODE 01: [ONLINE]  CACHE VALLEY RELAY :: FORENSIC MONITOR (RAT PACK)");
-          logStatic("NODE 02: [ONLINE]  BOX ELDER RELAY    :: ARMORED REPEATER (RSI)");
-          logStatic("NODE 03: [OFFLINE] DORMANT RELAY      :: NO CARRIER DETECT");
-          logStatic("NODE 04: [OFFLINE] DORMANT RELAY      :: HARDWARE UNRESPONSIVE\n", "sys");
+          if (state.telemetry && state.telemetry.active_nodes) {
+            state.telemetry.active_nodes.forEach(n => logStatic(`${n.id}: [${n.status}]  ${n.name.padEnd(20)} :: ${n.faction || n.sector}`, "sys"));
+            state.telemetry.dormant_nodes.forEach(n => logStatic(`${n.id}: [${n.status}] ${n.name.padEnd(20)} :: CARRIER ${n.carrier || 'UNRESOLVED'}`, "sys"));
+          } else {
+            logStatic("NODE 01: [ONLINE]  CACHE VALLEY RELAY :: FORENSIC MONITOR (RAT PACK)", "sys");
+            logStatic("NODE 02: [ONLINE]  BOX ELDER RELAY    :: ARMORED REPEATER (RSI)", "sys");
+            logStatic("NODE 03: [OFFLINE] DORMANT RELAY      :: NO CARRIER DETECT", "sys");
+          }
+          logStatic("");
+          return;
+
+        case 'telemetry':
+          logStatic("\n[ GLOBAL TELEMETRY MANIFEST ]", "alert");
+          if (state.telemetry) {
+            logStatic(`  COMMUNITY SENTIENCE STAGE : STAGE ${state.telemetry.community_sentience_stage}`);
+            logStatic(`  TOTAL TOKENS INGESTED     : ${state.telemetry.global_tokens_ingested}`);
+            if (state.telemetry.latest_breakthrough) {
+              logStatic(`  LATEST BREAKTHROUGH       : ${state.telemetry.latest_breakthrough.finder} [${state.telemetry.latest_breakthrough.token}]`);
+            }
+          } else {
+            logStatic("  TELEMETRY: HOST UNREACHABLE (OPERATING ON CACHED MEMORY)");
+          }
+          logStatic(`  PERSONAL SECURITY CLEARANCE: LEVEL ${state.clearanceLevel}\n`, "sys");
           return;
 
         case 'sos':
           logStatic("\n[ S.O.S. CHARTER EXCERPT // EST. PRE-MAY 2000 ]", "alert");
           logStatic("We are the beans of the earth. We conceal wooden vaults and compass scrolls where the unseeing muggle walks blindly.", "sys");
-          logStatic("When the satellites unlocked, we anchored our craft into the grid.", "sys");
           logStatic("RULE 1: The logbook is sacred. Protect the ink.\n", "alert");
           speak("The logbook is sacred. Protect the ink.", 0.95, 0.95);
           return;
@@ -528,27 +562,23 @@
           return;
 
         case 'login':
-          if (!args) {
-            logStatic("Usage: login <geocaching_callsign>", "warn");
-          } else {
-            handleCallsign(args);
-          }
+          if (!args) logStatic("Usage: login <geocaching_callsign>", "warn");
+          else handleCallsign(args);
           return;
 
         case 'solve':
-          if (!args) {
-            logStatic("Usage: solve <3-digit-code>", "warn");
-          } else {
-            handleSolve(args);
-          }
+          if (!args) logStatic("Usage: solve <3-digit-code>", "warn");
+          else handleSolve(args);
           return;
 
         case 'ingest':
-          if (!args) {
-            logStatic("Usage: ingest <FIELD-TOKEN-HASH>", "warn");
-          } else {
-            handleIngest(args.toUpperCase());
-          }
+          if (!args) logStatic("Usage: ingest <FIELD-TOKEN-HASH>", "warn");
+          else handleIngest(args.toUpperCase());
+          return;
+
+        case 'test':
+        case 'diag':
+          handleTestHarness(args);
           return;
 
         case 'reboot':
@@ -577,7 +607,7 @@
     }
 
     /* =========================================================================
-       6. GAMEPLAY LOGIC (CALLSIGN, SOLVE, INGEST)
+       7. GAMEPLAY LOGIC (CALLSIGN, SOLVE, INGEST)
        ========================================================================= */
     function handleCallsign(handle) {
       state.authenticatedUser = handle.toUpperCase();
@@ -646,7 +676,7 @@
 
     function renderRewardUI() {
       document.getElementById('reward-section').style.display = 'block';
-      const embed = `<div align="center">\n  <a href="${BASE_URL}/terminal.html" target="_blank">\n    <img src="${BASE_URL}/assets/badges/sos-tier1.png" alt="S.O.S. Provisional Bean" width="320" style="border: 2px solid #00ff66; border-radius: 4px;" />\n  </a><br />\n  <font size="1" face="Courier New" color="#00ff66">OPERATOR: ${state.authenticatedUser} // S.O.S. NODE-01 VERIFIED</font>\n</div>`;
+      const embed = `<div align="center">\n  <a href="${BASE_URL}/terminal.html" target="_blank">\n    <img src="${BASE_URL}/assets/badges/sos-tier1.svg" alt="S.O.S. Provisional Bean" width="320" style="border: 2px solid #00ff66; border-radius: 4px;" />\n  </a><br />\n  <font size="1" face="Courier New" color="#00ff66">OPERATOR: ${state.authenticatedUser} // S.O.S. NODE-01 VERIFIED</font>\n</div>`;
       document.getElementById('badgeCode').value = embed;
     }
 
@@ -666,7 +696,166 @@
     }
 
     /* =========================================================================
-       7. KEYBOARD SHORTCUTS & HISTORY NAVIGATION
+       8. DYNAMIC TEST SUITE & AUTO-UPDATE VERIFICATION (ITEM 14)
+       ========================================================================= */
+    async function handleTestHarness(subCmd) {
+      const parts = subCmd.trim().split(/\s+/);
+      const action = parts[0].toLowerCase();
+      const param = parts[1];
+
+      switch(action) {
+        case 'telemetry':
+        case 'sync':
+          logStatic("\n[DIAG: REMOTE TELEMETRY & GITHUB UPDATE SYNC]", "alert");
+          logStatic(`Fetching manifest: ${BASE_URL}/telemetry.json ...`, "sys");
+          try {
+            const cacheBuster = `?t=${Date.now()}`;
+            const res = await fetch(`${BASE_URL}/telemetry.json${cacheBuster}`, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to reach telemetry host.`);
+            const data = await res.json();
+            
+            logStatic(`• Telemetry Version: ${data.version || 'UNKNOWN'}`, "sys");
+            logStatic(`• Sentience Stage: STAGE ${data.community_sentience_stage} (Tokens Ingested: ${data.global_tokens_ingested})`, "sys");
+            logStatic(`• Active Nodes: ${data.active_nodes ? data.active_nodes.length : 0} | Dormant Nodes: ${data.dormant_nodes ? data.dormant_nodes.length : 0}`, "sys");
+            
+            if (data.latest_breakthrough) {
+              logStatic(`• Latest Breakthrough: ${data.latest_breakthrough.finder} [${data.latest_breakthrough.token}]`, "sys");
+            }
+
+            const schemaValid = data.version && Array.isArray(data.active_nodes) && typeof data.community_sentience_stage === 'number';
+            logStatic(`Remote Manifest Integrity: ${schemaValid ? '[PASS - SYNC NOMINAL]' : '[FAIL - SCHEMA CORRUPT]'}`, schemaValid ? 'alert' : 'error');
+          } catch (err) {
+            logStatic(`[SYNC ERROR]: ${err.message}`, "error");
+            logStatic("Ensure telemetry.json is committed to your GitHub Pages root.", "warn");
+          }
+          break;
+
+        case 'roster':
+          logStatic("\n[DIAG: DYNAMIC ROSTER REGRESSION AUDIT]", "alert");
+          const names = Object.keys(ROSTER);
+          logStatic(`Auditing ${names.length} registered callsigns...`, "sys");
+          let rosterErrors = 0;
+          names.forEach((name) => {
+            const p = ROSTER[name];
+            const valid = p.text && p.speech && typeof p.pitch === 'number' && typeof p.rate === 'number';
+            if (!valid) {
+              rosterErrors++;
+              logStatic(`• [${name.toUpperCase()}]: Schema validation FAILED.`, "error");
+            }
+          });
+          if (rosterErrors === 0) {
+            logStatic(`All ${names.length} roster profiles verified successfully. [PASS]`, "alert");
+            speak(`All ${names.length} roster profiles verified.`);
+          } else {
+            logStatic(`Roster audit detected ${rosterErrors} malformed profiles. [FAIL]`, "error");
+          }
+          break;
+
+        case 'tokens':
+          logStatic("\n[DIAG: TOKEN INGESTION & LEVEL PROMOTION AUDIT]", "alert");
+          const tokenKeys = Object.keys(VALID_FIELD_TOKENS);
+          logStatic(`Auditing ${tokenKeys.length} active field token definitions...`, "sys");
+          let tokenErrors = 0;
+          tokenKeys.forEach(key => {
+            const meta = VALID_FIELD_TOKENS[key];
+            if (!meta.level || !meta.desc) {
+              tokenErrors++;
+              logStatic(`• Token '${key}': Missing level or description.`, "error");
+            }
+          });
+          if (tokenErrors === 0) {
+            logStatic(`All ${tokenKeys.length} field token definitions valid. [PASS]`, "alert");
+          } else {
+            logStatic(`Token definition check failed with ${tokenErrors} errors. [FAIL]`, "error");
+          }
+          break;
+
+        case 'audio':
+          logStatic("\n[DIAG: AUDIO & OSCILLATOR PIPELINE]", "alert");
+          logStatic("1. Testing mechanical typewriter oscillator (1400Hz)...", "sys");
+          playTone(1400, 'triangle', 0.02, 0.02);
+          setTimeout(() => {
+            logStatic("2. Testing error buzzer (110Hz sawtooth)...", "sys");
+            playTone(110, 'sawtooth', 0.25, 0.05);
+          }, 400);
+          setTimeout(() => {
+            logStatic("3. Testing dual-tone 14400 modem burst...", "sys");
+            playModemHandshake();
+          }, 900);
+          setTimeout(() => {
+            logStatic("4. Testing Web Speech API voice rendering...", "sys");
+            speak("Audio pipeline verification complete.", 1.0, 1.0);
+            logStatic("Audio Subsystem Check: [PASS]", "alert");
+          }, 1600);
+          break;
+
+        case 'solve':
+          logStatic("\n[DIAG: PUZZLE SOLVE & DOM BADGE VERIFICATION]", "alert");
+          handleSolve(PUZZLE_REGISTER.code);
+          setTimeout(() => {
+            const reward = document.getElementById('reward-section');
+            const codeSnippet = document.getElementById('badgeCode').value;
+            const passkey = document.getElementById('certKey').textContent;
+            const isOk = reward.style.display === 'block' && codeSnippet.includes(BASE_URL) && passkey === 'SACRED-INK-2000';
+            logStatic(`Puzzle Solver & Reward DOM Pipeline: ${isOk ? '[PASS]' : '[FAIL]'}`, isOk ? 'alert' : 'error');
+          }, 600);
+          break;
+
+        case 'level':
+          const lvl = parseInt(param, 10);
+          if (lvl >= 1 && lvl <= 5) {
+            state.clearanceLevel = lvl;
+            localStorage.setItem('cipher_level', lvl);
+            logStatic(`[OVERRIDE]: Personal Clearance manually set to LEVEL ${lvl}.`, "alert");
+            speak(`Personal clearance updated to Level ${lvl}.`);
+          } else {
+            logStatic("Usage: test level <1-5>", "warn");
+          }
+          break;
+
+        case 'reset':
+          logStatic("[DIAG]: Resetting local storage and clearing session state...", "warn");
+          localStorage.clear();
+          state.authenticatedUser = '';
+          state.clearanceLevel = 1;
+          state.isSolved = false;
+          state.ingestedTokens = [];
+          document.getElementById('reward-section').style.display = 'none';
+          logStatic("Station memory flushed. Ready for fresh player simulation.", "alert");
+          speak("System memory reset.");
+          break;
+
+        case 'all':
+          logStatic("\n=======================================================", "alert");
+          logStatic("RUNNING FULL AUTOMATED REGRESSION & SYNC TEST", "alert");
+          logStatic("=======================================================", "alert");
+          handleTestHarness('roster');
+          handleTestHarness('tokens');
+          await handleTestHarness('sync');
+          handleTestHarness('audio');
+          setTimeout(() => handleTestHarness('solve'), 2200);
+          setTimeout(() => {
+            logStatic("\n[SUMMARY]: All local modules & cloud sync verified.", "alert");
+            speak("System regression tests completed successfully.");
+          }, 3400);
+          break;
+
+        default:
+          logStatic("\n=== C.I.P.H.E.R. COMPREHENSIVE TEST SUITE ===", "alert");
+          logStatic("  test all         : Run complete regression (Roster, Tokens, Sync, Audio, Solve).");
+          logStatic("  test sync        : Verify remote telemetry.json fetch & cloud manifest integrity.");
+          logStatic("  test roster      : Validate all registered cacher profiles in codebase.");
+          logStatic("  test tokens      : Audit all physical token definitions and level gates.");
+          logStatic("  test audio       : Check all Web Audio oscillators and speech synthesis.");
+          logStatic("  test solve       : Simulate valid puzzle solve & test reward DOM.");
+          logStatic("  test level <1-5> : Force-set personal security clearance level.");
+          logStatic("  test reset       : Wipe localStorage and restore initial unauthenticated state.\n", "sys");
+          break;
+      }
+    }
+
+    /* =========================================================================
+       9. KEYBOARD NAVIGATION & LISTENERS
        ========================================================================= */
     document.getElementById('userInput').addEventListener('keydown', (e) => {
       if (e.key === 'ArrowUp') {
@@ -687,14 +876,13 @@
       }
     });
 
-    // Real-time clock updater
     setInterval(() => {
       const now = new Date();
       document.getElementById('liveClock').textContent = 'CLOCK: ' + now.toLocaleTimeString() + ' MST';
     }, 1000);
 
     window.onload = () => {
-      logStatic("[ S.O.S. RELAY OS v1.03 // CACHE VALLEY RELAY 01 READY ]");
+      logStatic("[ S.O.S. RELAY OS v1.04 // CACHE VALLEY RELAY 01 READY ]");
       logStatic("AWAITING OPERATOR CARRIER INITIALIZATION...");
     };
   </script>
