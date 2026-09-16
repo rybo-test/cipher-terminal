@@ -1,42 +1,39 @@
 {
-  "version": "1.04",
-  "community_sentience_stage": 1,
-  "global_tokens_ingested": 0,
-  "active_nodes": [
+  "system_state": {
+    "system_name": "C.I.P.H.E.R.",
+    "version": "1.04",
+    "community_sentience_stage": 1,
+    "global_tokens_ingested": 0,
+    "latest_breakthrough_by": "System Operator",
+    "last_sync": "2026-09-16T21:00:00Z"
+  },
+  "nodes": [
     {
-      "id": "NODE_01",
-      "name": "Cache Valley Relay",
-      "sector": "Cache County",
+      "id": "NODE-01",
+      "name": "Corridor Gatekeeper",
       "status": "ONLINE",
-      "faction": "The Rat Pack (Forensic Tap)"
+      "type": "MYSTERY_GATEWAY",
+      "passkey_required": true,
+      "certitude_configured": true,
+      "coordinates_status": "LOCKED"
     },
     {
-      "id": "NODE_02",
-      "name": "Box Elder Relay",
-      "sector": "Box Elder County",
-      "status": "ONLINE",
-      "faction": "RSI (Armored Fortress)"
-    }
-  ],
-  "dormant_nodes": [
-    {
-      "id": "NODE_03",
-      "name": "Weber Canyon Relay",
-      "sector": "Weber County",
-      "status": "OFFLINE",
-      "carrier": "CORRUPTED"
+      "id": "NODE-02",
+      "name": "Fence Line Relay A",
+      "status": "DORMANT",
+      "type": "FIELD_INGESTION",
+      "passkey_required": false,
+      "certitude_configured": false,
+      "coordinates_status": "OFFLINE"
     },
     {
-      "id": "NODE_04",
-      "name": "Bear Lake Ridge Relay",
-      "sector": "Rich County",
-      "status": "OFFLINE",
-      "carrier": "NO_SIGNAL"
+      "id": "NODE-03",
+      "name": "Fence Line Relay B",
+      "status": "DORMANT",
+      "type": "FIELD_INGESTION",
+      "passkey_required": false,
+      "certitude_configured": false,
+      "coordinates_status": "OFFLINE"
     }
-  ],
-  "latest_breakthrough": {
-    "finder": "SYSTEM_INIT",
-    "token": "NONE",
-    "timestamp": "2026-09-16"
-  }
+  ]
 }
