@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FIELD VAULT // S.O.S. ARCHIVE ARCHITECTURE</title>
+  <style>
+    :root {
+      --bg: #070a07;
+      --panel: #0d140d;
+      --border: #00bb44;
+      --green: #00ff66;
+      --dim: #008833;
+      --highlight: #ffffff;
+      --warn: #ffcc00;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--green);
+      font-family: "Courier New", Courier, monospace;
+      font-size: 15px;
+      line-height: 1.5;
+      padding: 20px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .portal-card {
+      width: 100%;
+      max-width: 740px;
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.95);
+    }
+
+    .header-tag {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--dim);
+      border-bottom: 1px solid var(--dim);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    h1 {
+      font-size: 20px;
+      color: var(--highlight);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .notice-box {
+      border: 1px dashed var(--dim);
+      background: #030803;
+      padding: 14px;
+      margin: 16px 0;
+      font-size: 13px;
+      color: #99ffaa;
+    }
+
+    .link-wrapper {
+      margin: 28px 0 20px 0;
+      text-align: center;
+    }
+
+    .terminal-link {
+      display: inline-block;
+      background: var(--dim);
+      color: #000;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: none;
+      padding: 14px 28px;
+      border: 2px solid var(--green);
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .terminal-link:hover {
+      background: var(--green);
+      color: #000;
+      box-shadow: 0 0 12px rgba(0, 255, 102, 0.5);
+    }
+
+    .footer-meta {
+      font-size: 11px;
+      color: #447744;
+      border-top: 1px solid #113311;
+      padding-top: 10px;
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="portal-card">
+    <div class="header-tag">
+      <span>DOMAIN: RYBO-TEST.GITHUB.IO/FIELD-VAULT</span>
+      <span>INDEX: SEC-01</span>
+      <span>STATUS: ACTIVE</span>
+    </div>
+
+    <h1>[ S.O.S. REGIONAL ARCHIVE PORTAL ]</h1>
+    <p style="color: #88cc88; font-size: 13px;">
+      INTERMOUNTAIN TELEMETRY SYSTEM & BULLETIN RELAY // MAY 02, 2000
+    </p>
+
+    <div class="notice-box">
+      <strong>*** FIELD NOTICE: UNMONITORED TELEMETRY ***</strong><br />
+      This directory indexes regional survey markers, letterbox journal caches, and 
+      automated relay terminals along the northern corridor. Modern satellite operators 
+      proceeding past this point must authenticate using active field credentials.
+    </div>
+
+    <p style="margin-bottom: 12px;">
+      An unmonitored automated SysOp (Designation: <strong>C.I.P.H.E.R.</strong>) has been 
+      detected transmitting carrier frequency across legacy 14400-baud relays.
+    </p>
+
+    <div class="link-wrapper">
+      <a href="terminal.html" class="terminal-link">
+        &gt;&gt; ACCESS C.I.P.H.E.R. RELAY TERMINAL &lt;&lt;
+      </a>
+    </div>
+
+    <div class="footer-meta">
+      <span>HOSTED NODE: CACHE VALLEY SECTOR</span>
+      <span>AUTHENTICATION PROTOCOL: S.O.S. CHARTER</span>
+    </div>
+  </div>
+
+</body>
+</html>
