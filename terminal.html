@@ -97,8 +97,8 @@
 <script>
   // --- STATE & CONFIG ---
   const CONFIG = {
-    version: "v1.04-mobile",
-    dossierUrl: "https://cachesleuth.com/cases/cipher-node-01",
+    version: "v1.05-sleuth",
+    toolsUrl: "https://www.cachesleuth.com/",
     validPasskeys: ["AUTH-SIGNAL-702", "PASSKEY-SLEUTH-42"],
     certitudeKeyword: "BLUE-SWITCH-2000",
     certitudeUrl: "https://www.certitude.org/"
@@ -108,7 +108,7 @@
   const inputEl = document.getElementById("cmd-input");
   let audioCtx = null;
 
-  // --- AUDIO SYNTHESIS (Android Compatible) ---
+  // --- AUDIO SYNTHESIS (Android / Mobile Compatible) ---
   function initAudio() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -204,8 +204,8 @@
 AVAILABLE OPERATIONAL COMMANDS:
   <span class="highlight">help</span>               Display system commands
   <span class="highlight">status</span>             Display current clearance & telemetry
-  <span class="highlight">sleuth</span>             Request investigative case file dispatch
-  <span class="highlight">auth &lt;PASSKEY&gt;</span>     Submit authorization passkey
+  <span class="highlight">sleuth</span>             Intercept encrypted cipher payload
+  <span class="highlight">auth &lt;PASSKEY&gt;</span>     Submit decoded authorization passkey
   <span class="highlight">ingest &lt;TOKEN&gt;</span>    Ingest physical field token hash
   <span class="highlight">test all</span>           Run self-contained diagnostic suite
   <span class="highlight">clear</span>              Clear terminal buffer
@@ -230,14 +230,19 @@ OPERATOR TELEMETRY STATUS:
         setTimeout(() => playTone(1200, "sine", 0.12), 90);
         print(`
 ============================================================
-[RELAY NODE 01: INVESTIGATION DISPATCH]
+[RELAY NODE 01: INTERCEPTED CIPHER TRANSMISSION]
 ============================================================
-A corrupted memory sector has been captured along the corridor.
-Dossier dispatch is ready on CacheSleuth.
+SYSOP INTERCEPT: S.O.S. LEGACY BEACON FREQUENCY 146.520 MHz
+ENCRYPTION TYPE: CORRIDOR CAESAR SHIFT (EPOCH OFFSET: -6)
 
-1. Open dossier: <a href="${CONFIG.dossierUrl}" target="_blank" rel="noopener noreferrer">[OPEN CACHESLEUTH CASE FILE]</a>
-2. Solve the deduction scenario to extract your passkey.
-3. Authenticate here: <span class="highlight">auth &lt;PASSKEY&gt;</span>
+RAW TELEMETRY PAYLOAD:
+<div style="background:#05160c; border:1px dashed #00ff66; padding:8px; margin:6px 0; font-size:16px; letter-spacing:2px; color:#fff; text-align:center;">
+  NKXJ-YOMTGR-702
+</div>
+
+INSTRUCTIONS:
+1. Decode this payload using <a href="${CONFIG.toolsUrl}" target="_blank" rel="noopener noreferrer">CacheSleuth</a> or any cipher toolkit.
+2. Submit the decoded plaintext using: <span class="highlight">auth &lt;DECODED_KEY&gt;</span>
 ============================================================`);
         break;
 
@@ -272,7 +277,7 @@ Next Step: Retrieve physical container at GZ and scan/enter token:
 ============================================================`, false);
         } else {
           playErrorBuzz();
-          print(`<span class="err-text">[!] REJECTION: Checksum parity error for '${escapeHtml(arg)}'.</span>`);
+          print(`<span class="err-text">[!] REJECTION: Checksum parity error for '${escapeHtml(arg)}'. Check your cipher decode.</span>`);
         }
         break;
 
@@ -380,7 +385,7 @@ Next Step: Retrieve physical container at GZ and scan/enter token:
 =================================================`;
     print(`<div class="banner">${banner}</div>`, false);
     print(`[SYSTEM ONLINE]: Cold boot completed.`);
-    print(`Tap screen, then type <span class="highlight">sleuth</span> to inspect case file or <span class="highlight">help</span> for commands.\n`, false);
+    print(`Tap screen, then type <span class="highlight">sleuth</span> to inspect cipher or <span class="highlight">help</span> for commands.\n`, false);
   }
 
   // Key listener for mobile soft keyboard Enter
