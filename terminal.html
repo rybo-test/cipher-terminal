@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Terminal Node 01</title>
+  <title>C.I.P.H.E.R. // Maintenance Shell v1.04</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -89,26 +89,26 @@
       autocorrect="off" 
       autocapitalize="none" 
       spellcheck="false" 
-      placeholder="Type help, sleuth, or test all..."
+      placeholder="Type help, restore, read, or test all..."
     />
   </div>
 </div>
 
 <script>
-  // --- STATE & CONFIG ---
+  // --- SYSTEM CONFIG & FALLBACK STATE ---
   const CONFIG = {
-    version: "v1.05-sleuth",
+    version: "v1.04-SOS",
     toolsUrl: "https://www.cachesleuth.com/",
-    validPasskeys: ["AUTH-SIGNAL-702", "PASSKEY-SLEUTH-42"],
-    certitudeKeyword: "BLUE-SWITCH-2000",
-    certitudeUrl: "https://www.certitude.org/"
+    certitudeUrl: "https://www.certitude.org/",
+    storagePrefix: "cipher_"
   };
 
+  let telemetryData = null;
   const screenEl = document.getElementById("screen");
   const inputEl = document.getElementById("cmd-input");
   let audioCtx = null;
 
-  // --- AUDIO SYNTHESIS (Android / Mobile Compatible) ---
+  // --- AUDIO SYNTHESIS ENGINE ---
   function initAudio() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -187,7 +187,70 @@
     inputEl.focus();
   }
 
-  // --- COMMAND PROCESSOR ---
+  function escapeHtml(str) {
+    return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function sleep(ms) { 
+    return new Promise(r => setTimeout(r, ms)); 
+  }
+
+  // --- STATE MANAGEMENT ---
+  function getRestoredSectors() {
+    try {
+      const data = localStorage.getItem(`${CONFIG.storagePrefix}restored_sectors`);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveRestoredSector(sectorId) {
+    const current = getRestoredSectors();
+    if (!current.includes(sectorId)) {
+      current.push(sectorId);
+      localStorage.setItem(`${CONFIG.storagePrefix}restored_sectors`, JSON.stringify(current));
+    }
+  }
+
+  async function loadTelemetry() {
+    try {
+      const res = await fetch(`telemetry.json?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        telemetryData = await res.json();
+      }
+    } catch (e) {
+      console.warn("Telemetry loading failed; utilizing fallback definitions.", e);
+    }
+  }
+
+  // --- VERB ALIAS ROUTING ---
+  const CANONICAL_VERBS = {
+    RESTORE: ["RESTORE", "REPAIR", "FIX"],
+    COLLECT: ["COLLECT", "TAKE", "ACQUIRE"],
+    DISCOVER: ["DISCOVER", "FOUND", "INSPECT"],
+    LOG: ["LOG", "SIGN", "CHECKIN"],
+    DEPOSIT: ["DEPOSIT", "DROP", "SUBMIT"],
+    PATCH: ["PATCH", "MOUNT", "LOAD", "INJECT"],
+    READ: ["READ", "CAT", "VIEW"],
+    STATUS: ["STATUS", "TELEMETRY", "SYS"],
+    HELP: ["HELP", "MAN", "?"],
+    TEST: ["TEST", "DIAG"],
+    CLEAR: ["CLEAR", "CLS"],
+    REBOOT: ["REBOOT", "RESET"],
+    SLEUTH: ["SLEUTH", "INVESTIGATE", "CASE"],
+    AUTH: ["AUTH", "UNLOCK"]
+  };
+
+  function resolveVerb(verb) {
+    const upper = verb.toUpperCase();
+    for (const [canonical, aliases] of Object.entries(CANONICAL_VERBS)) {
+      if (aliases.includes(upper)) return canonical;
+    }
+    return upper;
+  }
+
+  // --- COMMAND PROCESSING LOGIC ---
   async function processCommand(raw) {
     const input = raw.trim();
     if (!input) return;
@@ -195,37 +258,63 @@
     print(`<span style="color:#58a6ff;">&gt; ${escapeHtml(input)}</span>`, false);
 
     const parts = input.split(/\s+/);
-    const cmd = parts[0].toLowerCase();
+    const verb = resolveVerb(parts[0]);
     const arg = parts.slice(1).join(" ").trim();
 
-    switch (cmd) {
-      case "help":
+    // Auto-route tokens typed with alternate verbs to RESTORE
+    if (["LOG", "DISCOVER", "COLLECT", "DEPOSIT", "PATCH"].includes(verb) && arg.toUpperCase().startsWith("CIPHER-")) {
+      print(`[!] Parsing argument... Memory bit detected. Auto-routing to RESTORE protocol.`);
+      return handleRestore(arg);
+    }
+
+    switch (verb) {
+      case "HELP":
         print(`
-AVAILABLE OPERATIONAL COMMANDS:
-  <span class="highlight">help</span>               Display system commands
-  <span class="highlight">status</span>             Display current clearance & telemetry
-  <span class="highlight">sleuth</span>             Intercept encrypted cipher payload
-  <span class="highlight">auth &lt;PASSKEY&gt;</span>     Submit decoded authorization passkey
-  <span class="highlight">ingest &lt;TOKEN&gt;</span>    Ingest physical field token hash
-  <span class="highlight">test all</span>           Run self-contained diagnostic suite
-  <span class="highlight">clear</span>              Clear terminal buffer
-  <span class="highlight">reboot</span>             Reset local session state`);
+C.I.P.H.E.R. MAINTENANCE SHELL // REV 1.04-SOS
+Type a command and press ENTER.
+
+  <span class="highlight">RESTORE &lt;KEY&gt;</span>     Reconstruct corrupted core sector files
+  <span class="highlight">READ &lt;SECTOR-ID&gt;</span>   Read memory sector bank (e.g., READ SECTOR-01)
+  <span class="highlight">STATUS</span>             Display telemetry integrity and active sectors
+  <span class="highlight">DISCOVER &lt;ID&gt;</span>     Catalog discovered node or trackable chip
+  <span class="highlight">COLLECT &lt;ID&gt;</span>      Ingest physical collectible card
+  <span class="highlight">LOG &lt;ID&gt;</span>          Record field cache sign-in
+  <span class="highlight">DEPOSIT &lt;ID&gt;</span>      Submit drop-box memory payload
+  <span class="highlight">PATCH &lt;KEY&gt;</span>        Apply firmware update / security override
+  <span class="highlight">SLEUTH</span>             Intercept legacy radio transmission
+  <span class="highlight">AUTH &lt;PASSKEY&gt;</span>     Submit decoded authorization key
+  <span class="highlight">TEST ALL</span>           Run full diagnostic regression suite
+  <span class="highlight">CLEAR</span>              Clear display buffer
+  <span class="highlight">REBOOT</span>             Reset local memory tables`);
         break;
 
-      case "status":
-        const lvl = localStorage.getItem("cipher_clearance_level") || "0";
-        const unlocked = localStorage.getItem("cipher_node01_unlocked") === "true";
-        print(`
-OPERATOR TELEMETRY STATUS:
-  Clearance Level:    ${lvl}
-  Active Node:        NODE-01 (Safe Mode)
-  Authentication:     ${unlocked ? "VERIFIED" : "PENDING"}
-  Target Network:     S.O.S. Corridor Relay`);
+      case "RESTORE":
+        await handleRestore(arg);
         break;
 
-      case "sleuth":
-      case "investigate":
-      case "case":
+      case "READ":
+        handleRead(arg);
+        break;
+
+      case "STATUS":
+        handleStatus();
+        break;
+
+      case "DISCOVER":
+      case "COLLECT":
+      case "LOG":
+      case "DEPOSIT":
+      case "PATCH":
+        if (!arg) {
+          playErrorBuzz();
+          print(`<span class="err-text">[!] Syntax Error: ID parameter required for ${verb}.</span>`);
+          return;
+        }
+        playTone(550, "sine", 0.08);
+        print(`[+] Protocol '${verb}' registered for: <span class="highlight">${escapeHtml(arg.toUpperCase())}</span>. Subsystem standing by for field nodes.`);
+        break;
+
+      case "SLEUTH":
         playTone(700, "sine", 0.08);
         setTimeout(() => playTone(1200, "sine", 0.12), 90);
         print(`
@@ -246,16 +335,15 @@ INSTRUCTIONS:
 ============================================================`);
         break;
 
-      case "auth":
-      case "unlock":
+      case "AUTH":
         if (!arg) {
           playErrorBuzz();
           print(`<span class="err-text">[!] SYNTAX ERROR: Usage: auth &lt;PASSKEY&gt;</span>`);
           return;
         }
-        if (CONFIG.validPasskeys.includes(arg.toUpperCase())) {
-          localStorage.setItem("cipher_clearance_level", "1");
-          localStorage.setItem("cipher_node01_unlocked", "true");
+        if (arg.toUpperCase() === "AUTH-SIGNAL-702" || arg.toUpperCase() === "PASSKEY-SLEUTH-42") {
+          localStorage.setItem(`${CONFIG.storagePrefix}clearance_level`, "1");
+          localStorage.setItem(`${CONFIG.storagePrefix}node01_unlocked`, "true");
           playSuccessSweep();
           print(`
 ============================================================
@@ -264,51 +352,29 @@ INSTRUCTIONS:
 SECURITY STATUS: ELEVATED TO CLEARANCE LEVEL 1
 ACHIEVEMENT: [S.O.S. TIER 1 CITATION UNLOCKED]
 
-[CERTITUDE COORDINATE KEYWORD]:
-<div class="badge-box">
-  KEYWORD: <span style="font-size:15px; color:#fff; background:#1f6feb; padding:2px 6px;">${CONFIG.certitudeKeyword}</span>
-</div>
-
-Validate keyword on the listing's Certitude checker:
-<a href="${CONFIG.certitudeUrl}" target="_blank" rel="noopener noreferrer">[OPEN CERTITUDE VALIDATOR]</a>
-
-Next Step: Retrieve physical container at GZ and scan/enter token:
-<span class="highlight">ingest &lt;TOKEN-ID&gt;</span>
-============================================================`, false);
+To recover memory banks and Certitude coordinates, locate
+the field recovery key and run:
+<span class="highlight">RESTORE &lt;RECOVERY_KEY&gt;</span>
+============================================================`);
         } else {
           playErrorBuzz();
           print(`<span class="err-text">[!] REJECTION: Checksum parity error for '${escapeHtml(arg)}'. Check your cipher decode.</span>`);
         }
         break;
 
-      case "ingest":
-        if (!arg) {
-          playErrorBuzz();
-          print(`<span class="err-text">[!] Missing Token ID. Usage: ingest &lt;TOKEN-ID&gt;</span>`);
-          return;
-        }
-        if (arg.toUpperCase() === "TOKEN-PT-01" || arg.toUpperCase() === "TOKEN-RLY-702") {
-          playSuccessSweep();
-          print(`[+] INGESTION CONFIRMED: Token ${escapeHtml(arg.toUpperCase())} accepted. Memory sector committed.`);
-        } else {
-          playErrorBuzz();
-          print(`<span class="err-text">[!] UNRECOGNIZED TOKEN: Hash does not match local sector manifest.</span>`);
-        }
-        break;
-
-      case "test":
-        if (arg.toLowerCase() === "all") {
+      case "TEST":
+        if (arg.toUpperCase() === "ALL") {
           await runDiagnosticSuite();
         } else {
-          print(`Run <span class="highlight">test all</span> to execute diagnostics.`);
+          print(`Type <span class="highlight">test all</span> to run the system harness.`);
         }
         break;
 
-      case "clear":
+      case "CLEAR":
         screenEl.innerHTML = "";
         break;
 
-      case "reboot":
+      case "REBOOT":
         localStorage.clear();
         print(`[*] System rebooted. Local storage cleared.`);
         setTimeout(initTerminal, 600);
@@ -316,79 +382,211 @@ Next Step: Retrieve physical container at GZ and scan/enter token:
 
       default:
         playErrorBuzz();
-        print(`<span class="err-text">Unknown command '${escapeHtml(cmd)}'. Type 'help' for valid directives.</span>`);
+        print(`<span class="err-text">Unknown directive '${escapeHtml(parts[0])}'. Type HELP for manual.</span>`);
     }
   }
 
-  // --- DIAGNOSTIC REGRESSION RUNNER ---
+  // --- SECTOR HANDLERS ---
+  async function handleRestore(rawKey) {
+    if (!rawKey) {
+      playErrorBuzz();
+      print(`<span class="err-text">[!] Usage: RESTORE &lt;KEY&gt; (e.g., RESTORE CIPHER-7K9A-4R2M)</span>`);
+      return;
+    }
+
+    const key = rawKey.toUpperCase();
+    const sectors = (telemetryData && telemetryData.archive_sectors) || [
+      {
+        sector_id: "SECTOR-01",
+        archive_ref: "RSI-RELAY-DELTA",
+        validation_key: "CIPHER-7K9A-4R2M",
+        restored_payload: {
+          log_body: "To all R.S.I. survey units: Terminal unit C.I.P.H.E.R. was\nnever decommissioned; it was compartmentalized. We thought\nit was merely routing signal logs. We were wrong.\n\nIf you are reading this, sector parity has returned to\nfunctional limits. Physical container access verified.",
+          certitude_keyword: "[PENDING_RANDOM_KEYWORD_01]",
+          system_whisper: "Sector parity logged. Thank you for fixing me."
+        }
+      }
+    ];
+
+    const match = sectors.find(s => s.validation_key === key);
+
+    if (match) {
+      saveRestoredSector(match.sector_id);
+      playSuccessSweep();
+      print(`
+[+] INGESTING VALIDATION STRING: ${escapeHtml(key)}
+[+] PARITY VERIFICATION: 0x${escapeHtml(key.split("-")[1] || "OK")}... OK
+[+] AUTHENTICATING DECRYPT KEY... VALID.
+[+] REBUILDING PARITY TABLES... [████████████████████] 100%
+[+] ${match.sector_id} RESTORED TO LOCAL ARCHIVE.
+
+-----------------------------------------------------------
+RESTORED LOG: ${match.sector_id} // ARCHIVE REF: ${match.archive_ref}
+-----------------------------------------------------------
+"${escapeHtml(match.restored_payload.log_body)}"
+
+<div class="badge-box">
+  CERTITUDE KEYWORD: <span style="color:#ffffff; font-weight:bold; background:#1f6feb; padding:2px 6px;">${escapeHtml(match.restored_payload.certitude_keyword)}</span>
+</div>
+
+Validate keyword on the listing's Certitude checker:
+<a href="${CONFIG.certitudeUrl}" target="_blank" rel="noopener noreferrer">[OPEN CERTITUDE VALIDATOR]</a>
+-----------------------------------------------------------
+<span style="color:#88cc88;">[SYS_NOTE]: ${escapeHtml(match.restored_payload.system_whisper)}</span>`);
+    } else {
+      playErrorBuzz();
+      print(`
+[!] INGESTING VALIDATION STRING: ${escapeHtml(key)}
+[!] PARITY VERIFICATION... FAILED.
+<span class="err-text">[!] ERROR 0x7E1: CHECKSUM MISMATCH. BIT SEGMENT REJECTED.</span>`);
+    }
+  }
+
+  function handleRead(target) {
+    if (!target) {
+      playErrorBuzz();
+      print(`<span class="err-text">[!] Specify target. Usage: READ &lt;SECTOR-ID&gt; (e.g., READ SECTOR-01)</span>`);
+      return;
+    }
+
+    const sectorId = target.toUpperCase();
+    const sectors = (telemetryData && telemetryData.archive_sectors) || [];
+    const targetSector = sectors.find(s => s.sector_id === sectorId);
+    const restoredList = getRestoredSectors();
+
+    if (restoredList.includes(sectorId)) {
+      const payload = targetSector ? targetSector.restored_payload : null;
+      print(`
+-----------------------------------------------------------
+ARCHIVE REF: ${targetSector ? targetSector.archive_ref : "LOCAL"} // ${sectorId}
+-----------------------------------------------------------
+"${payload ? escapeHtml(payload.log_body) : "Sector active."}"
+
+CERTITUDE KEYWORD: ${payload ? escapeHtml(payload.certitude_keyword) : "[LOCKED]"}
+-----------------------------------------------------------
+[SYS_STATUS]: Sector stable. Parity 100%.`);
+      return;
+    }
+
+    if (targetSector) {
+      playTone(320, "sawtooth", 0.08);
+      print(`
+[!] ACCESSING MEMORY BANK ${targetSector.memory_bank}...
+<span class="err-text">[!] ERROR 0x884: PARITY CHECK FAILED. SECTOR CORRUPTED.</span>
+
+${escapeHtml(targetSector.corrupted_display.hex_prefix)}
+${escapeHtml(targetSector.corrupted_display.raw_text)}
+
+[!] INTEGRITY: ${targetSector.corrupted_display.integrity_percent}
+[!] Use '<span class="highlight">RESTORE &lt;KEY&gt;</span>' with a field token to rebuild sector parity.`);
+    } else {
+      playErrorBuzz();
+      print(`<span class="err-text">[!] Memory address '${escapeHtml(sectorId)}' offline or unallocated.</span>`);
+    }
+  }
+
+  function handleStatus() {
+    const restored = getRestoredSectors();
+    const sectors = (telemetryData && telemetryData.archive_sectors) || [
+      { sector_id: "SECTOR-01" },
+      { sector_id: "SECTOR-02" },
+      { sector_id: "SECTOR-03" }
+    ];
+
+    let sectorReport = "";
+    sectors.forEach(s => {
+      const isOk = restored.includes(s.sector_id);
+      sectorReport += `  ${s.sector_id}: ${isOk ? "[ONLINE / PARITY VERIFIED]" : "[CORRUPTED / RECOVERY REQUIRED]"}\n`;
+    });
+
+    const percent = ((restored.length / sectors.length) * 100).toFixed(1);
+
+    print(`
+===========================================================
+C.I.P.H.E.R. SYSTEM INTEGRITY REPORT
+===========================================================
+SYSTEM CORE:    OPERATIONAL (RESTRICTED MAINTENANCE SHELL)
+LOCAL MEMORY:   PERSISTENCE ACTIVE
+NODE ID:        NODE-01 (CORRIDOR GATEWAY)
+
+ALLOCATED ARCHIVE SECTORS:
+${sectorReport}
+INTEGRITY INDEX: ${percent}%
+===========================================================`);
+  }
+
+  // --- DIAGNOSTIC REGRESSION HARNESS ---
   async function runDiagnosticSuite() {
-    print(`\n--- RUNNING DIAGNOSTIC TEST HARNESS ---`);
-    
-    // 1. Audio check
-    print(`[1/4] Verifying Audio Engine...`);
+    print(`\n--- RUNNING SYSTEM DIAGNOSTIC TEST HARNESS ---`);
+
+    print(`[1/4] Verifying Audio Pipeline...`);
     playTone(600, "sine", 0.08);
     await sleep(150);
     playTone(900, "triangle", 0.08);
     await sleep(150);
-    print(`      -> Web Audio oscillator pipeline active.`);
+    print(`      -> Oscillator output verified.`);
 
-    // 2. Telemetry JSON check
-    print(`[2/4] Testing telemetry fetch (cache-busting)...`);
-    try {
-      const res = await fetch(`telemetry.json?t=${Date.now()}`, { cache: "no-store" });
-      if (res.ok) {
-        const json = await res.json();
-        print(`      -> telemetry.json reachable (Stage: ${json.system_state.community_sentience_stage || 1})`);
-      } else {
-        print(`      -> <span class="err-text">HTTP ${res.status}: telemetry.json fetch non-200.</span>`);
-      }
-    } catch (e) {
-      print(`      -> <span class="err-text">telemetry.json offline/unreachable: ${e.message}</span>`);
-    }
-
-    // 3. Auth Engine Simulation
-    print(`[3/4] Validating Passkey & Clearance Gating...`);
-    const mockKey = CONFIG.validPasskeys[0];
-    if (CONFIG.validPasskeys.includes(mockKey)) {
-      localStorage.setItem("cipher_clearance_level", "1");
-      print(`      -> Passkey regex and localStorage level-up verified.`);
+    print(`[2/4] Testing telemetry.json Ingestion...`);
+    await loadTelemetry();
+    if (telemetryData && telemetryData.archive_sectors) {
+      print(`      -> telemetry.json active. Sectors indexed: ${telemetryData.archive_sectors.length}`);
     } else {
-      print(`      -> <span class="err-text">Passkey verification failed.</span>`);
+      print(`      -> <span class="err-text">Warning: Fallback sector definitions in use.</span>`);
     }
 
-    // 4. Persistence Check
-    print(`[4/4] Validating local persistence...`);
-    if (localStorage.getItem("cipher_clearance_level") === "1") {
-      print(`      -> State persistence verified.`);
+    print(`[3/4] Testing High-Entropy Key Parser...`);
+    const testKey = "CIPHER-7K9A-4R2M";
+    const sectors = (telemetryData && telemetryData.archive_sectors) || [];
+    const valid = sectors.some(s => s.validation_key === testKey);
+    print(`      -> Pilot Token (${testKey}): ${valid ? "PASSKEY REGISTERED" : "VERIFICATION ERROR"}`);
+
+    print(`[4/4] Validating Local Storage Retention...`);
+    saveRestoredSector("TEST-SECTOR");
+    const restored = getRestoredSectors();
+    if (restored.includes("TEST-SECTOR")) {
+      print(`      -> Persistence write/read cycle verified.`);
+      // Clean up test entry
+      const clean = restored.filter(s => s !== "TEST-SECTOR");
+      localStorage.setItem(`${CONFIG.storagePrefix}restored_sectors`, JSON.stringify(clean));
     } else {
       print(`      -> <span class="err-text">Storage write failed.</span>`);
     }
 
-    print(`\n[✔] TEST ALL COMPLETE: Core terminal vectors verified.\n`);
+    print(`\n[✔] TEST ALL COMPLETE: Core system operational.\n`);
   }
 
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-  function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
-  // --- COLD BOOT INIT ---
-  function initTerminal() {
+  // --- BOOT AND URL INGESTION INITIALIZATION ---
+  async function initTerminal() {
     screenEl.innerHTML = "";
+    await loadTelemetry();
+
     const banner = `
   ___   ___  ____   __  __  ____  ____ 
  / __) (_  )(  _ \\ (  )(  )(  __)(  _ \\
 ( (__   / /  ) __/  )(__)(  ) _)  )   /
  \\___) (___)(__)   (______)(____)(__\\_)
- C.I.P.H.E.R. SYSOP // TERMINAL NODE 01
- SYS VERSION: ${CONFIG.version} // CORRIDOR RELAY
+ C.I.P.H.E.R. MAINTENANCE SHELL // REV 1.04-SOS
+ REGIONAL VAULT NODE // CORRIDOR RELAY
 =================================================`;
     print(`<div class="banner">${banner}</div>`, false);
-    print(`[SYSTEM ONLINE]: Cold boot completed.`);
-    print(`Tap screen, then type <span class="highlight">sleuth</span> to inspect cipher or <span class="highlight">help</span> for commands.\n`, false);
+    print(`[SYSTEM ONLINE]: Local relay operational.`);
+    print(`Type <span class="highlight">status</span>, <span class="highlight">read sector-01</span>, or <span class="highlight">help</span> for directives.\n`, false);
+
+    // Parse inbound NFC / QR query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const inboundKey = urlParams.get("token") || 
+                       urlParams.get("restore") || 
+                       urlParams.get("inject") || 
+                       urlParams.get("key");
+
+    if (inboundKey) {
+      await sleep(350);
+      print(`\n<span style="color:#ffcc00;">[!] DETECTED INBOUND HARDWARE TOKEN PAYLOAD...</span>`);
+      await sleep(300);
+      await processCommand(`RESTORE ${inboundKey}`);
+    }
   }
 
-  // Key listener for mobile soft keyboard Enter
   inputEl.addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
       const val = inputEl.value;
