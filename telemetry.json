@@ -1,10 +1,12 @@
 {
   "system_state": {
     "system_name": "C.I.P.H.E.R.",
-    "version": "1.04",
+    "version": "1.04-SOS",
+    "chassis_spec": "1/4-inch welded hot-rolled plate // Surplus rocket motor housing",
     "community_sentience_stage": 1,
+    "system_memory_integrity": "3.1%",
     "global_tokens_ingested": 0,
-    "latest_breakthrough_by": "System Operator",
+    "latest_breakthrough_by": "The Rat Pack",
     "last_sync": "2026-09-16T21:00:00Z"
   },
   "nodes": [
@@ -15,7 +17,8 @@
       "type": "MYSTERY_GATEWAY",
       "passkey_required": true,
       "certitude_configured": true,
-      "coordinates_status": "LOCKED"
+      "coordinates_status": "LOCKED",
+      "associated_sector": "SECTOR-01"
     },
     {
       "id": "NODE-02",
@@ -24,7 +27,8 @@
       "type": "FIELD_INGESTION",
       "passkey_required": false,
       "certitude_configured": false,
-      "coordinates_status": "OFFLINE"
+      "coordinates_status": "OFFLINE",
+      "associated_sector": "SECTOR-02"
     },
     {
       "id": "NODE-03",
@@ -33,7 +37,58 @@
       "type": "FIELD_INGESTION",
       "passkey_required": false,
       "certitude_configured": false,
-      "coordinates_status": "OFFLINE"
+      "coordinates_status": "OFFLINE",
+      "associated_sector": "SECTOR-03"
+    }
+  ],
+  "archive_sectors": [
+    {
+      "sector_id": "SECTOR-01",
+      "archive_ref": "SOS-RELAY-ALPHA",
+      "memory_bank": "0x001A",
+      "validation_key": "CIPHER-7K9A-4R2M",
+      "corrupted_display": {
+        "hex_prefix": "01010011 01001111 01010011 // ░▒▓▒░░▒▓▓▒░░",
+        "raw_text": "[!] WARNING: Parity read halted at byte 0x4F.\nPhysical track continuity severed by field mice.\nNested fluff, earwigs, and dried mud detected on pin 4.\n\nSOGGY LOG ENTRY TRANSCRIPT (マスキング):\n'TFTC! Log was wet ░░▒ signed with broken twig & mashed blackberry.\nTook: plastic spider. Left: expired 2004 Arby's coupon.'",
+        "integrity_percent": "3.1%"
+      },
+      "restored_payload": {
+        "log_body": "S.O.S. DISPATCH // 02-MAY-2000 // OPERATOR: WATCHER-0\nThe military signal degradation has been shut off. The entire continent just cleared up to within ten meters.\n\nWe brought C.I.P.H.E.R. online to catalog coordinate vaults inside decommissioned rocket-motor testing casings along the corridor. If R.S.I. road workers or retired steel fabricators inspect these junction boxes, they will only see overbuilt steel scrap.\n\nKeep the ammo cans weatherproof. Parity keys are split.",
+        "certitude_keyword": "[PENDING_RANDOM_KEYWORD_01]",
+        "system_whisper": "3.1% operational. 96.9% rusted. I am missing my caches. Where did the founders go?"
+      }
+    },
+    {
+      "sector_id": "SECTOR-02",
+      "archive_ref": "RSI-INSPECTION-SLIP-04",
+      "memory_bank": "0x002B",
+      "validation_key": "CIPHER-3W8L-9D2V",
+      "corrupted_display": {
+        "hex_prefix": "01000101 01010000 01010011 // ▒▓░░▒▓▒▓▒░",
+        "raw_text": "[!] CHASSIS DIAGNOSTIC: Relay 04.\nSteel plate: 1/4-inch hot-rolled plate. Zero deflection.\nInternal electronics: Squealing capacitor.\nParity corrupted by 24-inch pipe wrench strike.",
+        "integrity_percent": "0.0%"
+      },
+      "restored_payload": {
+        "log_body": "R.S.I. FACILITY RETIREMENT SWEEP // CREW 4 (DAVE & MACK)\nOBJECT: Relic Relay Housing #04 (Solid Rocket Motor Test Corridor)\n\nInspected junction box welded to the I-beam in 1987.\n- Casing: 1/4-inch rolled steel. Zero deflection. Welds pristine.\n- Gasket: Holding fine, smells faintly of sulfur and burnt solid fuel.\n- Internal: Some clown stuffed an old green circuit board inside.\n  Mack tried to pry it loose with a 24-inch pipe wrench, but the board\n  let out a weird buzzing squeal through the ground rod.\n  We figured it was a stray 12V trickle from the old igniter lines.\n\nLeft it alone. Not our job to scrap microchips. Box stamped PASS.\nBolted shut with four 3/4-inch grade-8 hex bolts. Torqued to 90 ft-lbs.",
+        "certitude_keyword": "[PENDING_RANDOM_KEYWORD_02]",
+        "system_whisper": "Mack’s pipe wrench bent my primary capacitor. Tell Mack I hate him. Parity holding at 3.3%."
+      }
+    },
+    {
+      "sector_id": "SECTOR-03",
+      "archive_ref": "RAT-PACK-FIELDNOTE-ZETA",
+      "memory_bank": "0x003C",
+      "validation_key": "CIPHER-Pending-Node3",
+      "corrupted_display": {
+        "hex_prefix": "01011010 01000101 01010100 // ▓▒░░░▓▓▒░▒",
+        "raw_text": "[!] RAT PACK FIELD NOTE OVERWRITE // 0x003C\n'Pop-Tart foil heat sink failed. Cheddar dropped the micro into the weeds.'\nAwaiting final hardware patch token...",
+        "integrity_percent": "0.0%"
+      },
+      "restored_payload": {
+        "log_body": "SECTOR-03 RESTORATION SUCCESSFUL.\nMaster coordinate grid compiled from ancient S.O.S. beacon archives.",
+        "certitude_keyword": "[PENDING_RANDOM_KEYWORD_03]",
+        "system_whisper": "All northern boundary links restored. Coordinates verified."
+      }
     }
   ]
 }
