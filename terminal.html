@@ -18,7 +18,7 @@
     }
     #terminal-container {
       width: 100%;
-      max-width: 820px;
+      max-width: 860px;
       background: #0d1215;
       border: 2px solid #00ff66;
       border-radius: 6px;
@@ -30,24 +30,25 @@
     }
     #screen {
       flex: 1;
-      padding: 14px;
+      padding: 16px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
-      font-size: 13px;
-      line-height: 1.45;
+      font-size: 16px;
+      line-height: 1.55;
     }
     #input-bar {
       display: flex;
       align-items: center;
-      border-top: 1px solid #00ff66;
+      border-top: 2px solid #00ff66;
       background: #080c0d;
-      padding: 8px 12px;
+      padding: 12px 14px;
     }
     .prompt-label {
       color: #00ff66;
       font-weight: bold;
-      margin-right: 8px;
+      font-size: 17px;
+      margin-right: 10px;
       user-select: none;
     }
     #cmd-input {
@@ -57,23 +58,25 @@
       outline: none;
       color: #00ff66;
       font-family: inherit;
-      font-size: 15px;
+      font-size: 17px;
     }
     a { color: #58a6ff; text-decoration: underline; }
     .highlight { color: #ffffff; font-weight: bold; }
     .badge-box {
       border: 1px dashed #00ff66;
-      padding: 8px;
-      margin: 6px 0;
+      padding: 12px;
+      margin: 10px 0;
       background: #05160c;
+      font-size: 17px;
     }
-    .err-text { color: #ff5555; }
-    .warn-text { color: #ffcc00; }
+    .err-text { color: #ff5555; font-weight: bold; }
+    .warn-text { color: #ffcc00; font-weight: bold; }
     .banner {
       color: #00ff66;
-      font-size: 10px;
-      line-height: 1.1;
-      margin-bottom: 10px;
+      font-size: 12px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -100,7 +103,7 @@
   const CONFIG = {
     version: "v1.04-SOS",
     toolsUrl: "https://www.cachesleuth.com/",
-    certitudeUrl: "https://www.certitude.org/",
+    certitudeUrl: "https://www.certitudes.org/",
     storagePrefix: "cipher_"
   };
 
@@ -384,7 +387,7 @@ SYSOP INTERCEPT: S.O.S. LEGACY BEACON FREQUENCY 146.520 MHz
 ENCRYPTION TYPE: CORRIDOR CAESAR SHIFT (EPOCH OFFSET: -6)
 
 RAW TELEMETRY PAYLOAD:
-<div style="background:#05160c; border:1px dashed #00ff66; padding:8px; margin:6px 0; font-size:16px; letter-spacing:2px; color:#fff; text-align:center;">
+<div style="background:#05160c; border:1px dashed #00ff66; padding:10px; margin:8px 0; font-size:18px; letter-spacing:2px; color:#fff; text-align:center;">
   NKXJ-YOMTGR-702
 </div>
 
@@ -479,7 +482,7 @@ RESTORED LOG: ${match.sector_id} // ARCHIVE REF: ${match.archive_ref}
 "${escapeHtml(match.restored_payload.log_body)}"
 
 <div class="badge-box">
-  CERTITUDE KEYWORD: <span style="color:#ffffff; font-weight:bold; background:#1f6feb; padding:2px 6px;">${escapeHtml(match.restored_payload.certitude_keyword)}</span>
+  CERTITUDE KEYWORD: <span style="color:#ffffff; font-weight:bold; background:#1f6feb; padding:3px 8px;">${escapeHtml(match.restored_payload.certitude_keyword)}</span>
 </div>
 
 Validate keyword on the listing's Certitude checker:
