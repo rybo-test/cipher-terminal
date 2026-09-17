@@ -460,6 +460,12 @@ the field recovery key and run:
     if (match) {
       saveRestoredSector(match.sector_id);
       playSuccessSweep();
+
+      // Dynamic calculation: replace {INTEGRITY} with live computed level
+      const liveIntegrity = calculateIntegrity();
+      let whisper = match.restored_payload.system_whisper || "";
+      whisper = whisper.replace(/\{INTEGRITY\}/g, liveIntegrity);
+
       print(`
 [+] INGESTING VALIDATION STRING: ${escapeHtml(key)}
 [+] PARITY VERIFICATION: 0x${escapeHtml(key.split("-")[1] || "OK")}... OK
@@ -479,7 +485,7 @@ RESTORED LOG: ${match.sector_id} // ARCHIVE REF: ${match.archive_ref}
 Validate keyword on the listing's Certitude checker:
 <a href="${CONFIG.certitudeUrl}" target="_blank" rel="noopener noreferrer">[OPEN CERTITUDE VALIDATOR]</a>
 -----------------------------------------------------------
-<span style="color:#88cc88;">[SYS_NOTE]: ${escapeHtml(match.restored_payload.system_whisper)}</span>`);
+<span style="color:#88cc88;">[SYS_NOTE]: ${escapeHtml(whisper)}</span>`);
     } else {
       playErrorBuzz();
       print(`
