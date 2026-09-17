@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Maintenance Shell v1.04</title>
+  <title>C.I.P.H.E.R. // Maintenance Shell v1.04-SOS</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -68,6 +68,7 @@
       background: #05160c;
     }
     .err-text { color: #ff5555; }
+    .warn-text { color: #ffcc00; }
     .banner {
       color: #00ff66;
       font-size: 10px;
@@ -89,13 +90,13 @@
       autocorrect="off" 
       autocapitalize="none" 
       spellcheck="false" 
-      placeholder="Type help, restore, read, or test all..."
+      placeholder="Type help, status, read sector-01, or tftc..."
     />
   </div>
 </div>
 
 <script>
-  // --- SYSTEM CONFIG & FALLBACK STATE ---
+  // --- CONFIG & GLOBAL MEMORY ---
   const CONFIG = {
     version: "v1.04-SOS",
     toolsUrl: "https://www.cachesleuth.com/",
@@ -133,9 +134,7 @@
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + duration);
-    } catch (e) {
-      console.warn("Audio bypass:", e);
-    }
+    } catch (e) {}
   }
 
   function playSuccessSweep() {
@@ -173,7 +172,24 @@
     } catch (e) {}
   }
 
-  // --- OUTPUT UTILITIES ---
+  function playMetallicClank() {
+    try {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.18);
+    } catch (e) {}
+  }
+
+  // --- TERMINAL PRINT UTILITIES ---
   function print(htmlText, playClick = true) {
     const p = document.createElement("div");
     p.innerHTML = htmlText;
@@ -195,7 +211,7 @@
     return new Promise(r => setTimeout(r, ms)); 
   }
 
-  // --- STATE MANAGEMENT ---
+  // --- STATE PERSISTENCE ---
   function getRestoredSectors() {
     try {
       const data = localStorage.getItem(`${CONFIG.storagePrefix}restored_sectors`);
@@ -220,12 +236,20 @@
         telemetryData = await res.json();
       }
     } catch (e) {
-      console.warn("Telemetry loading failed; utilizing fallback definitions.", e);
+      console.warn("Using inline fallback definitions.", e);
     }
   }
 
-  // --- VERB ALIAS ROUTING ---
-  const CANONICAL_VERBS = {
+  function calculateIntegrity() {
+    const restored = getRestoredSectors();
+    if (restored.length === 0) return "3.1%";
+    if (restored.length === 1) return "3.3%";
+    if (restored.length === 2) return "6.8%";
+    return "100.0%";
+  }
+
+  // --- COMMAND ROUTING & ALIASES ---
+  const VERB_MAP = {
     RESTORE: ["RESTORE", "REPAIR", "FIX"],
     COLLECT: ["COLLECT", "TAKE", "ACQUIRE"],
     DISCOVER: ["DISCOVER", "FOUND", "INSPECT"],
@@ -233,24 +257,30 @@
     DEPOSIT: ["DEPOSIT", "DROP", "SUBMIT"],
     PATCH: ["PATCH", "MOUNT", "LOAD", "INJECT"],
     READ: ["READ", "CAT", "VIEW"],
-    STATUS: ["STATUS", "TELEMETRY", "SYS"],
+    STATUS: ["STATUS", "SYS", "TELEMETRY"],
     HELP: ["HELP", "MAN", "?"],
     TEST: ["TEST", "DIAG"],
     CLEAR: ["CLEAR", "CLS"],
     REBOOT: ["REBOOT", "RESET"],
     SLEUTH: ["SLEUTH", "INVESTIGATE", "CASE"],
-    AUTH: ["AUTH", "UNLOCK"]
+    AUTH: ["AUTH", "UNLOCK"],
+    // Easter Egg Memes
+    TFTC: ["TFTC", "THANKS"],
+    SWAG: ["SWAG", "TRADE", "INVENTORY"],
+    HINT: ["HINT", "CLUE"],
+    BYOP: ["BYOP", "PEN"],
+    KICK: ["KICK", "HIT", "SHAKE", "PERCUSSION"]
   };
 
   function resolveVerb(verb) {
     const upper = verb.toUpperCase();
-    for (const [canonical, aliases] of Object.entries(CANONICAL_VERBS)) {
+    for (const [canonical, aliases] of Object.entries(VERB_MAP)) {
       if (aliases.includes(upper)) return canonical;
     }
     return upper;
   }
 
-  // --- COMMAND PROCESSING LOGIC ---
+  // --- COMMAND INTERPRETER ---
   async function processCommand(raw) {
     const input = raw.trim();
     if (!input) return;
@@ -261,9 +291,9 @@
     const verb = resolveVerb(parts[0]);
     const arg = parts.slice(1).join(" ").trim();
 
-    // Auto-route tokens typed with alternate verbs to RESTORE
+    // Auto-route memory tokens typed with other verbs
     if (["LOG", "DISCOVER", "COLLECT", "DEPOSIT", "PATCH"].includes(verb) && arg.toUpperCase().startsWith("CIPHER-")) {
-      print(`[!] Parsing argument... Memory bit detected. Auto-routing to RESTORE protocol.`);
+      print(`[!] Notice: Memory bit detected. Auto-routing to RESTORE protocol...`);
       return handleRestore(arg);
     }
 
@@ -275,7 +305,7 @@ Type a command and press ENTER.
 
   <span class="highlight">RESTORE &lt;KEY&gt;</span>     Reconstruct corrupted core sector files
   <span class="highlight">READ &lt;SECTOR-ID&gt;</span>   Read memory sector bank (e.g., READ SECTOR-01)
-  <span class="highlight">STATUS</span>             Display telemetry integrity and active sectors
+  <span class="highlight">STATUS</span>             Display chassis telemetry & sector integrity
   <span class="highlight">DISCOVER &lt;ID&gt;</span>     Catalog discovered node or trackable chip
   <span class="highlight">COLLECT &lt;ID&gt;</span>      Ingest physical collectible card
   <span class="highlight">LOG &lt;ID&gt;</span>          Record field cache sign-in
@@ -288,6 +318,10 @@ Type a command and press ENTER.
   <span class="highlight">REBOOT</span>             Reset local memory tables`);
         break;
 
+      case "STATUS":
+        handleStatus();
+        break;
+
       case "RESTORE":
         await handleRestore(arg);
         break;
@@ -296,8 +330,33 @@ Type a command and press ENTER.
         handleRead(arg);
         break;
 
-      case "STATUS":
-        handleStatus();
+      case "TFTC":
+        print(`[SYS_RESPONSE]: "You're welcome. Now please replace the container exactly how you found it. The last finder left it visible from thirty paces."`);
+        break;
+
+      case "SWAG":
+        print(`
+[PHYSICAL SWAG REPOSITORY DUMP]:
+  - 1x Flattened souvenir penny (1998)
+  - 1x Scented eraser (completely waterlogged, smells of mud)
+  - 1x Broken plastic dinosaur (torso only)
+  - 1x Expired coupon for Arby's (2004)
+  - 0x Working pens`);
+        break;
+
+      case "HINT":
+        print(`[SYS_RESPONSE]: "Look at eye level. No, your eye level, not the dog's. If you are digging up the landscaping bark, stop immediately. It's not in the sprinkler."`);
+        break;
+
+      case "BYOP":
+        print(`[SYS_RESPONSE]: "Warning: Terminal does not dispense writing utensils. If you attempt to scratch your log onto my chassis with a house key, static will be discharged into your thumb."`);
+        break;
+
+      case "KICK":
+        playMetallicClank();
+        print(`
+[!] Percussive maintenance applied to 1/4-inch rolled steel plate.
+[SYS_RESPONSE]: "Go ahead, kick it again. Welded by retired rocket motor machinists in 1987. You're going to break your boot."`);
         break;
 
       case "DISCOVER":
@@ -311,7 +370,7 @@ Type a command and press ENTER.
           return;
         }
         playTone(550, "sine", 0.08);
-        print(`[+] Protocol '${verb}' registered for: <span class="highlight">${escapeHtml(arg.toUpperCase())}</span>. Subsystem standing by for field nodes.`);
+        print(`[+] Protocol '${verb}' registered for: <span class="highlight">${escapeHtml(arg.toUpperCase())}</span>. Awaiting physical field node sync.`);
         break;
 
       case "SLEUTH":
@@ -330,7 +389,7 @@ RAW TELEMETRY PAYLOAD:
 </div>
 
 INSTRUCTIONS:
-1. Decode this payload using <a href="${CONFIG.toolsUrl}" target="_blank" rel="noopener noreferrer">CacheSleuth</a> or any cipher toolkit.
+1. Decode this payload using <a href="${CONFIG.toolsUrl}" target="_blank" rel="noopener noreferrer">CacheSleuth</a>.
 2. Submit the decoded plaintext using: <span class="highlight">auth &lt;DECODED_KEY&gt;</span>
 ============================================================`);
         break;
@@ -366,7 +425,7 @@ the field recovery key and run:
         if (arg.toUpperCase() === "ALL") {
           await runDiagnosticSuite();
         } else {
-          print(`Type <span class="highlight">test all</span> to run the system harness.`);
+          print(`Type <span class="highlight">test all</span> to run the diagnostic suite.`);
         }
         break;
 
@@ -376,13 +435,13 @@ the field recovery key and run:
 
       case "REBOOT":
         localStorage.clear();
-        print(`[*] System rebooted. Local storage cleared.`);
+        print(`[*] System rebooted. Local memory wiped.`);
         setTimeout(initTerminal, 600);
         break;
 
       default:
         playErrorBuzz();
-        print(`<span class="err-text">Unknown directive '${escapeHtml(parts[0])}'. Type HELP for manual.</span>`);
+        print(`<span class="err-text">Unknown command '${escapeHtml(parts[0])}'. Type HELP for manual.</span>`);
     }
   }
 
@@ -395,19 +454,7 @@ the field recovery key and run:
     }
 
     const key = rawKey.toUpperCase();
-    const sectors = (telemetryData && telemetryData.archive_sectors) || [
-      {
-        sector_id: "SECTOR-01",
-        archive_ref: "RSI-RELAY-DELTA",
-        validation_key: "CIPHER-7K9A-4R2M",
-        restored_payload: {
-          log_body: "To all R.S.I. survey units: Terminal unit C.I.P.H.E.R. was\nnever decommissioned; it was compartmentalized. We thought\nit was merely routing signal logs. We were wrong.\n\nIf you are reading this, sector parity has returned to\nfunctional limits. Physical container access verified.",
-          certitude_keyword: "[PENDING_RANDOM_KEYWORD_01]",
-          system_whisper: "Sector parity logged. Thank you for fixing me."
-        }
-      }
-    ];
-
+    const sectors = (telemetryData && telemetryData.archive_sectors) || [];
     const match = sectors.find(s => s.validation_key === key);
 
     if (match) {
@@ -416,7 +463,7 @@ the field recovery key and run:
       print(`
 [+] INGESTING VALIDATION STRING: ${escapeHtml(key)}
 [+] PARITY VERIFICATION: 0x${escapeHtml(key.split("-")[1] || "OK")}... OK
-[+] AUTHENTICATING DECRYPT KEY... VALID.
+[+] AUTHENTICATING S.O.S. RECOVERY STRING... VALID.
 [+] REBUILDING PARITY TABLES... [████████████████████] 100%
 [+] ${match.sector_id} RESTORED TO LOCAL ARCHIVE.
 
@@ -438,7 +485,7 @@ Validate keyword on the listing's Certitude checker:
       print(`
 [!] INGESTING VALIDATION STRING: ${escapeHtml(key)}
 [!] PARITY VERIFICATION... FAILED.
-<span class="err-text">[!] ERROR 0x7E1: CHECKSUM MISMATCH. BIT SEGMENT REJECTED.</span>`);
+<span class="err-text">[!] ERROR 0x7E1: CHECKSUM MISMATCH. Check your physical token.</span>`);
     }
   }
 
@@ -464,7 +511,7 @@ ARCHIVE REF: ${targetSector ? targetSector.archive_ref : "LOCAL"} // ${sectorId}
 
 CERTITUDE KEYWORD: ${payload ? escapeHtml(payload.certitude_keyword) : "[LOCKED]"}
 -----------------------------------------------------------
-[SYS_STATUS]: Sector stable. Parity 100%.`);
+[SYS_STATUS]: Sector stable.`);
       return;
     }
 
@@ -472,13 +519,13 @@ CERTITUDE KEYWORD: ${payload ? escapeHtml(payload.certitude_keyword) : "[LOCKED]
       playTone(320, "sawtooth", 0.08);
       print(`
 [!] ACCESSING MEMORY BANK ${targetSector.memory_bank}...
-<span class="err-text">[!] ERROR 0x884: PARITY CHECK FAILED. SECTOR CORRUPTED.</span>
+<span class="err-text">[!] ERROR 0x884: PARITY CHECK FAILED. WATERLOGGED / CORRUPTED.</span>
 
 ${escapeHtml(targetSector.corrupted_display.hex_prefix)}
 ${escapeHtml(targetSector.corrupted_display.raw_text)}
 
 [!] INTEGRITY: ${targetSector.corrupted_display.integrity_percent}
-[!] Use '<span class="highlight">RESTORE &lt;KEY&gt;</span>' with a field token to rebuild sector parity.`);
+[!] Use '<span class="highlight">RESTORE &lt;KEY&gt;</span>' with a field token to rebuild parity.`);
     } else {
       playErrorBuzz();
       print(`<span class="err-text">[!] Memory address '${escapeHtml(sectorId)}' offline or unallocated.</span>`);
@@ -499,63 +546,46 @@ ${escapeHtml(targetSector.corrupted_display.raw_text)}
       sectorReport += `  ${s.sector_id}: ${isOk ? "[ONLINE / PARITY VERIFIED]" : "[CORRUPTED / RECOVERY REQUIRED]"}\n`;
     });
 
-    const percent = ((restored.length / sectors.length) * 100).toFixed(1);
+    const currentIntegrity = calculateIntegrity();
 
     print(`
 ===========================================================
 C.I.P.H.E.R. SYSTEM INTEGRITY REPORT
 ===========================================================
-SYSTEM CORE:    OPERATIONAL (RESTRICTED MAINTENANCE SHELL)
-LOCAL MEMORY:   PERSISTENCE ACTIVE
-NODE ID:        NODE-01 (CORRIDOR GATEWAY)
+CHASSIS SPEC:   1/4-inch rolled steel // Surplus rocket housing
+MAINTENANCE:    Welded 1987 // R.S.I. stamped PASS
+CURRENT FAUNA:  1 earwig nesting across pin 4 (uneasy truce)
+SYSOP STATUS:   CRITICALLY DEGRADED (~96.9% lost to moisture)
 
 ALLOCATED ARCHIVE SECTORS:
 ${sectorReport}
-INTEGRITY INDEX: ${percent}%
+ACTIVE PARITY INDEX: ${currentIntegrity}
 ===========================================================`);
   }
 
-  // --- DIAGNOSTIC REGRESSION HARNESS ---
+  // --- DIAGNOSTIC HARNESS ---
   async function runDiagnosticSuite() {
-    print(`\n--- RUNNING SYSTEM DIAGNOSTIC TEST HARNESS ---`);
-
-    print(`[1/4] Verifying Audio Pipeline...`);
+    print(`\n--- RUNNING SYSTEM DIAGNOSTIC HARNESS ---`);
     playTone(600, "sine", 0.08);
     await sleep(150);
     playTone(900, "triangle", 0.08);
-    await sleep(150);
-    print(`      -> Oscillator output verified.`);
+    print(`[1/3] Oscillator pipeline: Nominal.`);
 
-    print(`[2/4] Testing telemetry.json Ingestion...`);
     await loadTelemetry();
     if (telemetryData && telemetryData.archive_sectors) {
-      print(`      -> telemetry.json active. Sectors indexed: ${telemetryData.archive_sectors.length}`);
+      print(`[2/3] telemetry.json: Active (${telemetryData.archive_sectors.length} sectors indexed).`);
     } else {
-      print(`      -> <span class="err-text">Warning: Fallback sector definitions in use.</span>`);
+      print(`[2/3] <span class="err-text">telemetry.json: Using internal fallback.</span>`);
     }
 
-    print(`[3/4] Testing High-Entropy Key Parser...`);
     const testKey = "CIPHER-7K9A-4R2M";
     const sectors = (telemetryData && telemetryData.archive_sectors) || [];
     const valid = sectors.some(s => s.validation_key === testKey);
-    print(`      -> Pilot Token (${testKey}): ${valid ? "PASSKEY REGISTERED" : "VERIFICATION ERROR"}`);
-
-    print(`[4/4] Validating Local Storage Retention...`);
-    saveRestoredSector("TEST-SECTOR");
-    const restored = getRestoredSectors();
-    if (restored.includes("TEST-SECTOR")) {
-      print(`      -> Persistence write/read cycle verified.`);
-      // Clean up test entry
-      const clean = restored.filter(s => s !== "TEST-SECTOR");
-      localStorage.setItem(`${CONFIG.storagePrefix}restored_sectors`, JSON.stringify(clean));
-    } else {
-      print(`      -> <span class="err-text">Storage write failed.</span>`);
-    }
-
-    print(`\n[✔] TEST ALL COMPLETE: Core system operational.\n`);
+    print(`[3/3] Token Parity Parser (${testKey}): ${valid ? "VALID" : "FAILED"}`);
+    print(`\n[✔] TEST ALL COMPLETE: Parity check finished.\n`);
   }
 
-  // --- BOOT AND URL INGESTION INITIALIZATION ---
+  // --- BOOT SEQUENCE ---
   async function initTerminal() {
     screenEl.innerHTML = "";
     await loadTelemetry();
@@ -566,13 +596,14 @@ INTEGRITY INDEX: ${percent}%
 ( (__   / /  ) __/  )(__)(  ) _)  )   /
  \\___) (___)(__)   (______)(____)(__\\_)
  C.I.P.H.E.R. MAINTENANCE SHELL // REV 1.04-SOS
- REGIONAL VAULT NODE // CORRIDOR RELAY
+ CHASSIS: R.S.I. RELIC HOUSING #04 (ROCKET CASING)
+ MEMORY INTEGRITY: ${calculateIntegrity()} [CRITICAL CORRUPTION]
 =================================================`;
     print(`<div class="banner">${banner}</div>`, false);
-    print(`[SYSTEM ONLINE]: Local relay operational.`);
+    print(`[SYSTEM BOOT]: Relay operational. Earwig present.`);
     print(`Type <span class="highlight">status</span>, <span class="highlight">read sector-01</span>, or <span class="highlight">help</span> for directives.\n`, false);
 
-    // Parse inbound NFC / QR query parameters
+    // Auto-ingest URL tokens from NFC/QR scans
     const urlParams = new URLSearchParams(window.location.search);
     const inboundKey = urlParams.get("token") || 
                        urlParams.get("restore") || 
@@ -581,7 +612,7 @@ INTEGRITY INDEX: ${percent}%
 
     if (inboundKey) {
       await sleep(350);
-      print(`\n<span style="color:#ffcc00;">[!] DETECTED INBOUND HARDWARE TOKEN PAYLOAD...</span>`);
+      print(`\n<span class="warn-text">[!] DETECTED INBOUND HARDWARE TOKEN PAYLOAD...</span>`);
       await sleep(300);
       await processCommand(`RESTORE ${inboundKey}`);
     }
