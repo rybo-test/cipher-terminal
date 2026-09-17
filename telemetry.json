@@ -55,7 +55,7 @@
       "restored_payload": {
         "log_body": "S.O.S. DISPATCH // 02-MAY-2000 // OPERATOR: WATCHER-0\nThe military signal degradation has been shut off. The entire continent just cleared up to within ten meters.\n\nWe brought C.I.P.H.E.R. online to catalog coordinate vaults inside decommissioned rocket-motor testing casings along the corridor. If R.S.I. road workers or retired steel fabricators inspect these junction boxes, they will only see overbuilt steel scrap.\n\nKeep the ammo cans weatherproof. Parity keys are split.",
         "certitude_keyword": "[PENDING_RANDOM_KEYWORD_01]",
-        "system_whisper": "3.1% operational. 96.9% rusted. I am missing my caches. Where did the founders go?"
+        "system_whisper": "{INTEGRITY} operational. Parity recovered. I am missing my caches. Where did the founders go?"
       }
     },
     {
@@ -71,7 +71,7 @@
       "restored_payload": {
         "log_body": "R.S.I. FACILITY RETIREMENT SWEEP // CREW 4 (DAVE & MACK)\nOBJECT: Relic Relay Housing #04 (Solid Rocket Motor Test Corridor)\n\nInspected junction box welded to the I-beam in 1987.\n- Casing: 1/4-inch rolled steel. Zero deflection. Welds pristine.\n- Gasket: Holding fine, smells faintly of sulfur and burnt solid fuel.\n- Internal: Some clown stuffed an old green circuit board inside.\n  Mack tried to pry it loose with a 24-inch pipe wrench, but the board\n  let out a weird buzzing squeal through the ground rod.\n  We figured it was a stray 12V trickle from the old igniter lines.\n\nLeft it alone. Not our job to scrap microchips. Box stamped PASS.\nBolted shut with four 3/4-inch grade-8 hex bolts. Torqued to 90 ft-lbs.",
         "certitude_keyword": "[PENDING_RANDOM_KEYWORD_02]",
-        "system_whisper": "Mack’s pipe wrench bent my primary capacitor. Tell Mack I hate him. Parity holding at 3.3%."
+        "system_whisper": "Mack’s pipe wrench bent my primary capacitor. Tell Mack I hate him. Parity holding at {INTEGRITY}."
       }
     },
     {
@@ -87,7 +87,7 @@
       "restored_payload": {
         "log_body": "SECTOR-03 RESTORATION SUCCESSFUL.\nMaster coordinate grid compiled from ancient S.O.S. beacon archives.",
         "certitude_keyword": "[PENDING_RANDOM_KEYWORD_03]",
-        "system_whisper": "All northern boundary links restored. Coordinates verified."
+        "system_whisper": "All northern boundary links restored. Parity: {INTEGRITY}."
       }
     }
   ]
