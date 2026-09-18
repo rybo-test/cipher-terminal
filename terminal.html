@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
-  <link rel="stylesheet" href="css/terminal.css?v=1.06" />
+  <link rel="stylesheet" href="css/terminal.css?v=1.07" />
 </head>
 <body class="font-md">
   <div class="crt-chassis" id="crtContainer">
@@ -18,17 +18,19 @@
 
     <div class="terminal-screen" id="termOutput"></div>
 
-    <div class="action-deck">
+    <div class="action-deck" id="actionDeck">
       <button class="chip-btn" onclick="triggerAction('SLEUTH')">🔍 SLEUTH</button>
       <button class="chip-btn" onclick="triggerAction('UNLOCK ')">🔑 UNLOCK</button>
       <button class="chip-btn" onclick="triggerAction('FEED ')">💾 FEED TOKEN</button>
-      <button class="chip-btn" onclick="triggerAction('STATUS')">📡 STATUS</button>
+      <button class="chip-btn" onclick="triggerAction('PROFILE')">👤 PROFILE</button>
+      <button class="chip-btn" onclick="triggerAction('TRAIN')">🎓 TRAIN</button>
       <button class="chip-btn" onclick="triggerAction('MAP')">🗺️ MAP</button>
       <button class="chip-btn" onclick="triggerAction('HELP')">❓ HELP</button>
+      <button class="chip-btn admin-chip" id="adminChip" onclick="triggerAction('ADMIN')">⚡ ADMIN</button>
     </div>
 
     <div class="input-line-wrap">
-      <span class="prompt-label">C.I.P.H.E.R.&gt;</span>
+      <span class="prompt-label" id="promptLabel">C.I.P.H.E.R.&gt;</span>
       <input 
         type="text" 
         id="cliInput" 
@@ -74,6 +76,11 @@
 
     function soundBeep() { playTone(880, "sine", 0.05); }
     function soundKey() { playTone(1200 + Math.random() * 200, "square", 0.015); }
+    function soundAdmin() {
+      playTone(587.33, "triangle", 0.08, 0);
+      playTone(880, "triangle", 0.12, 0.08);
+      playTone(1174.66, "triangle", 0.2, 0.18);
+    }
     function soundError() {
       playTone(150, "sawtooth", 0.15, 0);
       playTone(110, "sawtooth", 0.25, 0.15);
@@ -111,14 +118,18 @@
       soundBeep();
     }
 
-    // --- State & Scaffolding Engine ---
+    // --- Configuration & Faction Clearance ---
     const outputEl = document.getElementById("termOutput");
     const inputEl = document.getElementById("cliInput");
+    const adminChipEl = document.getElementById("adminChip");
 
     const CONFIG = {
-      version: "v1.06-FIELD",
+      version: "v1.07-FIELD",
       node01Key: "BLUE-SWITCH",
       certitudeWord: "BLUE-SWITCH-2000",
+      practiceKey: "CAESAR",
+      practiceToken: "TOKEN-PRACTICE-99",
+      ratPackRoster: ["NEZZMUK", "RATWAFFLES", "CHEDA", "MUGGLEMISFIT"],
       validTokens: {
         "TOKEN-PT-01": { name: "Relay Node 01", sector: "Cache Valley Gate" },
         "TOKEN-PT-02": { name: "Relay Node 02", sector: "Corridor Fence Line" },
@@ -138,6 +149,20 @@
       localStorage.setItem("cipher_handle", state.handle);
       localStorage.setItem("cipher_clearance", state.clearance.toString());
       localStorage.setItem("cipher_tokens", JSON.stringify(state.ingested));
+      evaluateAdminVisibility();
+    }
+
+    function isRatPack(handle) {
+      return CONFIG.ratPackRoster.includes((handle || "").toUpperCase().trim());
+    }
+
+    function evaluateAdminVisibility() {
+      const state = getState();
+      if (isRatPack(state.handle)) {
+        adminChipEl.style.display = "inline-block";
+      } else {
+        adminChipEl.style.display = "none";
+      }
     }
 
     function printBlock(contentHtml, type = "") {
@@ -160,19 +185,154 @@
     }
 
     function showBanner() {
+      const state = getState();
       printBlock(`
         <div class="term-title">
           <span>⚡ C.I.P.H.E.R. SYSOP OS ${CONFIG.version}</span>
-          <span class="term-dim">LISTENING POST 01</span>
+          <span class="term-dim">OPERATOR: ${state.handle}</span>
         </div>
-        <p>Greetings, traveler. Sensors detect an active GPS receiver in the corridor.</p>
+        <p>Sensors detect an active GPS receiver in the corridor.</p>
         <p>My memory relays are scrambled across northern Utah. Crack the encrypted dispatch, feed physical tokens from field hides, and I will release the Certitude coordinates.</p>
         <div class="term-dim">
-          👉 <strong>Quick Start:</strong> Tap <code>[ 🔍 SLEUTH ]</code> to see your puzzle, or tap <code>[ ❓ HELP ]</code> for all commands.
+          👉 <strong>Quick Start:</strong> Tap <code>[ 🎓 TRAIN ]</code> for interactive practice, <code>[ 🔍 SLEUTH ]</code> for your mission clue, or <code>[ 👤 PROFILE ]</code> for your stats.
         </div>
       `);
     }
 
+    // --- Profile Mode ---
+    function showProfile() {
+      const state = getState();
+      const isMember = isRatPack(state.handle);
+      const restored = (state.clearance * 20) + (state.ingested.length * 15);
+
+      const b1 = true ? '<span class="term-badge">🎖️ [INITIATE]</span>' : '';
+      const b2 = state.clearance >= 1 ? '<span class="term-badge">🔓 [CIPHER-CRACKER]</span>' : '<span class="term-badge locked">🔒 [CIPHER-CRACKER]</span>';
+      const b3 = state.ingested.length > 0 ? '<span class="term-badge">💾 [FIELD-AGENT]</span>' : '<span class="term-badge locked">🔒 [FIELD-AGENT]</span>';
+      const b4 = state.ingested.length >= 3 ? '<span class="term-badge">🗺️ [CORRIDOR-MASTER]</span>' : '<span class="term-badge locked">🔒 [CORRIDOR-MASTER]</span>';
+      const bAdmin = isMember ? '<span class="term-badge" style="border-color:#38bdf8; color:#38bdf8;">⚡ [RAT PACK SYSOP]</span>' : '';
+
+      printBlock(`
+        <div class="term-title">
+          <span>👤 Operator Dossier & Field Identity</span>
+          <span class="term-dim">${isMember ? "RAT PACK CLEARANCE" : "GUEST CACHER"}</span>
+        </div>
+        <div class="term-row"><span class="term-label">Registered Callsign</span><span class="term-val">${state.handle}</span></div>
+        <div class="term-row"><span class="term-label">Security Clearance</span><span class="term-val">Level ${state.clearance}</span></div>
+        <div class="term-row"><span class="term-label">Memory Restored</span><span class="term-val">${restored}%</span></div>
+        <div class="term-row"><span class="term-label">Tokens Ingested</span><span class="term-val">${state.ingested.length} verified</span></div>
+        <div style="margin-top: 6px; font-weight: bold;">Earned Badges:</div>
+        <div class="term-badge-tray">
+          ${b1} ${b2} ${b3} ${b4} ${bAdmin}
+        </div>
+        <div class="term-dim" style="margin-top: 6px;">
+          Tip: Change callsign anytime via <code>HANDLE &lt;NAME&gt;</code>.
+        </div>
+      `);
+    }
+
+    // --- Guided Training Mode (TRAIN) ---
+    function showTrain(step = "ALL") {
+      soundBeep();
+      if (step === "1") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 1: Basic Navigation</span></div>
+          <p>The action buttons above the prompt are quick shortcuts!</p>
+          <p>Tap <code>[ 📡 STATUS ]</code> to inspect your signal, or tap <code>[ ❓ HELP ]</code> to see all commands. You can also type commands manually into the box below.</p>
+          <div class="term-dim">👉 Try typing: <code>STATUS</code> or <code>MAP</code>.</div>
+        `);
+      } else if (step === "2") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 2: Decryption & Passcodes</span></div>
+          <p>Real geocaches use ciphers. Here is a simulated test puzzle:</p>
+          <div class="term-callout">
+            <div class="term-callout-code">FDHVDU</div>
+            <div class="term-dim">Hint: Caesar Shift (-3) spells a famous Roman ruler!</div>
+          </div>
+          <p>When decoded, authenticate using: <code>UNLOCK CAESAR</code> (or tap [ 🔑 UNLOCK ]).</p>
+        `);
+      } else if (step === "3") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 3: Field Token Ingestion</span></div>
+          <p>When you locate a physical hide on the trail, you will find a stamped token puck.</p>
+          <p>Practice feeding a token code into the machine by typing:</p>
+          <div class="term-callout">
+            <div class="term-callout-code">FEED TOKEN-PRACTICE-99</div>
+          </div>
+          <p>This simulates waking up a corrupted corridor node.</p>
+        `);
+      } else if (step === "4") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 4: Percussive Maintenance & Field Utilities</span></div>
+          <p>Grandpa engineering at its finest: if the terminal acts up, give it a good kick.</p>
+          <div class="term-row"><span class="term-val">KICK</span><span class="term-label">Smack the casing to clear static</span></div>
+          <div class="term-row"><span class="term-val">MUGGLE</span><span class="term-label">Trigger stealth protocol when people are watching</span></div>
+          <div class="term-row"><span class="term-val">FONT LG</span><span class="term-label">Enlarge screen text when caching in bright sunlight</span></div>
+        `);
+      } else {
+        printBlock(`
+          <div class="term-title">
+            <span>🎓 C.I.P.H.E.R. Training Sandbox</span>
+            <span class="term-dim">PRACTICE PROTOCOLS</span>
+          </div>
+          <p>Welcome to the low-stakes training academy! Choose a tutorial step:</p>
+          <div class="term-row"><span class="term-val">TRAIN 1</span><span class="term-label">Basic Navigation & Action Chips</span></div>
+          <div class="term-row"><span class="term-val">TRAIN 2</span><span class="term-label">Cipher Decryption & UNLOCK practice</span></div>
+          <div class="term-row"><span class="term-val">TRAIN 3</span><span class="term-label">Physical Token Feeding simulation</span></div>
+          <div class="term-row"><span class="term-val">TRAIN 4</span><span class="term-label">Field Hacks & Percussive Maintenance</span></div>
+          <div class="term-dim" style="margin-top: 6px;">Type <code>TRAIN 1</code>, <code>TRAIN 2</code>, etc., to begin!</div>
+        `);
+      }
+    }
+
+    // --- Rat Pack Admin Mode ---
+    function showAdmin(subcmd = "") {
+      const state = getState();
+      if (!isRatPack(state.handle)) {
+        soundError();
+        printBlock(`
+          <div class="term-title"><span>⛔ ACCESS DENIED</span></div>
+          <p>Operator callsign '<strong>${state.handle}</strong>' is NOT authorized for S.O.S. Administrative Root.</p>
+          <div class="term-dim">Rat Pack clearance required. Use <code>HANDLE &lt;NAME&gt;</code> if you are an authorized pack member.</div>
+        `, "error");
+        return;
+      }
+
+      soundAdmin();
+      const sub = subcmd.toUpperCase().trim();
+
+      if (sub === "RESET") {
+        localStorage.removeItem("cipher_clearance");
+        localStorage.removeItem("cipher_tokens");
+        soundSuccess();
+        printBlock(`
+          <div class="term-title"><span>⚡ ADMIN: System Cleared</span></div>
+          <p>Local state purged. Device reset to baseline infant state.</p>
+        `, "admin");
+      } else if (sub === "UNLOCKALL") {
+        state.clearance = 5;
+        state.ingested = ["TOKEN-PT-01", "TOKEN-PT-02", "TOKEN-PT-03"];
+        saveState(state);
+        soundSuccess();
+        printBlock(`
+          <div class="term-title"><span>⚡ ADMIN: Master Override</span></div>
+          <p>All corridor sectors elevated to Tier 5. Relays forced ONLINE.</p>
+        `, "admin");
+      } else {
+        printBlock(`
+          <div class="term-title">
+            <span>⚡ Rat Pack SysOp Command Console</span>
+            <span class="term-dim">OPERATOR: ${state.handle}</span>
+          </div>
+          <p>Root access active. Diagnostic & field calibration utilities:</p>
+          <div class="term-row"><span class="term-val">ADMIN RESET</span><span class="term-label">Purge local state for clean trail testing</span></div>
+          <div class="term-row"><span class="term-val">ADMIN UNLOCKALL</span><span class="term-label">Elevate device to Level 5 clearance</span></div>
+          <div class="term-row"><span class="term-val">ADMIN TELEMETRY</span><span class="term-label">Force dynamic polling audit</span></div>
+          <div class="term-dim" style="margin-top: 6px;">Restricted to Nezzmuk, Ratwaffles, Cheda & MuggleMisfit.</div>
+        `, "admin");
+      }
+    }
+
+    // --- Standard Views ---
     function showMap() {
       const state = getState();
       const s1 = state.clearance >= 1 ? "██" : "░░";
@@ -205,16 +365,21 @@
         <div class="term-row"><span class="term-label">Clearance Level</span><span class="term-val">Tier ${state.clearance}</span></div>
         <div class="term-row"><span class="term-label">Ingested Tokens</span><span class="term-val">${state.ingested.length} Verified</span></div>
         <div class="term-row"><span class="term-label">Corridor Relay</span><span class="term-val">Listening Post 01</span></div>
-        <div class="term-row"><span class="term-label">Connection Carrier</span><span class="term-val">56,600 bps</span></div>
+        <div class="term-row"><span class="term-label">Carrier Link</span><span class="term-val">56,600 bps</span></div>
       `);
     }
 
     function showHelp() {
+      const state = getState();
+      const adminHelp = isRatPack(state.handle) ? '<div class="term-row"><span class="term-val">ADMIN</span><span class="term-label">Open Rat Pack administrative console</span></div>' : '';
+
       printBlock(`
         <div class="term-title">
           <span>❓ SysOp Command Index</span>
           <span class="term-dim">OPERATOR MANUAL</span>
         </div>
+        <div class="term-row"><span class="term-val">TRAIN</span><span class="term-label">Launch interactive practice sandbox</span></div>
+        <div class="term-row"><span class="term-val">PROFILE</span><span class="term-label">View operator dossier and earned badges</span></div>
         <div class="term-row"><span class="term-val">SLEUTH</span><span class="term-label">Inspect encrypted case dispatch</span></div>
         <div class="term-row"><span class="term-val">UNLOCK &lt;WORD&gt;</span><span class="term-label">Submit decoded passcode for GZ</span></div>
         <div class="term-row"><span class="term-val">FEED &lt;TOKEN&gt;</span><span class="term-label">Feed physical token code from container</span></div>
@@ -223,6 +388,7 @@
         <div class="term-row"><span class="term-val">FONT &lt;SM/MD/LG&gt;</span><span class="term-label">Adjust screen text size</span></div>
         <div class="term-row"><span class="term-val">HANDLE &lt;NAME&gt;</span><span class="term-label">Register your geocaching callsign</span></div>
         <div class="term-row"><span class="term-val">KICK</span><span class="term-label">Percussive maintenance on casing</span></div>
+        ${adminHelp}
         <div class="term-row"><span class="term-val">CLEAR</span><span class="term-label">Wipe terminal screen buffer</span></div>
       `);
     }
@@ -239,11 +405,12 @@
           <div class="term-dim" style="margin-top: 4px;">Cipher Type: Caesar Shift (+3)</div>
         </div>
         <div class="term-dim">
-          👉 <strong>Instructions:</strong> Decode using CacheSleuth or your cipher toolbox. Then type <code>UNLOCK &lt;WORD&gt;</code> (or tap the UNLOCK button).
+          👉 <strong>Instructions:</strong> Decode using CacheSleuth or your cipher toolbox. Then type <code>UNLOCK &lt;WORD&gt;</code> (or tap UNLOCK).
         </div>
       `);
     }
 
+    // --- CLI Command Execution Router ---
     function processCommand(rawInput) {
       const clean = rawInput.trim();
       if (!clean) return;
@@ -270,6 +437,24 @@
         case "DIAG":
           soundBeep();
           showStatus();
+          break;
+
+        case "PROFILE":
+        case "WHOAMI":
+        case "ID":
+          soundBeep();
+          showProfile();
+          break;
+
+        case "TRAIN":
+        case "PRACTICE":
+          showTrain(arg);
+          break;
+
+        case "ADMIN":
+        case "SYSOP":
+        case "ROOT":
+          showAdmin(arg);
           break;
 
         case "MAP":
@@ -320,7 +505,14 @@
             `, "error");
             return;
           }
-          if (arg.toUpperCase() === CONFIG.node01Key) {
+          if (arg.toUpperCase() === CONFIG.practiceKey) {
+            soundSuccess();
+            printBlock(`
+              <div class="term-title"><span>🎓 TRAIN 2 Complete!</span></div>
+              <p>Practice passcode accepted! You simulated cracking a real cipher.</p>
+              <div class="term-dim">Now hit [ 🔍 SLEUTH ] to tackle the live Node 01 hide!</div>
+            `, "success");
+          } else if (arg.toUpperCase() === CONFIG.node01Key) {
             soundSuccess();
             state.clearance = Math.max(state.clearance, 1);
             saveState(state);
@@ -361,7 +553,13 @@
             return;
           }
           const tokenUpper = arg.toUpperCase();
-          if (CONFIG.validTokens[tokenUpper]) {
+          if (tokenUpper === CONFIG.practiceToken) {
+            soundSuccess();
+            printBlock(`
+              <div class="term-title"><span>🎓 TRAIN 3 Complete!</span></div>
+              <p>Practice token ingested successfully! In the field, doing this restores real memory sectors and activates new nodes.</p>
+            `, "success");
+          } else if (CONFIG.validTokens[tokenUpper]) {
             if (state.ingested.includes(tokenUpper)) {
               soundBeep();
               printBlock(`
@@ -432,7 +630,7 @@
           soundBeep();
           printBlock(`
             <div class="term-title"><span>👀 Stealth Alert</span></div>
-            <p>Muggle in vicinity! Pretend to tie your hiking boots and look innocent.</p>
+            <p>Muggle in vicinity! Pretend to tie your hiking boots and look casual.</p>
           `, "alert");
           break;
 
@@ -441,7 +639,7 @@
           printBlock(`
             <div class="term-title"><span>❓ Unrecognized Command</span></div>
             <p>Command '${clean}' not found in SysOp index.</p>
-            <div class="term-dim">Don't panic! Tap <code>[ ❓ HELP ]</code> to see available actions.</div>
+            <div class="term-dim">Don't panic! Tap <code>[ ❓ HELP ]</code> or <code>[ 🎓 TRAIN ]</code> to learn the ropes.</div>
           `, "error");
           break;
       }
@@ -472,6 +670,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       setFontSize(localStorage.getItem("cipher_font_size") || "md");
+      evaluateAdminVisibility();
       showBanner();
 
       const params = new URLSearchParams(window.location.search);
