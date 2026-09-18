@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
-  <link rel="stylesheet" href="css/terminal.css?v=1.17" />
+  <link rel="stylesheet" href="css/terminal.css?v=1.18" />
 </head>
 <body class="font-md">
   <div class="crt-chassis" id="crtContainer">
@@ -126,11 +126,10 @@
     const headerStatusEl = document.getElementById("headerStatus");
 
     // Live GAS endpoint (Deploy as Web App, Accessible to Anyone)
-    // Fallback URL defaults to local telemetry.json if empty
     const GAS_ENDPOINT = ""; 
 
     const CONFIG = {
-      version: "v1.17-FIELD",
+      version: "v1.18-FIELD",
       node01Key: "BLUE-SWITCH",
       certitudeWord: "BLUE-SWITCH-2000",
       practiceKey: "CAESAR",
@@ -197,6 +196,10 @@
 
     // --- Two-Way Telemetry Sync (GAS & Fallback) ---
     async function fetchTelemetry() {
+      if (!navigator.onLine) {
+        headerStatusEl.innerText = "RELAY: OFFLINE // NO CONNECTION";
+        return;
+      }
       headerStatusEl.innerText = "SYSOP RELAY: SYNCING...";
       const targetUrl = GAS_ENDPOINT ? `${GAS_ENDPOINT}?action=READ` : `telemetry.json?v=${Date.now()}`;
       try {
@@ -213,7 +216,7 @@
     }
 
     async function sendIngestToRelay(tokenId, handle) {
-      if (!GAS_ENDPOINT) return false;
+      if (!GAS_ENDPOINT || !navigator.onLine) return false;
       try {
         const res = await fetch(GAS_ENDPOINT, {
           method: "POST",
@@ -233,29 +236,26 @@
     }
 
     async function verifyAdminPinWithRelay(pin) {
-      if (!GAS_ENDPOINT) {
-        // Local fallback verification if endpoint not yet deployed
-        return pin === "8675309";
+      const cleanPin = String(pin || "").trim();
+      if (!GAS_ENDPOINT || !navigator.onLine) {
+        return cleanPin === "8675309";
       }
       try {
         const res = await fetch(GAS_ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "VERIFY_PIN",
-            pin: pin
-          })
+          body: JSON.stringify({ action: "VERIFY_PIN", pin: cleanPin })
         });
         const resp = await res.json();
         return resp.success === true;
       } catch (e) {
-        return pin === "8675309"; // Safe fallback
+        return cleanPin === "8675309"; // Bulletproof local fallback
       }
     }
 
     async function flushSyncQueue() {
       const state = getState();
-      if (!state.syncQueue.length || !GAS_ENDPOINT) return;
+      if (!state.syncQueue.length || !GAS_ENDPOINT || !navigator.onLine) return;
       const queue = [...state.syncQueue];
       state.syncQueue = [];
       saveState(state);
@@ -419,7 +419,7 @@
           <p>When you locate a physical hide on the trail, you will find a stamped token coin.</p>
           <p>Practice feeding a token code into the machine by typing:</p>
           <div class="term-callout">
-            <div class="term-callout-code">FEED TOKEN-PRACTICE-99</div>
+            <div class="term-callout-code">TOKEN-PRACTICE-99</div>
           </div>
           <p>This simulates waking up a corrupted corridor node.</p>
         `);
@@ -460,42 +460,58 @@
         return;
       }
 
+      // If user provided argument (e.g. 'ADMIN 8675309')
+      if (arg) {
+        const isValid = await verifyAdminPinWithRelay(arg);
+        if (isValid) {
+          grantAdminAccess(state.handle);
+        } else {
+          soundError();
+          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid 7-digit SysOp PIN.</p>`, "error");
+        }
+        return;
+      }
+
+      // Otherwise trigger interactive prompt
       if (!awaitingAdminPin) {
         awaitingAdminPin = true;
         soundBeep();
         printBlock(`
           <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
-          <p>Welcome, Rat Pack operative. Enter your <strong>7-digit SysOp Admin PIN</strong> to unlock root controls:</p>
-          <div class="term-dim">Prompt locked: Type your 7-digit PIN below.</div>
+          <p>Welcome, Rat Pack operative. Enter your <strong>7-digit SysOp Admin PIN</strong> below:</p>
+          <div class="term-dim">Prompt locked: Type your 7-digit PIN and press Enter.</div>
         `, "admin");
         return;
       }
 
-      // Verify the 7-digit PIN
-      printBlock(`Verifying PIN credentials against Google Sheet ledger...`, "term-dim");
-      const isValid = await verifyAdminPinWithRelay(arg);
+      // Processing entered PIN from prompt
+      const pinInput = arg || inputEl.value;
+      const isValid = await verifyAdminPinWithRelay(pinInput);
       awaitingAdminPin = false;
 
-      if (!isValid) {
+      if (isValid) {
+        grantAdminAccess(state.handle);
+      } else {
         soundError();
         printBlock(`
           <div class="term-title"><span>⛔ PIN AUTHENTICATION FAILED</span></div>
           <p>PIN challenge rejected. Security trip logged to Google Sheet audit ledger.</p>
         `, "error");
-        return;
       }
+    }
 
+    function grantAdminAccess(handle) {
       soundAdmin();
       printBlock(`
         <div class="term-title">
           <span>⚡ Rat Pack SysOp Command Console</span>
-          <span class="term-dim">OPERATOR: ${state.handle}</span>
+          <span class="term-dim">OPERATOR: ${handle}</span>
         </div>
         <p>7-Digit PIN Verified. Root access granted:</p>
         <div class="term-row"><span class="term-val">ADMIN RESET</span><span class="term-label">Purge local state for clean trail testing</span></div>
         <div class="term-row"><span class="term-val">ADMIN UNLOCKALL</span><span class="term-label">Elevate device to Level 5 clearance</span></div>
         <div class="term-row"><span class="term-val">ADMIN SYNC</span><span class="term-label">Force immediate flush of offline queue</span></div>
-        <div class="term-dim" style="margin-top: 6px;">Admin PIN verified via Google Sheet ledger.</div>
+        <div class="term-dim" style="margin-top: 6px;">Admin session active.</div>
       `, "admin");
     }
 
@@ -683,14 +699,15 @@
                 <p style="margin-top: 6px;">Memory sector ONLINE. Broadcasting telemetry to community ledger...</p>
               `, "success");
 
-              // Two-way Write-back Handshake
-              const sent = await sendIngestToRelay(tokenUpper, state.handle);
+              // Connection-First Two-Way Write-back Handshake
+              const isOnline = navigator.onLine;
+              const sent = isOnline ? await sendIngestToRelay(tokenUpper, state.handle) : false;
               if (sent) {
                 printBlock(`📡 <strong>COMMUNITY RELAY UPDATED:</strong> Google Sheet ledger incremented.`, "success");
               } else {
                 state.syncQueue.push({ token: tokenUpper, handle: state.handle });
                 saveState(state);
-                printBlock(`📡 <strong>LOCAL PARITY VERIFIED:</strong> Weak corridor signal. Token cached in device memory. It will broadcast to the community once you reach cell service.`, "alert");
+                printBlock(`📡 <strong>LOCAL PARITY VERIFIED:</strong> ${isOnline ? "Server timeout." : "Offline mode active."} Token cached in device memory. It will broadcast once signal returns.`, "alert");
               }
             }
           } else {
