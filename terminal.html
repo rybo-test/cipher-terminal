@@ -2,728 +2,501 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Maintenance Shell v1.04-SOS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
   <style>
     :root {
-      --term-font-size: 16px;
-      --input-font-size: 17px;
+      --crt-bg: #0b0f10;
+      --crt-text: #00ff66;
+      --crt-dim: #008833;
+      --crt-alert: #ffb000;
+      --crt-error: #ff3333;
+      --crt-glow: rgba(0, 255, 102, 0.4);
     }
-
-    * { box-sizing: border-box; }
-    body {
-      background-color: #0b0f10;
-      color: #00ff66;
-      font-family: 'Courier New', Courier, monospace;
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 12px;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: #050708;
+      color: var(--crt-text);
+      font-family: "Courier New", Courier, monospace;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
-      min-height: 100vh;
+      align-items: center;
+      padding: 12px;
     }
-    #terminal-container {
+    .crt-chassis {
       width: 100%;
       max-width: 860px;
-      background: #0d1215;
-      border: 2px solid #00ff66;
-      border-radius: 6px;
-      box-shadow: 0 0 16px rgba(0, 255, 102, 0.25);
+      background-color: var(--crt-bg);
+      border: 3px solid var(--crt-text);
+      border-radius: 12px;
+      box-shadow: 0 0 25px var(--crt-glow), inset 0 0 15px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 94vh;
-      overflow: hidden;
+      height: 92vh;
     }
-    #screen {
+    .crt-chassis::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .header-bar {
+      padding: 10px 16px;
+      background-color: #08140e;
+      border-bottom: 2px solid var(--crt-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 12;
+    }
+    .audio-toggle {
+      background: transparent;
+      border: 1px solid var(--crt-text);
+      color: var(--crt-text);
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      border-radius: 4px;
+    }
+    .audio-toggle:hover {
+      background: var(--crt-dim);
+      color: #fff;
+    }
+    .terminal-screen {
       flex: 1;
       padding: 16px;
       overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-size: var(--term-font-size);
-      line-height: 1.55;
+      font-size: 14px;
+      line-height: 1.5;
+      text-shadow: 0 0 4px var(--crt-glow);
+      user-select: text;
+      z-index: 11;
     }
-    #input-bar {
+    .terminal-screen pre {
+      font-family: inherit;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .action-deck {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px;
+      background-color: #07100b;
+      border-top: 1px dashed var(--crt-dim);
+      z-index: 12;
+    }
+    .chip-btn {
+      background: #0d1a12;
+      border: 1px solid var(--crt-text);
+      color: var(--crt-text);
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      box-shadow: 0 0 5px rgba(0, 255, 102, 0.15);
+      transition: all 0.1s ease;
+    }
+    .chip-btn:active {
+      background: var(--crt-text);
+      color: var(--crt-bg);
+      transform: translateY(1px);
+    }
+    .input-line-wrap {
       display: flex;
       align-items: center;
-      border-top: 2px solid #00ff66;
-      background: #080c0d;
       padding: 12px 14px;
+      background-color: #040906;
+      border-top: 2px solid var(--crt-text);
+      z-index: 12;
     }
     .prompt-label {
-      color: #00ff66;
       font-weight: bold;
-      font-size: var(--input-font-size);
-      margin-right: 10px;
-      user-select: none;
+      margin-right: 8px;
+      color: var(--crt-text);
     }
-    #cmd-input {
+    .cli-input {
       flex: 1;
       background: transparent;
       border: none;
       outline: none;
-      color: #00ff66;
+      color: var(--crt-text);
       font-family: inherit;
-      font-size: var(--input-font-size);
-    }
-    a { color: #58a6ff; text-decoration: underline; }
-    .highlight { color: #ffffff; font-weight: bold; }
-    .badge-box {
-      border: 1px dashed #00ff66;
-      padding: 12px;
-      margin: 10px 0;
-      background: #05160c;
-      font-size: var(--input-font-size);
-    }
-    .err-text { color: #ff5555; font-weight: bold; }
-    .warn-text { color: #ffcc00; font-weight: bold; }
-    .banner {
-      color: #00ff66;
-      font-size: calc(var(--term-font-size) * 0.75);
-      line-height: 1.15;
-      margin-bottom: 12px;
+      font-size: 15px;
       font-weight: bold;
+      text-shadow: 0 0 4px var(--crt-glow);
     }
+    .glitch-text { color: var(--crt-alert); }
+    .success-text { color: #55ff55; font-weight: bold; }
+    .error-text { color: var(--crt-error); }
   </style>
 </head>
 <body>
+  <div class="crt-chassis" id="crtContainer">
+    <div class="header-bar">
+      <span id="headerStatus">SYSOP RELAY: ONLINE // 56K DIAL-UP</span>
+      <button class="audio-toggle" id="audioBtn" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+    </div>
 
-<div id="terminal-container" onclick="focusInput()">
-  <div id="screen"></div>
-  <div id="input-bar">
-    <span class="prompt-label">C.I.P.H.E.R.&gt;</span>
-    <input 
-      type="text" 
-      id="cmd-input" 
-      autocomplete="off" 
-      autocorrect="off" 
-      autocapitalize="none" 
-      spellcheck="false" 
-      placeholder="Type help, status, read sector-01, or font..."
-    />
+    <div class="terminal-screen" id="termOutput"></div>
+
+    <div class="action-deck">
+      <button class="chip-btn" onclick="triggerAction('SLEUTH')">🔍 SLEUTH</button>
+      <button class="chip-btn" onclick="triggerAction('UNLOCK ')">🔑 UNLOCK</button>
+      <button class="chip-btn" onclick="triggerAction('FEED ')">💾 FEED TOKEN</button>
+      <button class="chip-btn" onclick="triggerAction('STATUS')">📡 STATUS</button>
+      <button class="chip-btn" onclick="triggerAction('MAP')">🗺️ MAP</button>
+      <button class="chip-btn" onclick="triggerAction('HELP')">❓ HELP</button>
+    </div>
+
+    <div class="input-line-wrap">
+      <span class="prompt-label">C.I.P.H.E.R.&gt;</span>
+      <input type="text" id="cliInput" class="cli-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus />
+    </div>
   </div>
-</div>
 
-<script>
-  // --- CONFIG & GLOBAL MEMORY ---
-  const CONFIG = {
-    version: "v1.04-SOS",
-    toolsUrl: "https://www.cachesleuth.com/",
-    certitudeUrl: "https://www.certitudes.org/",
-    storagePrefix: "cipher_",
-    fontSizes: {
-      STANDARD: { screen: "16px", input: "17px", label: "STANDARD (Default)" },
-      LARGE: { screen: "19px", input: "20px", label: "LARGE" },
-      XL: { screen: "22px", input: "23px", label: "EXTRA LARGE" }
-    }
-  };
+  <script>
+    // Audio Synthesis Engine (Web Audio API)
+    let audioContext = null;
+    let audioEnabled = true;
 
-  let telemetryData = null;
-  const screenEl = document.getElementById("screen");
-  const inputEl = document.getElementById("cmd-input");
-  let audioCtx = null;
-
-  // --- FONT SCALING ENGINE ---
-  function applySavedFontSize() {
-    const saved = localStorage.getItem(`${CONFIG.storagePrefix}font_size`) || "STANDARD";
-    const cfg = CONFIG.fontSizes[saved] || CONFIG.fontSizes.STANDARD;
-    document.documentElement.style.setProperty("--term-font-size", cfg.screen);
-    document.documentElement.style.setProperty("--input-font-size", cfg.input);
-    return saved;
-  }
-
-  function setFontSize(targetSize) {
-    const normalized = targetSize.toUpperCase();
-    if (CONFIG.fontSizes[normalized]) {
-      localStorage.setItem(`${CONFIG.storagePrefix}font_size`, normalized);
-      applySavedFontSize();
-      return normalized;
-    }
-    return null;
-  }
-
-  // --- AUDIO SYNTHESIS ENGINE ---
-  function initAudio() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-  }
-
-  function playTone(freq, type = "sine", duration = 0.1, stopRamp = true) {
-    try {
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      if (stopRamp) {
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    } catch (e) {}
-  }
-
-  function playSuccessSweep() {
-    try {
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
-      osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.45);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.45);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.45);
-    } catch (e) {}
-  }
-
-  function playErrorBuzz() {
-    try {
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-      osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.25);
-    } catch (e) {}
-  }
-
-  function playMetallicClank() {
-    try {
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "square";
-      osc.frequency.setValueAtTime(90, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.18);
-    } catch (e) {}
-  }
-
-  // --- TERMINAL PRINT UTILITIES ---
-  function print(htmlText, playClick = true) {
-    const p = document.createElement("div");
-    p.innerHTML = htmlText;
-    screenEl.appendChild(p);
-    screenEl.scrollTop = screenEl.scrollHeight;
-    if (playClick) playTone(950, "sine", 0.03);
-  }
-
-  function focusInput() {
-    initAudio();
-    inputEl.focus();
-  }
-
-  function escapeHtml(str) {
-    return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
-  function sleep(ms) { 
-    return new Promise(r => setTimeout(r, ms)); 
-  }
-
-  // --- STATE PERSISTENCE ---
-  function getRestoredSectors() {
-    try {
-      const data = localStorage.getItem(`${CONFIG.storagePrefix}restored_sectors`);
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
     }
-  }
 
-  function saveRestoredSector(sectorId) {
-    const current = getRestoredSectors();
-    if (!current.includes(sectorId)) {
-      current.push(sectorId);
-      localStorage.setItem(`${CONFIG.storagePrefix}restored_sectors`, JSON.stringify(current));
+    function playTone(freq, type = "square", duration = 0.08, delay = 0) {
+      if (!audioEnabled) return;
+      initAudio();
+      setTimeout(() => {
+        try {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+          gain.gain.setValueAtTime(0.04, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.start();
+          osc.stop(audioContext.currentTime + duration);
+        } catch (e) {}
+      }, delay * 1000);
     }
-  }
 
-  async function loadTelemetry() {
-    try {
-      const res = await fetch(`telemetry.json?t=${Date.now()}`, { cache: "no-store" });
-      if (res.ok) {
-        telemetryData = await res.json();
+    function soundBeep() { playTone(880, "sine", 0.05); }
+    function soundKey() { playTone(1200 + Math.random() * 200, "square", 0.015); }
+    function soundError() {
+      playTone(150, "sawtooth", 0.15, 0);
+      playTone(110, "sawtooth", 0.25, 0.15);
+    }
+    function soundSuccess() {
+      playTone(440, "sine", 0.08, 0);
+      playTone(554.37, "sine", 0.08, 0.08);
+      playTone(659.25, "sine", 0.12, 0.16);
+      playTone(880, "sine", 0.25, 0.24);
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('audioBtn').innerText = audioEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: MUTED";
+      if (audioEnabled) soundBeep();
+    }
+
+    // Terminal State & Engine Logic
+    const outputEl = document.getElementById("termOutput");
+    const inputEl = document.getElementById("cliInput");
+
+    const CONFIG = {
+      version: "v1.04-FIELD",
+      node01Key: "BLUE-SWITCH",
+      certitudeWord: "BLUE-SWITCH-2000",
+      validTokens: {
+        "TOKEN-PT-01": { name: "Relay Node 01", sector: "Cache Valley Gate" },
+        "TOKEN-PT-02": { name: "Relay Node 02", sector: "Corridor Fence Line" },
+        "TOKEN-PT-03": { name: "Relay Node 03", sector: "Railway Siding" }
       }
-    } catch (e) {
-      console.warn("Using inline fallback definitions.", e);
-    }
-  }
+    };
 
-  function calculateIntegrity() {
-    const restored = getRestoredSectors();
-    if (restored.length === 0) return "3.1%";
-    if (restored.length === 1) return "3.3%";
-    if (restored.length === 2) return "6.8%";
-    return "100.0%";
-  }
-
-  // --- COMMAND ROUTING & ALIASES ---
-  const VERB_MAP = {
-    RESTORE: ["RESTORE", "REPAIR", "FIX"],
-    COLLECT: ["COLLECT", "TAKE", "ACQUIRE"],
-    DISCOVER: ["DISCOVER", "FOUND", "INSPECT"],
-    LOG: ["LOG", "SIGN", "CHECKIN"],
-    DEPOSIT: ["DEPOSIT", "DROP", "SUBMIT"],
-    PATCH: ["PATCH", "MOUNT", "LOAD", "INJECT"],
-    READ: ["READ", "CAT", "VIEW"],
-    STATUS: ["STATUS", "SYS", "TELEMETRY"],
-    HELP: ["HELP", "MAN", "?"],
-    TEST: ["TEST", "DIAG"],
-    CLEAR: ["CLEAR", "CLS"],
-    REBOOT: ["REBOOT", "RESET"],
-    SLEUTH: ["SLEUTH", "INVESTIGATE", "CASE"],
-    AUTH: ["AUTH", "UNLOCK"],
-    FONT: ["FONT", "SIZE", "ZOOM"],
-    // Easter Egg Memes
-    TFTC: ["TFTC", "THANKS"],
-    SWAG: ["SWAG", "TRADE", "INVENTORY"],
-    HINT: ["HINT", "CLUE"],
-    BYOP: ["BYOP", "PEN"],
-    KICK: ["KICK", "HIT", "SHAKE", "PERCUSSION"]
-  };
-
-  function resolveVerb(verb) {
-    const upper = verb.toUpperCase();
-    for (const [canonical, aliases] of Object.entries(VERB_MAP)) {
-      if (aliases.includes(upper)) return canonical;
-    }
-    return upper;
-  }
-
-  // --- COMMAND INTERPRETER ---
-  async function processCommand(raw) {
-    const input = raw.trim();
-    if (!input) return;
-
-    print(`<span style="color:#58a6ff;">&gt; ${escapeHtml(input)}</span>`, false);
-
-    const parts = input.split(/\s+/);
-    const verb = resolveVerb(parts[0]);
-    const arg = parts.slice(1).join(" ").trim();
-
-    // Auto-route memory tokens typed with other verbs
-    if (["LOG", "DISCOVER", "COLLECT", "DEPOSIT", "PATCH"].includes(verb) && arg.toUpperCase().startsWith("CIPHER-")) {
-      print(`[!] Notice: Memory bit detected. Auto-routing to RESTORE protocol...`);
-      return handleRestore(arg);
+    function getState() {
+      return {
+        handle: localStorage.getItem("cipher_handle") || "ANONYMOUS_CACHER",
+        clearance: parseInt(localStorage.getItem("cipher_clearance") || "0", 10),
+        ingested: JSON.parse(localStorage.getItem("cipher_tokens") || "[]")
+      };
     }
 
-    switch (verb) {
-      case "HELP":
-        print(`
-C.I.P.H.E.R. MAINTENANCE SHELL // REV 1.04-SOS
-Type a command and press ENTER.
-
-  <span class="highlight">RESTORE &lt;KEY&gt;</span>     Reconstruct corrupted core sector files
-  <span class="highlight">READ &lt;SECTOR-ID&gt;</span>   Read memory sector bank (e.g., READ SECTOR-01)
-  <span class="highlight">STATUS</span>             Display chassis telemetry & sector integrity
-  <span class="highlight">FONT &lt;SIZE&gt;</span>        Adjust display size (STANDARD, LARGE, XL)
-  <span class="highlight">DISCOVER &lt;ID&gt;</span>     Catalog discovered node or trackable chip
-  <span class="highlight">COLLECT &lt;ID&gt;</span>      Ingest physical collectible card
-  <span class="highlight">LOG &lt;ID&gt;</span>          Record field cache sign-in
-  <span class="highlight">DEPOSIT &lt;ID&gt;</span>      Submit drop-box memory payload
-  <span class="highlight">PATCH &lt;KEY&gt;</span>        Apply firmware update / security override
-  <span class="highlight">SLEUTH</span>             Intercept legacy radio transmission
-  <span class="highlight">AUTH &lt;PASSKEY&gt;</span>     Submit decoded authorization key
-  <span class="highlight">TEST ALL</span>           Run full diagnostic regression suite
-  <span class="highlight">CLEAR</span>              Clear display buffer
-  <span class="highlight">REBOOT</span>             Reset local memory tables`);
-        break;
-
-      case "FONT":
-        handleFont(arg);
-        break;
-
-      case "STATUS":
-        handleStatus();
-        break;
-
-      case "RESTORE":
-        await handleRestore(arg);
-        break;
-
-      case "READ":
-        handleRead(arg);
-        break;
-
-      case "TFTC":
-        print(`[SYS_RESPONSE]: "You're welcome. Now please replace the container exactly how you found it. The last finder left it visible from thirty paces."`);
-        break;
-
-      case "SWAG":
-        print(`
-[PHYSICAL SWAG REPOSITORY DUMP]:
-  - 1x Flattened souvenir penny (1998)
-  - 1x Scented eraser (completely waterlogged, smells of mud)
-  - 1x Broken plastic dinosaur (torso only)
-  - 1x Expired coupon for Arby's (2004)
-  - 0x Working pens`);
-        break;
-
-      case "HINT":
-        print(`[SYS_RESPONSE]: "Look at eye level. No, your eye level, not the dog's. If you are digging up the landscaping bark, stop immediately. It's not in the sprinkler."`);
-        break;
-
-      case "BYOP":
-        print(`[SYS_RESPONSE]: "Warning: Terminal does not dispense writing utensils. If you attempt to scratch your log onto my chassis with a house key, static will be discharged into your thumb."`);
-        break;
-
-      case "KICK":
-        playMetallicClank();
-        print(`
-[!] Percussive maintenance applied to 1/4-inch rolled steel plate.
-[SYS_RESPONSE]: "Go ahead, kick it again. Welded by retired rocket motor machinists in 1987. You're going to break your boot."`);
-        break;
-
-      case "DISCOVER":
-      case "COLLECT":
-      case "LOG":
-      case "DEPOSIT":
-      case "PATCH":
-        if (!arg) {
-          playErrorBuzz();
-          print(`<span class="err-text">[!] Syntax Error: ID parameter required for ${verb}.</span>`);
-          return;
-        }
-        playTone(550, "sine", 0.08);
-        print(`[+] Protocol '${verb}' registered for: <span class="highlight">${escapeHtml(arg.toUpperCase())}</span>. Awaiting physical field node sync.`);
-        break;
-
-      case "SLEUTH":
-        playTone(700, "sine", 0.08);
-        setTimeout(() => playTone(1200, "sine", 0.12), 90);
-        print(`
-============================================================
-[RELAY NODE 01: INTERCEPTED CIPHER TRANSMISSION]
-============================================================
-SYSOP INTERCEPT: S.O.S. LEGACY BEACON FREQUENCY 146.520 MHz
-ENCRYPTION TYPE: CORRIDOR CAESAR SHIFT (EPOCH OFFSET: -6)
-
-RAW TELEMETRY PAYLOAD:
-<div style="background:#05160c; border:1px dashed #00ff66; padding:10px; margin:8px 0; font-size:calc(var(--term-font-size) * 1.15); letter-spacing:2px; color:#fff; text-align:center;">
-  NKXJ-YOMTGR-702
-</div>
-
-INSTRUCTIONS:
-1. Decode this payload using <a href="${CONFIG.toolsUrl}" target="_blank" rel="noopener noreferrer">CacheSleuth</a>.
-2. Submit the decoded plaintext using: <span class="highlight">auth &lt;DECODED_KEY&gt;</span>
-============================================================`);
-        break;
-
-      case "AUTH":
-        if (!arg) {
-          playErrorBuzz();
-          print(`<span class="err-text">[!] SYNTAX ERROR: Usage: auth &lt;PASSKEY&gt;</span>`);
-          return;
-        }
-        if (arg.toUpperCase() === "AUTH-SIGNAL-702" || arg.toUpperCase() === "PASSKEY-SLEUTH-42") {
-          localStorage.setItem(`${CONFIG.storagePrefix}clearance_level`, "1");
-          localStorage.setItem(`${CONFIG.storagePrefix}node01_unlocked`, "true");
-          playSuccessSweep();
-          print(`
-============================================================
-[+] HANDSHAKE VERIFIED: PASSKEY ACCEPTED
-============================================================
-SECURITY STATUS: ELEVATED TO CLEARANCE LEVEL 1
-ACHIEVEMENT: [S.O.S. TIER 1 CITATION UNLOCKED]
-
-To recover memory banks and Certitude coordinates, locate
-the field recovery key and run:
-<span class="highlight">RESTORE &lt;RECOVERY_KEY&gt;</span>
-============================================================`);
-        } else {
-          playErrorBuzz();
-          print(`<span class="err-text">[!] REJECTION: Checksum parity error for '${escapeHtml(arg)}'. Check your cipher decode.</span>`);
-        }
-        break;
-
-      case "TEST":
-        if (arg.toUpperCase() === "ALL") {
-          await runDiagnosticSuite();
-        } else {
-          print(`Type <span class="highlight">test all</span> to run the diagnostic suite.`);
-        }
-        break;
-
-      case "CLEAR":
-        screenEl.innerHTML = "";
-        break;
-
-      case "REBOOT":
-        const savedFont = localStorage.getItem(`${CONFIG.storagePrefix}font_size`);
-        localStorage.clear();
-        if (savedFont) {
-          localStorage.setItem(`${CONFIG.storagePrefix}font_size`, savedFont);
-        }
-        print(`[*] System rebooted. Local memory wiped (display preferences retained).`);
-        setTimeout(initTerminal, 600);
-        break;
-
-      default:
-        playErrorBuzz();
-        print(`<span class="err-text">Unknown command '${escapeHtml(parts[0])}'. Type HELP for manual.</span>`);
+    function saveState(state) {
+      localStorage.setItem("cipher_handle", state.handle);
+      localStorage.setItem("cipher_clearance", state.clearance.toString());
+      localStorage.setItem("cipher_tokens", JSON.stringify(state.ingested));
     }
-  }
 
-  // --- FONT COMMAND HANDLER ---
-  function handleFont(arg) {
-    const cleanArg = (arg || "").trim().toUpperCase();
-    const current = localStorage.getItem(`${CONFIG.storagePrefix}font_size`) || "STANDARD";
+    function print(text, className = "") {
+      const p = document.createElement("p");
+      if (className) p.className = className;
+      p.innerHTML = text;
+      outputEl.appendChild(p);
+      outputEl.scrollTop = outputEl.scrollHeight;
+    }
 
-    if (!cleanArg) {
+    function clearScreen() {
+      outputEl.innerHTML = "";
+    }
+
+    function showBanner() {
       print(`
-CURRENT DISPLAY SCALE: <span class="highlight">${current}</span>
-
-AVAILABLE OPTIONS:
-  <span class="highlight">font standard</span>  - 16px font (Compact / Default)
-  <span class="highlight">font large</span>     - 19px font (High visibility)
-  <span class="highlight">font xl</span>        - 22px font (Direct sunlight / Ultra large)
-  <span class="highlight">font +</span>         - Increase scale
-  <span class="highlight">font -</span>         - Decrease scale`);
-      return;
-    }
-
-    if (cleanArg === "+" || cleanArg === "UP") {
-      const next = current === "STANDARD" ? "LARGE" : "XL";
-      setFontSize(next);
-      playSuccessSweep();
-      print(`[+] Display scaled up to: <span class="highlight">${next}</span> (saved)`);
-      return;
-    }
-
-    if (cleanArg === "-" || cleanArg === "DOWN") {
-      const prev = current === "XL" ? "LARGE" : "STANDARD";
-      setFontSize(prev);
-      playSuccessSweep();
-      print(`[+] Display scaled down to: <span class="highlight">${prev}</span> (saved)`);
-      return;
-    }
-
-    const applied = setFontSize(cleanArg);
-    if (applied) {
-      playSuccessSweep();
-      print(`[+] Display font scale updated to: <span class="highlight">${applied}</span> (saved)`);
-    } else {
-      playErrorBuzz();
-      print(`<span class="err-text">[!] Invalid size '${escapeHtml(arg)}'. Choose STANDARD, LARGE, or XL.</span>`);
-    }
-  }
-
-  // --- SECTOR HANDLERS ---
-  async function handleRestore(rawKey) {
-    if (!rawKey) {
-      playErrorBuzz();
-      print(`<span class="err-text">[!] Usage: RESTORE &lt;KEY&gt; (e.g., RESTORE CIPHER-7K9A-4R2M)</span>`);
-      return;
-    }
-
-    const key = rawKey.toUpperCase();
-    const sectors = (telemetryData && telemetryData.archive_sectors) || [];
-    const match = sectors.find(s => s.validation_key === key);
-
-    if (match) {
-      saveRestoredSector(match.sector_id);
-      playSuccessSweep();
-
-      const liveIntegrity = calculateIntegrity();
-      let whisper = match.restored_payload.system_whisper || "";
-      whisper = whisper.replace(/\{INTEGRITY\}/g, liveIntegrity);
-
-      print(`
-[+] INGESTING VALIDATION STRING: ${escapeHtml(key)}
-[+] PARITY VERIFICATION: 0x${escapeHtml(key.split("-")[1] || "OK")}... OK
-[+] AUTHENTICATING S.O.S. RECOVERY STRING... VALID.
-[+] REBUILDING PARITY TABLES... [████████████████████] 100%
-[+] ${match.sector_id} RESTORED TO LOCAL ARCHIVE.
-
------------------------------------------------------------
-RESTORED LOG: ${match.sector_id} // ARCHIVE REF: ${match.archive_ref}
------------------------------------------------------------
-"${escapeHtml(match.restored_payload.log_body)}"
-
-<div class="badge-box">
-  CERTITUDE KEYWORD: <span style="color:#ffffff; font-weight:bold; background:#1f6feb; padding:3px 8px;">${escapeHtml(match.restored_payload.certitude_keyword)}</span>
-</div>
-
-Validate keyword on the listing's Certitude checker:
-<a href="${CONFIG.certitudeUrl}" target="_blank" rel="noopener noreferrer">[OPEN CERTITUDE VALIDATOR]</a>
------------------------------------------------------------
-<span style="color:#88cc88;">[SYS_NOTE]: ${escapeHtml(whisper)}</span>`);
-    } else {
-      playErrorBuzz();
-      print(`
-[!] INGESTING VALIDATION STRING: ${escapeHtml(key)}
-[!] PARITY VERIFICATION... FAILED.
-<span class="err-text">[!] ERROR 0x7E1: CHECKSUM MISMATCH. Check your physical token.</span>`);
-    }
-  }
-
-  function handleRead(target) {
-    if (!target) {
-      playErrorBuzz();
-      print(`<span class="err-text">[!] Specify target. Usage: READ &lt;SECTOR-ID&gt; (e.g., READ SECTOR-01)</span>`);
-      return;
-    }
-
-    const sectorId = target.toUpperCase();
-    const sectors = (telemetryData && telemetryData.archive_sectors) || [];
-    const targetSector = sectors.find(s => s.sector_id === sectorId);
-    const restoredList = getRestoredSectors();
-
-    if (restoredList.includes(sectorId)) {
-      const payload = targetSector ? targetSector.restored_payload : null;
-      print(`
------------------------------------------------------------
-ARCHIVE REF: ${targetSector ? targetSector.archive_ref : "LOCAL"} // ${sectorId}
------------------------------------------------------------
-"${payload ? escapeHtml(payload.log_body) : "Sector active."}"
-
-CERTITUDE KEYWORD: ${payload ? escapeHtml(payload.certitude_keyword) : "[LOCKED]"}
------------------------------------------------------------
-[SYS_STATUS]: Sector stable.`);
-      return;
-    }
-
-    if (targetSector) {
-      playTone(320, "sawtooth", 0.08);
-      print(`
-[!] ACCESSING MEMORY BANK ${targetSector.memory_bank}...
-<span class="err-text">[!] ERROR 0x884: PARITY CHECK FAILED. WATERLOGGED / CORRUPTED.</span>
-
-${escapeHtml(targetSector.corrupted_display.hex_prefix)}
-${escapeHtml(targetSector.corrupted_display.raw_text)}
-
-[!] INTEGRITY: ${targetSector.corrupted_display.integrity_percent}
-[!] Use '<span class="highlight">RESTORE &lt;KEY&gt;</span>' with a field token to rebuild parity.`);
-    } else {
-      playErrorBuzz();
-      print(`<span class="err-text">[!] Memory address '${escapeHtml(sectorId)}' offline or unallocated.</span>`);
-    }
-  }
-
-  function handleStatus() {
-    const restored = getRestoredSectors();
-    const sectors = (telemetryData && telemetryData.archive_sectors) || [
-      { sector_id: "SECTOR-01" },
-      { sector_id: "SECTOR-02" },
-      { sector_id: "SECTOR-03" }
-    ];
-
-    let sectorReport = "";
-    sectors.forEach(s => {
-      const isOk = restored.includes(s.sector_id);
-      sectorReport += `  ${s.sector_id}: ${isOk ? "[ONLINE / PARITY VERIFIED]" : "[CORRUPTED / RECOVERY REQUIRED]"}\n`;
-    });
-
-    const currentIntegrity = calculateIntegrity();
-    const activeFont = localStorage.getItem(`${CONFIG.storagePrefix}font_size`) || "STANDARD";
-
-    print(`
-===========================================================
-C.I.P.H.E.R. SYSTEM INTEGRITY REPORT
-===========================================================
-CHASSIS SPEC:   1/4-inch rolled steel // Surplus rocket housing
-MAINTENANCE:    Welded 1987 // R.S.I. stamped PASS
-CURRENT FAUNA:  1 earwig nesting across pin 4 (uneasy truce)
-SYSOP STATUS:   CRITICALLY DEGRADED (~96.9% lost to moisture)
-DISPLAY SCALE:  ${activeFont} (Adjust with 'FONT <SIZE>')
-
-ALLOCATED ARCHIVE SECTORS:
-${sectorReport}
-ACTIVE PARITY INDEX: ${currentIntegrity}
-===========================================================`);
-  }
-
-  // --- DIAGNOSTIC HARNESS ---
-  async function runDiagnosticSuite() {
-    print(`\n--- RUNNING SYSTEM DIAGNOSTIC HARNESS ---`);
-    playTone(600, "sine", 0.08);
-    await sleep(150);
-    playTone(900, "triangle", 0.08);
-    print(`[1/4] Oscillator pipeline: Nominal.`);
-
-    await loadTelemetry();
-    if (telemetryData && telemetryData.archive_sectors) {
-      print(`[2/4] telemetry.json: Active (${telemetryData.archive_sectors.length} sectors indexed).`);
-    } else {
-      print(`[2/4] <span class="err-text">telemetry.json: Using internal fallback.</span>`);
-    }
-
-    const testKey = "CIPHER-7K9A-4R2M";
-    const sectors = (telemetryData && telemetryData.archive_sectors) || [];
-    const valid = sectors.some(s => s.validation_key === testKey);
-    print(`[3/4] Token Parity Parser (${testKey}): ${valid ? "VALID" : "FAILED"}`);
-
-    const fontTest = setFontSize("LARGE");
-    print(`[4/4] Font Scaling Persistence: ${fontTest === "LARGE" ? "VERIFIED" : "FAILED"}`);
-    print(`\n[✔] TEST ALL COMPLETE: Core terminal vectors verified.\n`);
-  }
-
-  // --- BOOT SEQUENCE ---
-  async function initTerminal() {
-    applySavedFontSize();
-    screenEl.innerHTML = "";
-    await loadTelemetry();
-
-    const banner = `
   ___   ___  ____   __  __  ____  ____ 
  / __) (_  )(  _ \\ (  )(  )(  __)(  _ \\
 ( (__   / /  ) __/  )(__)(  ) _)  )   /
  \\___) (___)(__)   (______)(____)(__\\_)
- C.I.P.H.E.R. MAINTENANCE SHELL // REV 1.04-SOS
- CHASSIS: R.S.I. RELIC HOUSING #04 (ROCKET CASING)
- MEMORY INTEGRITY: ${calculateIntegrity()} [CRITICAL CORRUPTION]
-=================================================`;
-    print(`<div class="banner">${banner}</div>`, false);
-    print(`[SYSTEM BOOT]: Relay operational. Earwig present.`);
-    print(`Type <span class="highlight">status</span>, <span class="highlight">font</span>, <span class="highlight">read sector-01</span>, or <span class="highlight">help</span> for directives.\n`, false);
+============================================================
+C.I.P.H.E.R. SYSOP OS ${CONFIG.version} // CORRIDOR LISTENING POST 01
+CURRENT STATUS: WAKING UP FROM A 25-YEAR NAP
+============================================================
+Greetings, traveler. My memory sectors are scrambled across 
+northern Utah. Decrypt my relays, feed me token keys from the 
+field, and I'll unlock Certitude coordinates for you.
 
-    // Auto-ingest URL tokens from NFC/QR scans
-    const urlParams = new URLSearchParams(window.location.search);
-    const inboundKey = urlParams.get("token") || 
-                       urlParams.get("restore") || 
-                       urlParams.get("inject") || 
-                       urlParams.get("key");
-
-    if (inboundKey) {
-      await sleep(350);
-      print(`\n<span class="warn-text">[!] DETECTED INBOUND HARDWARE TOKEN PAYLOAD...</span>`);
-      await sleep(300);
-      await processCommand(`RESTORE ${inboundKey}`);
+Tap any green button below or type a command to begin.
+------------------------------------------------------------`);
     }
-  }
 
-  inputEl.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      const val = inputEl.value;
-      inputEl.value = "";
-      processCommand(val);
+    function showMap() {
+      const state = getState();
+      const s1 = state.clearance >= 1 ? "██" : "░░";
+      const s2 = state.ingested.includes("TOKEN-PT-01") ? "██" : "░░";
+      const s3 = state.ingested.includes("TOKEN-PT-02") ? "██" : "░░";
+      const s4 = state.ingested.includes("TOKEN-PT-03") ? "██" : "▒▒";
+
+      print(`
+[CORRIDOR MEMORY SECTOR RESTORATION GRID]
++------------------------------------+
+|  [01: GATEWAY]  ${s1}  |  [02: RELAY]    ${s2}  |
+|  [03: SIDING]   ${s3}  |  [04: FENCE]    ${s4}  |
++------------------------------------+
+(██ = ONLINE & RESTORED | ░░/▒▒ = CORRUPTED / DORMANT)
+Effective Memory Restored: ${(state.clearance * 20) + (state.ingested.length * 15)}%`);
     }
-  });
 
-  window.addEventListener("load", initTerminal);
-</script>
+    function showStatus() {
+      const state = getState();
+      print(`
+SYSOP TELEMETRY REPORT:
+- Active Callsign   : ${state.handle}
+- Security Clearance: Level ${state.clearance}
+- Ingested Tokens   : ${state.ingested.length} verified
+- Corridor Node     : Node 01 (Dormant Relay)
+- Dial-Up Baud Rate : 56,600 bps (Optimal)`);
+    }
+
+    function showHelp() {
+      print(`
+FRIENDLY COMMAND DIRECTORY:
+* SLEUTH        - View today's encrypted case dispatch
+* UNLOCK <WORD> - Submit decrypted passcode to unlock GZ
+* FEED <TOKEN>  - Feed a physical token code found in a cache
+* STATUS        - Show active callsign and memory restoration
+* MAP           - Display corridor sector restoration grid
+* HANDLE <NAME> - Register your geocaching player name
+* KICK          - Apply percussive maintenance to rusty casing
+* CLEAR         - Clear terminal screen buffer`);
+    }
+
+    function processCommand(rawInput) {
+      const clean = rawInput.trim();
+      if (!clean) return;
+
+      print(`&gt; ${clean}`, "prompt-label");
+      const parts = clean.split(/\s+/);
+      const cmd = parts[0].toUpperCase();
+      const arg = parts.slice(1).join(" ").trim();
+      const state = getState();
+
+      switch (cmd) {
+        case "HELP":
+        case "?":
+          soundBeep();
+          showHelp();
+          break;
+
+        case "CLEAR":
+        case "CLS":
+          clearScreen();
+          break;
+
+        case "STATUS":
+        case "DIAG":
+          soundBeep();
+          showStatus();
+          break;
+
+        case "MAP":
+        case "GRID":
+        case "NODES":
+          soundBeep();
+          showMap();
+          break;
+
+        case "SLEUTH":
+        case "CASE":
+        case "CLUE":
+          soundBeep();
+          print(`
+[INCOMING DISPATCH // S.O.S. ARCHIVE NODE-01]
+INTERCEPTED CIPHER STRING:
+============================================================
+  "EOXH-VZLWFK"  (Caesar Cipher Shift: +3)
+============================================================
+DIRECTIONS:
+1. Decode the string above using CacheSleuth or your favorite cipher tool.
+2. Type UNLOCK &lt;DECODED_WORD&gt; to authenticate and unlock Certitude.`);
+          break;
+
+        case "UNLOCK":
+        case "AUTH":
+        case "CODE":
+        case "PASS":
+          if (!arg) {
+            soundError();
+            print("ERROR: Missing passcode! Type: UNLOCK <WORD>", "error-text");
+            return;
+          }
+          if (arg.toUpperCase() === CONFIG.node01Key) {
+            soundSuccess();
+            state.clearance = Math.max(state.clearance, 1);
+            saveState(state);
+            print(`
+[SUCCESS] Passcode confirmed! Relays aligned!
+============================================================
+CERTITUDE KEYWORD: ${CONFIG.certitudeWord}
+============================================================
+Enter this keyword into the Certitude checker on Geocaching.com 
+to retrieve physical coordinates and field parking!`, "success-text");
+          } else {
+            soundError();
+            print(`[BZZZT!] Passcode '${arg}' rejected! Radio static detected. Re-check your cipher shift at CacheSleuth.`, "error-text");
+          }
+          break;
+
+        case "FEED":
+        case "INGEST":
+        case "TOKEN":
+          if (!arg) {
+            soundError();
+            print("ERROR: Missing token! Type: FEED <TOKEN-CODE>", "error-text");
+            return;
+          }
+          const tokenUpper = arg.toUpperCase();
+          if (CONFIG.validTokens[tokenUpper]) {
+            if (state.ingested.includes(tokenUpper)) {
+              soundBeep();
+              print(`NOTICE: Token ${tokenUpper} was already fed into this terminal!`, "glitch-text");
+            } else {
+              soundSuccess();
+              state.ingested.push(tokenUpper);
+              saveState(state);
+              print(`
+[DING!] Valid token ingested: ${CONFIG.validTokens[tokenUpper].name}
+Sector [${CONFIG.validTokens[tokenUpper].sector}] marked ONLINE!
+Memory restoration escalated.`, "success-text");
+            }
+          } else {
+            soundError();
+            print(`[ERROR] Unrecognized token '${arg}'. Check the stamp on the physical puck.`, "error-text");
+          }
+          break;
+
+        case "HANDLE":
+        case "NAME":
+        case "USER":
+          if (!arg) {
+            print(`Current callsign: ${state.handle}`);
+          } else {
+            state.handle = arg.toUpperCase();
+            saveState(state);
+            soundSuccess();
+            print(`Callsign updated to: ${state.handle}`, "success-text");
+          }
+          break;
+
+        case "KICK":
+        case "HIT":
+        case "BANG":
+          soundError();
+          print("*THWACK!* You kicked the steel junction box. A spider fell out, the tube flickered, and signal jumped 0.2%. Grandpa engineering at its finest!", "glitch-text");
+          break;
+
+        case "COFFEE":
+          soundError();
+          print("ERROR 418: CD drive tray extended. Please do not rest your mug on the tray.", "glitch-text");
+          break;
+
+        case "MUGGLE":
+          soundBeep();
+          print("STEALTH WARNING: Muggle spotted! Pretend to tie your hiking boots and look casual!", "glitch-text");
+          break;
+
+        default:
+          soundError();
+          print(`UNKNOWN COMMAND: '${clean}'. Don't panic! Tap [ ❓ HELP ] to see what to do.`, "error-text");
+          break;
+      }
+    }
+
+    function triggerAction(actionText) {
+      if (actionText.endsWith(" ")) {
+        inputEl.value = actionText;
+        inputEl.focus();
+      } else {
+        processCommand(actionText);
+      }
+    }
+
+    // Event Listeners & URL Token Auto-Ingest
+    inputEl.addEventListener("keydown", (e) => {
+      soundKey();
+      if (e.key === "Enter") {
+        const val = inputEl.value;
+        inputEl.value = "";
+        processCommand(val);
+      }
+    });
+
+    document.getElementById("crtContainer").addEventListener("click", () => {
+      inputEl.focus();
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      showBanner();
+      // Handle direct NFC or QR scan: ?token=TOKEN-PT-01
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get("token");
+      if (urlToken) {
+        setTimeout(() => {
+          print(`[AUTOPUBLISH] NFC/QR Field Scan detected: ${urlToken}`, "glitch-text");
+          processCommand(`FEED ${urlToken}`);
+        }, 800);
+      }
+    });
+  </script>
 </body>
 </html>
