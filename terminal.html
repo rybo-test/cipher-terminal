@@ -4,155 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
-  <style>
-    :root {
-      --crt-bg: #0b0f10;
-      --crt-text: #00ff66;
-      --crt-dim: #008833;
-      --crt-alert: #ffb000;
-      --crt-error: #ff3333;
-      --crt-glow: rgba(0, 255, 102, 0.4);
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
-    body {
-      background-color: #050708;
-      color: var(--crt-text);
-      font-family: "Courier New", Courier, monospace;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 12px;
-    }
-    .crt-chassis {
-      width: 100%;
-      max-width: 860px;
-      background-color: var(--crt-bg);
-      border: 3px solid var(--crt-text);
-      border-radius: 12px;
-      box-shadow: 0 0 25px var(--crt-glow), inset 0 0 15px rgba(0, 0, 0, 0.8);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 92vh;
-    }
-    .crt-chassis::before {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-      background-size: 100% 4px;
-      z-index: 10;
-      pointer-events: none;
-    }
-    .header-bar {
-      padding: 10px 16px;
-      background-color: #08140e;
-      border-bottom: 2px solid var(--crt-dim);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      font-weight: bold;
-      z-index: 12;
-    }
-    .audio-toggle {
-      background: transparent;
-      border: 1px solid var(--crt-text);
-      color: var(--crt-text);
-      padding: 4px 8px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 11px;
-      border-radius: 4px;
-    }
-    .audio-toggle:hover {
-      background: var(--crt-dim);
-      color: #fff;
-    }
-    .terminal-screen {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-      font-size: 14px;
-      line-height: 1.5;
-      text-shadow: 0 0 4px var(--crt-glow);
-      user-select: text;
-      z-index: 11;
-    }
-    .terminal-screen pre {
-      font-family: inherit;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .action-deck {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 10px 14px;
-      background-color: #07100b;
-      border-top: 1px dashed var(--crt-dim);
-      z-index: 12;
-    }
-    .chip-btn {
-      background: #0d1a12;
-      border: 1px solid var(--crt-text);
-      color: var(--crt-text);
-      padding: 8px 12px;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 4px;
-      box-shadow: 0 0 5px rgba(0, 255, 102, 0.15);
-      transition: all 0.1s ease;
-    }
-    .chip-btn:active {
-      background: var(--crt-text);
-      color: var(--crt-bg);
-      transform: translateY(1px);
-    }
-    .input-line-wrap {
-      display: flex;
-      align-items: center;
-      padding: 12px 14px;
-      background-color: #040906;
-      border-top: 2px solid var(--crt-text);
-      z-index: 12;
-    }
-    .prompt-label {
-      font-weight: bold;
-      margin-right: 8px;
-      color: var(--crt-text);
-    }
-    .cli-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--crt-text);
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: bold;
-      text-shadow: 0 0 4px var(--crt-glow);
-    }
-    .glitch-text { color: var(--crt-alert); }
-    .success-text { color: #55ff55; font-weight: bold; }
-    .error-text { color: var(--crt-error); }
-  </style>
+  <!-- Shared external stylesheet with cache-busting version query -->
+  <link rel="stylesheet" href="css/terminal.css?v=1.05" />
 </head>
-<body>
+<body class="font-md">
   <div class="crt-chassis" id="crtContainer">
     <div class="header-bar">
       <span id="headerStatus">SYSOP RELAY: ONLINE // 56K DIAL-UP</span>
-      <button class="audio-toggle" id="audioBtn" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+      <div class="header-controls">
+        <button class="control-btn" id="fontBtn" onclick="cycleFontSize()">🔠 FONT: MED</button>
+        <button class="control-btn" id="audioBtn" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+      </div>
     </div>
 
     <div class="terminal-screen" id="termOutput"></div>
@@ -168,12 +30,21 @@
 
     <div class="input-line-wrap">
       <span class="prompt-label">C.I.P.H.E.R.&gt;</span>
-      <input type="text" id="cliInput" class="cli-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus />
+      <input 
+        type="text" 
+        id="cliInput" 
+        class="cli-input" 
+        autocomplete="off" 
+        autocorrect="off" 
+        autocapitalize="off" 
+        spellcheck="false" 
+        autofocus 
+      />
     </div>
   </div>
 
   <script>
-    // Audio Synthesis Engine (Web Audio API)
+    // --- Audio Synthesis Engine (Web Audio API) ---
     let audioContext = null;
     let audioEnabled = true;
 
@@ -217,16 +88,36 @@
 
     function toggleAudio() {
       audioEnabled = !audioEnabled;
-      document.getElementById('audioBtn').innerText = audioEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: MUTED";
+      document.getElementById("audioBtn").innerText = audioEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: MUTED";
       if (audioEnabled) soundBeep();
     }
 
-    // Terminal State & Engine Logic
+    // --- Font Size Controller ---
+    const fontSizes = ["sm", "md", "lg"];
+    const fontLabels = { sm: "🔠 FONT: SMALL", md: "🔠 FONT: MED", lg: "🔠 FONT: LARGE" };
+
+    function setFontSize(size) {
+      if (!fontSizes.includes(size)) size = "md";
+      document.body.classList.remove("font-sm", "font-md", "font-lg");
+      document.body.classList.add(`font-${size}`);
+      localStorage.setItem("cipher_font_size", size);
+      const btn = document.getElementById("fontBtn");
+      if (btn) btn.innerText = fontLabels[size];
+    }
+
+    function cycleFontSize() {
+      const current = localStorage.getItem("cipher_font_size") || "md";
+      const nextIdx = (fontSizes.indexOf(current) + 1) % fontSizes.length;
+      setFontSize(fontSizes[nextIdx]);
+      soundBeep();
+    }
+
+    // --- Terminal State & Engine Logic ---
     const outputEl = document.getElementById("termOutput");
     const inputEl = document.getElementById("cliInput");
 
     const CONFIG = {
-      version: "v1.04-FIELD",
+      version: "v1.05-FIELD",
       node01Key: "BLUE-SWITCH",
       certitudeWord: "BLUE-SWITCH-2000",
       validTokens: {
@@ -316,6 +207,7 @@ FRIENDLY COMMAND DIRECTORY:
 * FEED <TOKEN>  - Feed a physical token code found in a cache
 * STATUS        - Show active callsign and memory restoration
 * MAP           - Display corridor sector restoration grid
+* FONT <SM/MD/LG>- Adjust text size for readability
 * HANDLE <NAME> - Register your geocaching player name
 * KICK          - Apply percussive maintenance to rusty casing
 * CLEAR         - Clear terminal screen buffer`);
@@ -354,6 +246,21 @@ FRIENDLY COMMAND DIRECTORY:
         case "NODES":
           soundBeep();
           showMap();
+          break;
+
+        case "FONT":
+        case "FONTSIZE":
+        case "TEXT":
+          if (!arg) {
+            cycleFontSize();
+            print(`Font size cycled. Current setting: ${localStorage.getItem("cipher_font_size").toUpperCase()}`);
+          } else {
+            const target = arg.toLowerCase();
+            if (["sm", "small", "1"].includes(target)) setFontSize("sm");
+            else if (["lg", "large", "3"].includes(target)) setFontSize("lg");
+            else setFontSize("md");
+            print(`Font size updated to: ${localStorage.getItem("cipher_font_size").toUpperCase()}`, "success-text");
+          }
           break;
 
         case "SLEUTH":
@@ -471,7 +378,7 @@ Memory restoration escalated.`, "success-text");
       }
     }
 
-    // Event Listeners & URL Token Auto-Ingest
+    // --- Listeners & Initializers ---
     inputEl.addEventListener("keydown", (e) => {
       soundKey();
       if (e.key === "Enter") {
@@ -486,13 +393,17 @@ Memory restoration escalated.`, "success-text");
     });
 
     window.addEventListener("DOMContentLoaded", () => {
+      // Restore user-selected font size
+      setFontSize(localStorage.getItem("cipher_font_size") || "md");
+
       showBanner();
-      // Handle direct NFC or QR scan: ?token=TOKEN-PT-01
+
+      // Auto-ingest URL token if scanned via NFC or QR code in the field
       const params = new URLSearchParams(window.location.search);
       const urlToken = params.get("token");
       if (urlToken) {
         setTimeout(() => {
-          print(`[AUTOPUBLISH] NFC/QR Field Scan detected: ${urlToken}`, "glitch-text");
+          print(`[AUTOPUBLISH] Field scan detected: ${urlToken}`, "glitch-text");
           processCommand(`FEED ${urlToken}`);
         }, 800);
       }
