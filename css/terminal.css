@@ -7,12 +7,12 @@
   --crt-admin: #38bdf8;
   --crt-glow: rgba(0, 255, 102, 0.4);
 
-  /* Dynamic font sizing */
+  /* Dynamic typography variables */
   --term-font-size: 14px;
   --term-line-height: 1.5;
 }
 
-/* Font Size Classes */
+/* Font Size Scaling */
 body.font-sm {
   --term-font-size: 12px;
   --term-line-height: 1.4;
@@ -30,34 +30,56 @@ body.font-lg {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh; /* Dynamic viewport height absorbs Android URL bar & keyboard */
+  overflow: hidden;
   background-color: #050708;
   color: var(--crt-text);
   font-family: "Courier New", Courier, monospace;
-  min-height: 100vh;
+}
+
+body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 12px;
+  padding: 8px;
+}
+
+@media (min-width: 600px) {
+  body {
+    padding: 14px;
+  }
 }
 
 .crt-chassis {
   width: 100%;
   max-width: 880px;
+  height: 100%;
+  max-height: 100dvh;
   background-color: var(--crt-bg);
-  border: 3px solid var(--crt-text);
-  border-radius: 12px;
-  box-shadow: 0 0 25px var(--crt-glow), inset 0 0 15px rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--crt-text);
+  border-radius: 8px;
+  box-shadow: 0 0 20px var(--crt-glow), inset 0 0 15px rgba(0, 0, 0, 0.8);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 92vh;
 }
 
+@media (min-width: 600px) {
+  .crt-chassis {
+    border-width: 3px;
+    border-radius: 12px;
+    height: 94vh;
+  }
+}
+
+/* CRT Scanline Overlay */
 .crt-chassis::before {
   content: " ";
   display: block;
@@ -70,20 +92,28 @@ body {
 }
 
 .header-bar {
-  padding: 10px 16px;
+  padding: 8px 12px;
   background-color: #08140e;
   border-bottom: 2px solid var(--crt-dim);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
   z-index: 12;
+  flex-shrink: 0;
+}
+
+.header-status {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 55%;
 }
 
 .header-controls {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .control-btn {
@@ -93,28 +123,30 @@ body {
   padding: 4px 8px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10px;
   border-radius: 4px;
+  touch-action: manipulation;
 }
 
-.control-btn:hover {
+.control-btn:active {
   background: var(--crt-dim);
   color: #fff;
 }
 
-/* Output Screen & Structured Layout */
+/* Scrollable Output Screen */
 .terminal-screen {
   flex: 1;
-  padding: 16px;
+  padding: 12px;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   font-size: var(--term-font-size);
   line-height: var(--term-line-height);
   text-shadow: 0 0 4px var(--crt-glow);
-  user-select: text;
   z-index: 11;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .user-echo {
@@ -122,42 +154,46 @@ body {
   font-weight: bold;
   border-left: 3px solid var(--crt-dim);
   padding-left: 8px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
+/* Card & Row Scaffolding */
 .term-block {
-  background: rgba(0, 35, 15, 0.25);
-  border: 1px solid rgba(0, 255, 102, 0.25);
+  background: rgba(0, 35, 15, 0.3);
+  border: 1px solid rgba(0, 255, 102, 0.3);
   border-radius: 6px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  word-break: break-word;
 }
 
 .term-title {
   color: #ffffff;
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   border-bottom: 1px dashed var(--crt-dim);
-  padding-bottom: 6px;
+  padding-bottom: 4px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 0.95em;
 }
 
 .term-dim {
   color: #00bb4b;
-  font-size: 0.9em;
+  font-size: 0.88em;
 }
 
 .term-row {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px dotted rgba(0, 136, 51, 0.35);
-  padding: 4px 0;
+  border-bottom: 1px dotted rgba(0, 136, 51, 0.3);
+  padding: 3px 0;
+  gap: 8px;
 }
 
 .term-label {
@@ -167,12 +203,13 @@ body {
 .term-val {
   color: #ffffff;
   font-weight: bold;
+  text-align: right;
 }
 
 .term-badge-tray {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-top: 4px;
 }
 
@@ -180,9 +217,9 @@ body {
   background: rgba(0, 255, 102, 0.15);
   border: 1px solid var(--crt-text);
   color: #ffffff;
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: 4px;
-  font-size: 0.85em;
+  font-size: 0.8em;
   font-weight: bold;
 }
 
@@ -196,78 +233,78 @@ body {
   background: rgba(0, 255, 102, 0.12);
   border: 2px solid var(--crt-text);
   border-radius: 6px;
-  padding: 12px;
+  padding: 10px;
   text-align: center;
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 .term-callout-code {
-  font-size: 1.3em;
+  font-size: 1.25em;
   font-weight: bold;
   color: #ffffff;
   letter-spacing: 2px;
   text-shadow: 0 0 8px #00ff66;
 }
 
-/* Status Cards & Color Variants */
+/* Status Cards */
 .term-block.error {
-  background: rgba(45, 10, 10, 0.45);
+  background: rgba(45, 10, 10, 0.5);
   border-color: var(--crt-error);
   color: #ff9999;
 }
 
 .term-block.alert {
-  background: rgba(45, 30, 5, 0.45);
+  background: rgba(45, 30, 5, 0.5);
   border-color: var(--crt-alert);
   color: #ffe099;
 }
 
 .term-block.success {
-  background: rgba(0, 45, 20, 0.5);
+  background: rgba(0, 45, 20, 0.55);
   border-color: var(--crt-text);
 }
 
 .term-block.admin {
-  background: rgba(5, 30, 45, 0.55);
+  background: rgba(5, 30, 45, 0.6);
   border-color: var(--crt-admin);
   color: #bae6fd;
 }
 
-/* Action Deck & Input Line */
+/* Touch Action Deck */
 .action-deck {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 8px 10px;
   background-color: #07100b;
   border-top: 1px dashed var(--crt-dim);
   z-index: 12;
+  flex-shrink: 0;
 }
 
 .chip-btn {
   background: #0d1a12;
   border: 1px solid var(--crt-text);
   color: var(--crt-text);
-  padding: 8px 12px;
+  padding: 6px 10px;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
   cursor: pointer;
   border-radius: 4px;
-  box-shadow: 0 0 5px rgba(0, 255, 102, 0.15);
-  transition: all 0.1s ease;
+  box-shadow: 0 0 4px rgba(0, 255, 102, 0.15);
+  touch-action: manipulation;
 }
 
 .chip-btn:active {
   background: var(--crt-text);
   color: var(--crt-bg);
-  transform: translateY(1px);
 }
 
 .chip-btn.admin-chip {
   border-color: var(--crt-admin);
   color: var(--crt-admin);
-  display: none; /* Only shown if handle is a Rat Pack member */
+  display: none;
 }
 
 .chip-btn.admin-chip:active {
@@ -275,20 +312,23 @@ body {
   color: #000;
 }
 
+/* Prompt Line & Input */
 .input-line-wrap {
   display: flex;
   align-items: center;
-  padding: 12px 14px;
+  padding: 10px 12px;
   background-color: #040906;
   border-top: 2px solid var(--crt-text);
   z-index: 12;
+  flex-shrink: 0;
 }
 
 .prompt-label {
   font-weight: bold;
-  margin-right: 8px;
+  margin-right: 6px;
   color: var(--crt-text);
   font-size: var(--term-font-size);
+  white-space: nowrap;
 }
 
 .cli-input {
@@ -301,4 +341,5 @@ body {
   font-size: var(--term-font-size);
   font-weight: bold;
   text-shadow: 0 0 4px var(--crt-glow);
+  width: 100%;
 }
