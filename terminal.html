@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
-  <!-- Shared external stylesheet with cache-busting version query -->
-  <link rel="stylesheet" href="css/terminal.css?v=1.05" />
+  <link rel="stylesheet" href="css/terminal.css?v=1.06" />
 </head>
 <body class="font-md">
   <div class="crt-chassis" id="crtContainer">
@@ -112,12 +111,12 @@
       soundBeep();
     }
 
-    // --- Terminal State & Engine Logic ---
+    // --- State & Scaffolding Engine ---
     const outputEl = document.getElementById("termOutput");
     const inputEl = document.getElementById("cliInput");
 
     const CONFIG = {
-      version: "v1.05-FIELD",
+      version: "v1.06-FIELD",
       node01Key: "BLUE-SWITCH",
       certitudeWord: "BLUE-SWITCH-2000",
       validTokens: {
@@ -141,12 +140,19 @@
       localStorage.setItem("cipher_tokens", JSON.stringify(state.ingested));
     }
 
-    function print(text, className = "") {
-      const p = document.createElement("p");
-      if (className) p.className = className;
-      p.innerHTML = text;
-      outputEl.appendChild(p);
+    function printBlock(contentHtml, type = "") {
+      const card = document.createElement("div");
+      card.className = `term-block ${type}`.trim();
+      card.innerHTML = contentHtml;
+      outputEl.appendChild(card);
       outputEl.scrollTop = outputEl.scrollHeight;
+    }
+
+    function printEcho(rawInput) {
+      const echo = document.createElement("div");
+      echo.className = "user-echo";
+      echo.innerText = `C.I.P.H.E.R.> ${rawInput}`;
+      outputEl.appendChild(echo);
     }
 
     function clearScreen() {
@@ -154,21 +160,17 @@
     }
 
     function showBanner() {
-      print(`
-  ___   ___  ____   __  __  ____  ____ 
- / __) (_  )(  _ \\ (  )(  )(  __)(  _ \\
-( (__   / /  ) __/  )(__)(  ) _)  )   /
- \\___) (___)(__)   (______)(____)(__\\_)
-============================================================
-C.I.P.H.E.R. SYSOP OS ${CONFIG.version} // CORRIDOR LISTENING POST 01
-CURRENT STATUS: WAKING UP FROM A 25-YEAR NAP
-============================================================
-Greetings, traveler. My memory sectors are scrambled across 
-northern Utah. Decrypt my relays, feed me token keys from the 
-field, and I'll unlock Certitude coordinates for you.
-
-Tap any green button below or type a command to begin.
-------------------------------------------------------------`);
+      printBlock(`
+        <div class="term-title">
+          <span>⚡ C.I.P.H.E.R. SYSOP OS ${CONFIG.version}</span>
+          <span class="term-dim">LISTENING POST 01</span>
+        </div>
+        <p>Greetings, traveler. Sensors detect an active GPS receiver in the corridor.</p>
+        <p>My memory relays are scrambled across northern Utah. Crack the encrypted dispatch, feed physical tokens from field hides, and I will release the Certitude coordinates.</p>
+        <div class="term-dim">
+          👉 <strong>Quick Start:</strong> Tap <code>[ 🔍 SLEUTH ]</code> to see your puzzle, or tap <code>[ ❓ HELP ]</code> for all commands.
+        </div>
+      `);
     }
 
     function showMap() {
@@ -177,47 +179,76 @@ Tap any green button below or type a command to begin.
       const s2 = state.ingested.includes("TOKEN-PT-01") ? "██" : "░░";
       const s3 = state.ingested.includes("TOKEN-PT-02") ? "██" : "░░";
       const s4 = state.ingested.includes("TOKEN-PT-03") ? "██" : "▒▒";
+      const pct = (state.clearance * 20) + (state.ingested.length * 15);
 
-      print(`
-[CORRIDOR MEMORY SECTOR RESTORATION GRID]
-+------------------------------------+
-|  [01: GATEWAY]  ${s1}  |  [02: RELAY]    ${s2}  |
-|  [03: SIDING]   ${s3}  |  [04: FENCE]    ${s4}  |
-+------------------------------------+
-(██ = ONLINE & RESTORED | ░░/▒▒ = CORRUPTED / DORMANT)
-Effective Memory Restored: ${(state.clearance * 20) + (state.ingested.length * 15)}%`);
+      printBlock(`
+        <div class="term-title">
+          <span>🗺️ Corridor Sector Restoration Grid</span>
+          <span class="term-dim">${pct}% RESTORED</span>
+        </div>
+        <div class="term-row"><span class="term-label">[01: GATEWAY RELAY]</span><span class="term-val">${s1} ONLINE</span></div>
+        <div class="term-row"><span class="term-label">[02: CORRIDOR FENCE]</span><span class="term-val">${s2} ${state.ingested.includes("TOKEN-PT-01") ? "ONLINE" : "DORMANT"}</span></div>
+        <div class="term-row"><span class="term-label">[03: RAILWAY SIDING]</span><span class="term-val">${s3} ${state.ingested.includes("TOKEN-PT-02") ? "ONLINE" : "DORMANT"}</span></div>
+        <div class="term-row"><span class="term-label">[04: SENTINEL FINAL]</span><span class="term-val">${s4} ${state.ingested.includes("TOKEN-PT-03") ? "ONLINE" : "LOCKED"}</span></div>
+        <div class="term-dim" style="margin-top: 4px;">Legend: ██ = Restored & Active | ░░/▒▒ = Corrupted / Offline</div>
+      `);
     }
 
     function showStatus() {
       const state = getState();
-      print(`
-SYSOP TELEMETRY REPORT:
-- Active Callsign   : ${state.handle}
-- Security Clearance: Level ${state.clearance}
-- Ingested Tokens   : ${state.ingested.length} verified
-- Corridor Node     : Node 01 (Dormant Relay)
-- Dial-Up Baud Rate : 56,600 bps (Optimal)`);
+      printBlock(`
+        <div class="term-title">
+          <span>📡 SysOp Telemetry Audit</span>
+          <span class="term-dim">PORT 56K</span>
+        </div>
+        <div class="term-row"><span class="term-label">Active Callsign</span><span class="term-val">${state.handle}</span></div>
+        <div class="term-row"><span class="term-label">Clearance Level</span><span class="term-val">Tier ${state.clearance}</span></div>
+        <div class="term-row"><span class="term-label">Ingested Tokens</span><span class="term-val">${state.ingested.length} Verified</span></div>
+        <div class="term-row"><span class="term-label">Corridor Relay</span><span class="term-val">Listening Post 01</span></div>
+        <div class="term-row"><span class="term-label">Connection Carrier</span><span class="term-val">56,600 bps</span></div>
+      `);
     }
 
     function showHelp() {
-      print(`
-FRIENDLY COMMAND DIRECTORY:
-* SLEUTH        - View today's encrypted case dispatch
-* UNLOCK <WORD> - Submit decrypted passcode to unlock GZ
-* FEED <TOKEN>  - Feed a physical token code found in a cache
-* STATUS        - Show active callsign and memory restoration
-* MAP           - Display corridor sector restoration grid
-* FONT <SM/MD/LG>- Adjust text size for readability
-* HANDLE <NAME> - Register your geocaching player name
-* KICK          - Apply percussive maintenance to rusty casing
-* CLEAR         - Clear terminal screen buffer`);
+      printBlock(`
+        <div class="term-title">
+          <span>❓ SysOp Command Index</span>
+          <span class="term-dim">OPERATOR MANUAL</span>
+        </div>
+        <div class="term-row"><span class="term-val">SLEUTH</span><span class="term-label">Inspect encrypted case dispatch</span></div>
+        <div class="term-row"><span class="term-val">UNLOCK &lt;WORD&gt;</span><span class="term-label">Submit decoded passcode for GZ</span></div>
+        <div class="term-row"><span class="term-val">FEED &lt;TOKEN&gt;</span><span class="term-label">Feed physical token code from container</span></div>
+        <div class="term-row"><span class="term-val">MAP</span><span class="term-label">View corridor sector restoration grid</span></div>
+        <div class="term-row"><span class="term-val">STATUS</span><span class="term-label">Check callsign, clearance & baud rate</span></div>
+        <div class="term-row"><span class="term-val">FONT &lt;SM/MD/LG&gt;</span><span class="term-label">Adjust screen text size</span></div>
+        <div class="term-row"><span class="term-val">HANDLE &lt;NAME&gt;</span><span class="term-label">Register your geocaching callsign</span></div>
+        <div class="term-row"><span class="term-val">KICK</span><span class="term-label">Percussive maintenance on casing</span></div>
+        <div class="term-row"><span class="term-val">CLEAR</span><span class="term-label">Wipe terminal screen buffer</span></div>
+      `);
+    }
+
+    function showSleuth() {
+      printBlock(`
+        <div class="term-title">
+          <span>🔍 Intercepted Dispatch // Node 01</span>
+          <span class="term-dim">S.O.S. ARCHIVE</span>
+        </div>
+        <p>Incoming packet intercepted from legacy dial-up relay. Decode the cipher string to extract the clearance passkey:</p>
+        <div class="term-callout">
+          <div class="term-callout-code">EOXH-VZLWFK</div>
+          <div class="term-dim" style="margin-top: 4px;">Cipher Type: Caesar Shift (+3)</div>
+        </div>
+        <div class="term-dim">
+          👉 <strong>Instructions:</strong> Decode using CacheSleuth or your cipher toolbox. Then type <code>UNLOCK &lt;WORD&gt;</code> (or tap the UNLOCK button).
+        </div>
+      `);
     }
 
     function processCommand(rawInput) {
       const clean = rawInput.trim();
       if (!clean) return;
 
-      print(`&gt; ${clean}`, "prompt-label");
+      printEcho(clean);
       const parts = clean.split(/\s+/);
       const cmd = parts[0].toUpperCase();
       const arg = parts.slice(1).join(" ").trim();
@@ -253,13 +284,19 @@ FRIENDLY COMMAND DIRECTORY:
         case "TEXT":
           if (!arg) {
             cycleFontSize();
-            print(`Font size cycled. Current setting: ${localStorage.getItem("cipher_font_size").toUpperCase()}`);
+            printBlock(`
+              <div class="term-title"><span>🔠 Font Size Updated</span></div>
+              <p>Current setting: <strong>${(localStorage.getItem("cipher_font_size") || "md").toUpperCase()}</strong></p>
+            `);
           } else {
             const target = arg.toLowerCase();
             if (["sm", "small", "1"].includes(target)) setFontSize("sm");
             else if (["lg", "large", "3"].includes(target)) setFontSize("lg");
             else setFontSize("md");
-            print(`Font size updated to: ${localStorage.getItem("cipher_font_size").toUpperCase()}`, "success-text");
+            printBlock(`
+              <div class="term-title"><span>🔠 Font Size Updated</span></div>
+              <p>Current setting: <strong>${(localStorage.getItem("cipher_font_size") || "md").toUpperCase()}</strong></p>
+            `, "success");
           }
           break;
 
@@ -267,15 +304,7 @@ FRIENDLY COMMAND DIRECTORY:
         case "CASE":
         case "CLUE":
           soundBeep();
-          print(`
-[INCOMING DISPATCH // S.O.S. ARCHIVE NODE-01]
-INTERCEPTED CIPHER STRING:
-============================================================
-  "EOXH-VZLWFK"  (Caesar Cipher Shift: +3)
-============================================================
-DIRECTIONS:
-1. Decode the string above using CacheSleuth or your favorite cipher tool.
-2. Type UNLOCK &lt;DECODED_WORD&gt; to authenticate and unlock Certitude.`);
+          showSleuth();
           break;
 
         case "UNLOCK":
@@ -284,23 +313,38 @@ DIRECTIONS:
         case "PASS":
           if (!arg) {
             soundError();
-            print("ERROR: Missing passcode! Type: UNLOCK <WORD>", "error-text");
+            printBlock(`
+              <div class="term-title"><span>⚠️ Missing Passcode</span></div>
+              <p>You must provide the decoded secret word!</p>
+              <div class="term-dim">Syntax: <code>UNLOCK &lt;WORD&gt;</code></div>
+            `, "error");
             return;
           }
           if (arg.toUpperCase() === CONFIG.node01Key) {
             soundSuccess();
             state.clearance = Math.max(state.clearance, 1);
             saveState(state);
-            print(`
-[SUCCESS] Passcode confirmed! Relays aligned!
-============================================================
-CERTITUDE KEYWORD: ${CONFIG.certitudeWord}
-============================================================
-Enter this keyword into the Certitude checker on Geocaching.com 
-to retrieve physical coordinates and field parking!`, "success-text");
+            printBlock(`
+              <div class="term-title">
+                <span>🔓 Access Granted // Level 1 Clearance</span>
+                <span class="term-dim">VERIFIED</span>
+              </div>
+              <p>Relay tumblers disengaged. S.O.S. network coordinates unlocked.</p>
+              <div class="term-callout">
+                <div style="font-size: 0.9em; margin-bottom: 4px;">CERTITUDE VALIDATION KEYWORD:</div>
+                <div class="term-callout-code">${CONFIG.certitudeWord}</div>
+              </div>
+              <div class="term-dim">
+                Enter this keyword into the Certitude checker on the Geocaching listing to get physical GZ and parking coordinates!
+              </div>
+            `, "success");
           } else {
             soundError();
-            print(`[BZZZT!] Passcode '${arg}' rejected! Radio static detected. Re-check your cipher shift at CacheSleuth.`, "error-text");
+            printBlock(`
+              <div class="term-title"><span>⛔ Passcode Rejected</span></div>
+              <p>[BZZZT!] Passcode '${arg}' produced pure radio static.</p>
+              <div class="term-dim">Tip: Re-verify your Caesar shift (+3) in CacheSleuth and try again.</div>
+            `, "error");
           }
           break;
 
@@ -309,26 +353,41 @@ to retrieve physical coordinates and field parking!`, "success-text");
         case "TOKEN":
           if (!arg) {
             soundError();
-            print("ERROR: Missing token! Type: FEED <TOKEN-CODE>", "error-text");
+            printBlock(`
+              <div class="term-title"><span>⚠️ Missing Token Code</span></div>
+              <p>You must provide the code stamped on the physical container!</p>
+              <div class="term-dim">Syntax: <code>FEED &lt;TOKEN-CODE&gt;</code></div>
+            `, "error");
             return;
           }
           const tokenUpper = arg.toUpperCase();
           if (CONFIG.validTokens[tokenUpper]) {
             if (state.ingested.includes(tokenUpper)) {
               soundBeep();
-              print(`NOTICE: Token ${tokenUpper} was already fed into this terminal!`, "glitch-text");
+              printBlock(`
+                <div class="term-title"><span>ℹ️ Token Already Ingested</span></div>
+                <p>Token <strong>${tokenUpper}</strong> is already registered to this terminal.</p>
+              `, "alert");
             } else {
               soundSuccess();
               state.ingested.push(tokenUpper);
               saveState(state);
-              print(`
-[DING!] Valid token ingested: ${CONFIG.validTokens[tokenUpper].name}
-Sector [${CONFIG.validTokens[tokenUpper].sector}] marked ONLINE!
-Memory restoration escalated.`, "success-text");
+              printBlock(`
+                <div class="term-title">
+                  <span>💾 Token Accepted // Memory Restored</span>
+                  <span class="term-dim">${tokenUpper}</span>
+                </div>
+                <div class="term-row"><span class="term-label">Node Name</span><span class="term-val">${CONFIG.validTokens[tokenUpper].name}</span></div>
+                <div class="term-row"><span class="term-label">Sector Restored</span><span class="term-val">${CONFIG.validTokens[tokenUpper].sector}</span></div>
+                <p style="margin-top: 6px;">Corridor node marked ONLINE. Tap [ 🗺️ MAP ] to see your updated progress.</p>
+              `, "success");
             }
           } else {
             soundError();
-            print(`[ERROR] Unrecognized token '${arg}'. Check the stamp on the physical puck.`, "error-text");
+            printBlock(`
+              <div class="term-title"><span>⛔ Invalid Token</span></div>
+              <p>Unrecognized token hash '${arg}'. Verify the stamped alphanumeric string on the physical puck.</p>
+            `, "error");
           }
           break;
 
@@ -336,12 +395,18 @@ Memory restoration escalated.`, "success-text");
         case "NAME":
         case "USER":
           if (!arg) {
-            print(`Current callsign: ${state.handle}`);
+            printBlock(`
+              <div class="term-title"><span>👤 Active Operator</span></div>
+              <p>Current callsign: <strong>${state.handle}</strong></p>
+            `);
           } else {
             state.handle = arg.toUpperCase();
             saveState(state);
             soundSuccess();
-            print(`Callsign updated to: ${state.handle}`, "success-text");
+            printBlock(`
+              <div class="term-title"><span>👤 Callsign Registered</span></div>
+              <p>Operator identity saved as: <strong>${state.handle}</strong></p>
+            `, "success");
           }
           break;
 
@@ -349,22 +414,35 @@ Memory restoration escalated.`, "success-text");
         case "HIT":
         case "BANG":
           soundError();
-          print("*THWACK!* You kicked the steel junction box. A spider fell out, the tube flickered, and signal jumped 0.2%. Grandpa engineering at its finest!", "glitch-text");
+          printBlock(`
+            <div class="term-title"><span>🔧 Percussive Maintenance</span></div>
+            <p>*THWACK!* You kicked the steel junction box. A spider fell out, the tube flickered, and signal jumped 0.2%. Grandpa engineering at its finest!</p>
+          `, "alert");
           break;
 
         case "COFFEE":
           soundError();
-          print("ERROR 418: CD drive tray extended. Please do not rest your mug on the tray.", "glitch-text");
+          printBlock(`
+            <div class="term-title"><span>☕ Coffee Protocol</span></div>
+            <p>ERROR 418: CD drive tray extended. Please do not rest your mug on the tray.</p>
+          `, "alert");
           break;
 
         case "MUGGLE":
           soundBeep();
-          print("STEALTH WARNING: Muggle spotted! Pretend to tie your hiking boots and look casual!", "glitch-text");
+          printBlock(`
+            <div class="term-title"><span>👀 Stealth Alert</span></div>
+            <p>Muggle in vicinity! Pretend to tie your hiking boots and look innocent.</p>
+          `, "alert");
           break;
 
         default:
           soundError();
-          print(`UNKNOWN COMMAND: '${clean}'. Don't panic! Tap [ ❓ HELP ] to see what to do.`, "error-text");
+          printBlock(`
+            <div class="term-title"><span>❓ Unrecognized Command</span></div>
+            <p>Command '${clean}' not found in SysOp index.</p>
+            <div class="term-dim">Don't panic! Tap <code>[ ❓ HELP ]</code> to see available actions.</div>
+          `, "error");
           break;
       }
     }
@@ -393,17 +471,17 @@ Memory restoration escalated.`, "success-text");
     });
 
     window.addEventListener("DOMContentLoaded", () => {
-      // Restore user-selected font size
       setFontSize(localStorage.getItem("cipher_font_size") || "md");
-
       showBanner();
 
-      // Auto-ingest URL token if scanned via NFC or QR code in the field
       const params = new URLSearchParams(window.location.search);
       const urlToken = params.get("token");
       if (urlToken) {
         setTimeout(() => {
-          print(`[AUTOPUBLISH] Field scan detected: ${urlToken}`, "glitch-text");
+          printBlock(`
+            <div class="term-title"><span>📡 Field Token Detected</span></div>
+            <p>Processing scanned URL parameter: <strong>${urlToken}</strong></p>
+          `, "alert");
           processCommand(`FEED ${urlToken}`);
         }, 800);
       }
