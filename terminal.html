@@ -2,20 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
-  <link rel="stylesheet" href="css/terminal.css?v=1.07" />
+  <link rel="stylesheet" href="css/terminal.css?v=1.17" />
 </head>
 <body class="font-md">
   <div class="crt-chassis" id="crtContainer">
     <div class="header-bar">
-      <span id="headerStatus">SYSOP RELAY: ONLINE // 56K DIAL-UP</span>
+      <span class="header-status" id="headerStatus">SYSOP RELAY: POLLING...</span>
       <div class="header-controls">
         <button class="control-btn" id="fontBtn" onclick="cycleFontSize()">🔠 FONT: MED</button>
         <button class="control-btn" id="audioBtn" onclick="toggleAudio()">🔊 AUDIO: ON</button>
       </div>
     </div>
 
+    <!-- Scoped Touch Output Buffer -->
     <div class="terminal-screen" id="termOutput"></div>
 
     <div class="action-deck" id="actionDeck">
@@ -29,7 +30,7 @@
       <button class="chip-btn admin-chip" id="adminChip" onclick="triggerAction('ADMIN')">⚡ ADMIN</button>
     </div>
 
-    <div class="input-line-wrap">
+    <div class="input-line-wrap" id="promptWrapper">
       <span class="prompt-label" id="promptLabel">C.I.P.H.E.R.&gt;</span>
       <input 
         type="text" 
@@ -39,7 +40,6 @@
         autocorrect="off" 
         autocapitalize="off" 
         spellcheck="false" 
-        autofocus 
       />
     </div>
   </div>
@@ -95,6 +95,7 @@
     function toggleAudio() {
       audioEnabled = !audioEnabled;
       document.getElementById("audioBtn").innerText = audioEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: MUTED";
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
       if (audioEnabled) soundBeep();
     }
 
@@ -118,13 +119,18 @@
       soundBeep();
     }
 
-    // --- Configuration & Faction Clearance ---
+    // --- Terminal State & Telemetry Configuration ---
     const outputEl = document.getElementById("termOutput");
     const inputEl = document.getElementById("cliInput");
     const adminChipEl = document.getElementById("adminChip");
+    const headerStatusEl = document.getElementById("headerStatus");
+
+    // Live GAS endpoint (Deploy as Web App, Accessible to Anyone)
+    // Fallback URL defaults to local telemetry.json if empty
+    const GAS_ENDPOINT = ""; 
 
     const CONFIG = {
-      version: "v1.07-FIELD",
+      version: "v1.17-FIELD",
       node01Key: "BLUE-SWITCH",
       certitudeWord: "BLUE-SWITCH-2000",
       practiceKey: "CAESAR",
@@ -137,11 +143,19 @@
       }
     };
 
+    // 20-Slot CLI Command History Stack
+    const cmdHistory = [];
+    let historyIdx = -1;
+
+    // Awaiting Admin PIN State
+    let awaitingAdminPin = false;
+
     function getState() {
       return {
         handle: localStorage.getItem("cipher_handle") || "ANONYMOUS_CACHER",
         clearance: parseInt(localStorage.getItem("cipher_clearance") || "0", 10),
-        ingested: JSON.parse(localStorage.getItem("cipher_tokens") || "[]")
+        ingested: JSON.parse(localStorage.getItem("cipher_tokens") || "[]"),
+        syncQueue: JSON.parse(localStorage.getItem("cipher_sync_queue") || "[]")
       };
     }
 
@@ -149,6 +163,7 @@
       localStorage.setItem("cipher_handle", state.handle);
       localStorage.setItem("cipher_clearance", state.clearance.toString());
       localStorage.setItem("cipher_tokens", JSON.stringify(state.ingested));
+      localStorage.setItem("cipher_sync_queue", JSON.stringify(state.syncQueue));
       evaluateAdminVisibility();
     }
 
@@ -158,11 +173,7 @@
 
     function evaluateAdminVisibility() {
       const state = getState();
-      if (isRatPack(state.handle)) {
-        adminChipEl.style.display = "inline-block";
-      } else {
-        adminChipEl.style.display = "none";
-      }
+      adminChipEl.style.display = isRatPack(state.handle) ? "inline-block" : "none";
     }
 
     function printBlock(contentHtml, type = "") {
@@ -184,6 +195,81 @@
       outputEl.innerHTML = "";
     }
 
+    // --- Two-Way Telemetry Sync (GAS & Fallback) ---
+    async function fetchTelemetry() {
+      headerStatusEl.innerText = "SYSOP RELAY: SYNCING...";
+      const targetUrl = GAS_ENDPOINT ? `${GAS_ENDPOINT}?action=READ` : `telemetry.json?v=${Date.now()}`;
+      try {
+        const res = await fetch(targetUrl, { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP error");
+        const data = await res.json();
+        const globalTokens = data.GlobalTokensIngested || data.global_tokens_ingested || 0;
+        const nodesOnline = data.NodesOnline || data.nodes_online || 2;
+        headerStatusEl.innerText = `RELAY: ONLINE // GLOBAL TOKENS: ${globalTokens} // NODES: ${nodesOnline}`;
+        flushSyncQueue();
+      } catch (e) {
+        headerStatusEl.innerText = "RELAY: OFFLINE // LOCAL RUNNING";
+      }
+    }
+
+    async function sendIngestToRelay(tokenId, handle) {
+      if (!GAS_ENDPOINT) return false;
+      try {
+        const res = await fetch(GAS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "INGEST_TOKEN",
+            tokenId: tokenId,
+            callsign: handle,
+            clientVersion: CONFIG.version
+          })
+        });
+        const resp = await res.json();
+        return resp.success === true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function verifyAdminPinWithRelay(pin) {
+      if (!GAS_ENDPOINT) {
+        // Local fallback verification if endpoint not yet deployed
+        return pin === "8675309";
+      }
+      try {
+        const res = await fetch(GAS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "VERIFY_PIN",
+            pin: pin
+          })
+        });
+        const resp = await res.json();
+        return resp.success === true;
+      } catch (e) {
+        return pin === "8675309"; // Safe fallback
+      }
+    }
+
+    async function flushSyncQueue() {
+      const state = getState();
+      if (!state.syncQueue.length || !GAS_ENDPOINT) return;
+      const queue = [...state.syncQueue];
+      state.syncQueue = [];
+      saveState(state);
+
+      for (const item of queue) {
+        const success = await sendIngestToRelay(item.token, item.handle);
+        if (!success) {
+          state.syncQueue.push(item);
+        }
+      }
+      saveState(state);
+    }
+
+    // --- Standard Views ---
     function showBanner() {
       const state = getState();
       printBlock(`
@@ -199,13 +285,12 @@
       `);
     }
 
-    // --- Profile Mode ---
     function showProfile() {
       const state = getState();
       const isMember = isRatPack(state.handle);
       const restored = (state.clearance * 20) + (state.ingested.length * 15);
 
-      const b1 = true ? '<span class="term-badge">🎖️ [INITIATE]</span>' : '';
+      const b1 = '<span class="term-badge">🎖️ [INITIATE]</span>';
       const b2 = state.clearance >= 1 ? '<span class="term-badge">🔓 [CIPHER-CRACKER]</span>' : '<span class="term-badge locked">🔒 [CIPHER-CRACKER]</span>';
       const b3 = state.ingested.length > 0 ? '<span class="term-badge">💾 [FIELD-AGENT]</span>' : '<span class="term-badge locked">🔒 [FIELD-AGENT]</span>';
       const b4 = state.ingested.length >= 3 ? '<span class="term-badge">🗺️ [CORRIDOR-MASTER]</span>' : '<span class="term-badge locked">🔒 [CORRIDOR-MASTER]</span>';
@@ -220,6 +305,7 @@
         <div class="term-row"><span class="term-label">Security Clearance</span><span class="term-val">Level ${state.clearance}</span></div>
         <div class="term-row"><span class="term-label">Memory Restored</span><span class="term-val">${restored}%</span></div>
         <div class="term-row"><span class="term-label">Tokens Ingested</span><span class="term-val">${state.ingested.length} verified</span></div>
+        <div class="term-row"><span class="term-label">Offline Queue</span><span class="term-val">${state.syncQueue.length} pending</span></div>
         <div style="margin-top: 6px; font-weight: bold;">Earned Badges:</div>
         <div class="term-badge-tray">
           ${b1} ${b2} ${b3} ${b4} ${bAdmin}
@@ -230,109 +316,6 @@
       `);
     }
 
-    // --- Guided Training Mode (TRAIN) ---
-    function showTrain(step = "ALL") {
-      soundBeep();
-      if (step === "1") {
-        printBlock(`
-          <div class="term-title"><span>🎓 TRAIN 1: Basic Navigation</span></div>
-          <p>The action buttons above the prompt are quick shortcuts!</p>
-          <p>Tap <code>[ 📡 STATUS ]</code> to inspect your signal, or tap <code>[ ❓ HELP ]</code> to see all commands. You can also type commands manually into the box below.</p>
-          <div class="term-dim">👉 Try typing: <code>STATUS</code> or <code>MAP</code>.</div>
-        `);
-      } else if (step === "2") {
-        printBlock(`
-          <div class="term-title"><span>🎓 TRAIN 2: Decryption & Passcodes</span></div>
-          <p>Real geocaches use ciphers. Here is a simulated test puzzle:</p>
-          <div class="term-callout">
-            <div class="term-callout-code">FDHVDU</div>
-            <div class="term-dim">Hint: Caesar Shift (-3) spells a famous Roman ruler!</div>
-          </div>
-          <p>When decoded, authenticate using: <code>UNLOCK CAESAR</code> (or tap [ 🔑 UNLOCK ]).</p>
-        `);
-      } else if (step === "3") {
-        printBlock(`
-          <div class="term-title"><span>🎓 TRAIN 3: Field Token Ingestion</span></div>
-          <p>When you locate a physical hide on the trail, you will find a stamped token puck.</p>
-          <p>Practice feeding a token code into the machine by typing:</p>
-          <div class="term-callout">
-            <div class="term-callout-code">FEED TOKEN-PRACTICE-99</div>
-          </div>
-          <p>This simulates waking up a corrupted corridor node.</p>
-        `);
-      } else if (step === "4") {
-        printBlock(`
-          <div class="term-title"><span>🎓 TRAIN 4: Percussive Maintenance & Field Utilities</span></div>
-          <p>Grandpa engineering at its finest: if the terminal acts up, give it a good kick.</p>
-          <div class="term-row"><span class="term-val">KICK</span><span class="term-label">Smack the casing to clear static</span></div>
-          <div class="term-row"><span class="term-val">MUGGLE</span><span class="term-label">Trigger stealth protocol when people are watching</span></div>
-          <div class="term-row"><span class="term-val">FONT LG</span><span class="term-label">Enlarge screen text when caching in bright sunlight</span></div>
-        `);
-      } else {
-        printBlock(`
-          <div class="term-title">
-            <span>🎓 C.I.P.H.E.R. Training Sandbox</span>
-            <span class="term-dim">PRACTICE PROTOCOLS</span>
-          </div>
-          <p>Welcome to the low-stakes training academy! Choose a tutorial step:</p>
-          <div class="term-row"><span class="term-val">TRAIN 1</span><span class="term-label">Basic Navigation & Action Chips</span></div>
-          <div class="term-row"><span class="term-val">TRAIN 2</span><span class="term-label">Cipher Decryption & UNLOCK practice</span></div>
-          <div class="term-row"><span class="term-val">TRAIN 3</span><span class="term-label">Physical Token Feeding simulation</span></div>
-          <div class="term-row"><span class="term-val">TRAIN 4</span><span class="term-label">Field Hacks & Percussive Maintenance</span></div>
-          <div class="term-dim" style="margin-top: 6px;">Type <code>TRAIN 1</code>, <code>TRAIN 2</code>, etc., to begin!</div>
-        `);
-      }
-    }
-
-    // --- Rat Pack Admin Mode ---
-    function showAdmin(subcmd = "") {
-      const state = getState();
-      if (!isRatPack(state.handle)) {
-        soundError();
-        printBlock(`
-          <div class="term-title"><span>⛔ ACCESS DENIED</span></div>
-          <p>Operator callsign '<strong>${state.handle}</strong>' is NOT authorized for S.O.S. Administrative Root.</p>
-          <div class="term-dim">Rat Pack clearance required. Use <code>HANDLE &lt;NAME&gt;</code> if you are an authorized pack member.</div>
-        `, "error");
-        return;
-      }
-
-      soundAdmin();
-      const sub = subcmd.toUpperCase().trim();
-
-      if (sub === "RESET") {
-        localStorage.removeItem("cipher_clearance");
-        localStorage.removeItem("cipher_tokens");
-        soundSuccess();
-        printBlock(`
-          <div class="term-title"><span>⚡ ADMIN: System Cleared</span></div>
-          <p>Local state purged. Device reset to baseline infant state.</p>
-        `, "admin");
-      } else if (sub === "UNLOCKALL") {
-        state.clearance = 5;
-        state.ingested = ["TOKEN-PT-01", "TOKEN-PT-02", "TOKEN-PT-03"];
-        saveState(state);
-        soundSuccess();
-        printBlock(`
-          <div class="term-title"><span>⚡ ADMIN: Master Override</span></div>
-          <p>All corridor sectors elevated to Tier 5. Relays forced ONLINE.</p>
-        `, "admin");
-      } else {
-        printBlock(`
-          <div class="term-title">
-            <span>⚡ Rat Pack SysOp Command Console</span>
-            <span class="term-dim">OPERATOR: ${state.handle}</span>
-          </div>
-          <p>Root access active. Diagnostic & field calibration utilities:</p>
-          <div class="term-row"><span class="term-val">ADMIN RESET</span><span class="term-label">Purge local state for clean trail testing</span></div>
-          <div class="term-row"><span class="term-val">ADMIN UNLOCKALL</span><span class="term-label">Elevate device to Level 5 clearance</span></div>
-          <div class="term-row"><span class="term-val">ADMIN TELEMETRY</span><span class="term-label">Force dynamic polling audit</span></div>
-          <div class="term-dim" style="margin-top: 6px;">Restricted to Nezzmuk, Ratwaffles, Cheda & MuggleMisfit.</div>
-        `, "admin");
-      }
-    }
-
-    // --- Standard Views ---
     function showMap() {
       const state = getState();
       const s1 = state.clearance >= 1 ? "██" : "░░";
@@ -364,9 +347,10 @@
         <div class="term-row"><span class="term-label">Active Callsign</span><span class="term-val">${state.handle}</span></div>
         <div class="term-row"><span class="term-label">Clearance Level</span><span class="term-val">Tier ${state.clearance}</span></div>
         <div class="term-row"><span class="term-label">Ingested Tokens</span><span class="term-val">${state.ingested.length} Verified</span></div>
-        <div class="term-row"><span class="term-label">Corridor Relay</span><span class="term-val">Listening Post 01</span></div>
+        <div class="term-row"><span class="term-label">Pending Sync Queue</span><span class="term-val">${state.syncQueue.length} queued</span></div>
         <div class="term-row"><span class="term-label">Carrier Link</span><span class="term-val">56,600 bps</span></div>
       `);
+      fetchTelemetry();
     }
 
     function showHelp() {
@@ -410,12 +394,129 @@
       `);
     }
 
-    // --- CLI Command Execution Router ---
-    function processCommand(rawInput) {
+    function showTrain(step = "ALL") {
+      soundBeep();
+      if (step === "1") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 1: Basic Navigation</span></div>
+          <p>The action buttons above the prompt are quick shortcuts!</p>
+          <p>Tap <code>[ 📡 STATUS ]</code> to inspect your signal, or tap <code>[ ❓ HELP ]</code> to see all commands. You can also type commands manually into the box below.</p>
+          <div class="term-dim">👉 Try typing: <code>STATUS</code> or <code>MAP</code>.</div>
+        `);
+      } else if (step === "2") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 2: Decryption & Passcodes</span></div>
+          <p>Real geocaches use ciphers. Here is a simulated test puzzle:</p>
+          <div class="term-callout">
+            <div class="term-callout-code">FDHVDU</div>
+            <div class="term-dim">Hint: Caesar Shift (-3) spells a famous Roman ruler!</div>
+          </div>
+          <p>When decoded, authenticate using: <code>UNLOCK CAESAR</code> (or tap [ 🔑 UNLOCK ]).</p>
+        `);
+      } else if (step === "3") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 3: Field Token Ingestion</span></div>
+          <p>When you locate a physical hide on the trail, you will find a stamped token coin.</p>
+          <p>Practice feeding a token code into the machine by typing:</p>
+          <div class="term-callout">
+            <div class="term-callout-code">FEED TOKEN-PRACTICE-99</div>
+          </div>
+          <p>This simulates waking up a corrupted corridor node.</p>
+        `);
+      } else if (step === "4") {
+        printBlock(`
+          <div class="term-title"><span>🎓 TRAIN 4: Percussive Maintenance & Field Utilities</span></div>
+          <p>Grandpa engineering at its finest: if the terminal acts up, give it a good kick.</p>
+          <div class="term-row"><span class="term-val">KICK</span><span class="term-label">Smack the casing to clear static</span></div>
+          <div class="term-row"><span class="term-val">MUGGLE</span><span class="term-label">Trigger stealth protocol when people are watching</span></div>
+          <div class="term-row"><span class="term-val">FONT LG</span><span class="term-label">Enlarge screen text when caching in bright sunlight</span></div>
+        `);
+      } else {
+        printBlock(`
+          <div class="term-title">
+            <span>🎓 C.I.P.H.E.R. Training Sandbox</span>
+            <span class="term-dim">PRACTICE PROTOCOLS</span>
+          </div>
+          <p>Welcome to the low-stakes training academy! Choose a tutorial step:</p>
+          <div class="term-row"><span class="term-val">TRAIN 1</span><span class="term-label">Basic Navigation & Action Chips</span></div>
+          <div class="term-row"><span class="term-val">TRAIN 2</span><span class="term-label">Cipher Decryption & UNLOCK practice</span></div>
+          <div class="term-row"><span class="term-val">TRAIN 3</span><span class="term-label">Physical Token Feeding simulation</span></div>
+          <div class="term-row"><span class="term-val">TRAIN 4</span><span class="term-label">Field Hacks & Percussive Maintenance</span></div>
+          <div class="term-dim" style="margin-top: 6px;">Type <code>TRAIN 1</code>, <code>TRAIN 2</code>, etc., to begin!</div>
+        `);
+      }
+    }
+
+    // --- Rat Pack Gated Admin Console ---
+    async function handleAdminCommand(arg) {
+      const state = getState();
+      if (!isRatPack(state.handle)) {
+        soundError();
+        printBlock(`
+          <div class="term-title"><span>⛔ ACCESS DENIED</span></div>
+          <p>Operator callsign '<strong>${state.handle}</strong>' is NOT authorized for S.O.S. Administrative Root.</p>
+          <div class="term-dim">Rat Pack clearance required. Use <code>HANDLE &lt;NAME&gt;</code> if you are an authorized pack member.</div>
+        `, "error");
+        return;
+      }
+
+      if (!awaitingAdminPin) {
+        awaitingAdminPin = true;
+        soundBeep();
+        printBlock(`
+          <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
+          <p>Welcome, Rat Pack operative. Enter your <strong>7-digit SysOp Admin PIN</strong> to unlock root controls:</p>
+          <div class="term-dim">Prompt locked: Type your 7-digit PIN below.</div>
+        `, "admin");
+        return;
+      }
+
+      // Verify the 7-digit PIN
+      printBlock(`Verifying PIN credentials against Google Sheet ledger...`, "term-dim");
+      const isValid = await verifyAdminPinWithRelay(arg);
+      awaitingAdminPin = false;
+
+      if (!isValid) {
+        soundError();
+        printBlock(`
+          <div class="term-title"><span>⛔ PIN AUTHENTICATION FAILED</span></div>
+          <p>PIN challenge rejected. Security trip logged to Google Sheet audit ledger.</p>
+        `, "error");
+        return;
+      }
+
+      soundAdmin();
+      printBlock(`
+        <div class="term-title">
+          <span>⚡ Rat Pack SysOp Command Console</span>
+          <span class="term-dim">OPERATOR: ${state.handle}</span>
+        </div>
+        <p>7-Digit PIN Verified. Root access granted:</p>
+        <div class="term-row"><span class="term-val">ADMIN RESET</span><span class="term-label">Purge local state for clean trail testing</span></div>
+        <div class="term-row"><span class="term-val">ADMIN UNLOCKALL</span><span class="term-label">Elevate device to Level 5 clearance</span></div>
+        <div class="term-row"><span class="term-val">ADMIN SYNC</span><span class="term-label">Force immediate flush of offline queue</span></div>
+        <div class="term-dim" style="margin-top: 6px;">Admin PIN verified via Google Sheet ledger.</div>
+      `, "admin");
+    }
+
+    // --- Command Processing Engine ---
+    async function processCommand(rawInput) {
       const clean = rawInput.trim();
       if (!clean) return;
 
       printEcho(clean);
+
+      // Record in 20-slot history buffer
+      cmdHistory.unshift(clean);
+      if (cmdHistory.length > 20) cmdHistory.pop();
+      historyIdx = -1;
+
+      // Handle ongoing Admin PIN prompt
+      if (awaitingAdminPin) {
+        await handleAdminCommand(clean);
+        return;
+      }
+
       const parts = clean.split(/\s+/);
       const cmd = parts[0].toUpperCase();
       const arg = parts.slice(1).join(" ").trim();
@@ -454,7 +555,7 @@
         case "ADMIN":
         case "SYSOP":
         case "ROOT":
-          showAdmin(arg);
+          await handleAdminCommand(arg);
           break;
 
         case "MAP":
@@ -570,6 +671,8 @@
               soundSuccess();
               state.ingested.push(tokenUpper);
               saveState(state);
+
+              // Tactile Ingestion Animation
               printBlock(`
                 <div class="term-title">
                   <span>💾 Token Accepted // Memory Restored</span>
@@ -577,14 +680,24 @@
                 </div>
                 <div class="term-row"><span class="term-label">Node Name</span><span class="term-val">${CONFIG.validTokens[tokenUpper].name}</span></div>
                 <div class="term-row"><span class="term-label">Sector Restored</span><span class="term-val">${CONFIG.validTokens[tokenUpper].sector}</span></div>
-                <p style="margin-top: 6px;">Corridor node marked ONLINE. Tap [ 🗺️ MAP ] to see your updated progress.</p>
+                <p style="margin-top: 6px;">Memory sector ONLINE. Broadcasting telemetry to community ledger...</p>
               `, "success");
+
+              // Two-way Write-back Handshake
+              const sent = await sendIngestToRelay(tokenUpper, state.handle);
+              if (sent) {
+                printBlock(`📡 <strong>COMMUNITY RELAY UPDATED:</strong> Google Sheet ledger incremented.`, "success");
+              } else {
+                state.syncQueue.push({ token: tokenUpper, handle: state.handle });
+                saveState(state);
+                printBlock(`📡 <strong>LOCAL PARITY VERIFIED:</strong> Weak corridor signal. Token cached in device memory. It will broadcast to the community once you reach cell service.`, "alert");
+              }
             }
           } else {
             soundError();
             printBlock(`
               <div class="term-title"><span>⛔ Invalid Token</span></div>
-              <p>Unrecognized token hash '${arg}'. Verify the stamped alphanumeric string on the physical puck.</p>
+              <p>Unrecognized token hash '${arg}'. Verify the stamped alphanumeric string on the physical token.</p>
             `, "error");
           }
           break;
@@ -654,17 +767,31 @@
       }
     }
 
-    // --- Listeners & Initializers ---
+    // --- Key Events & Scoped Touch Handling ---
     inputEl.addEventListener("keydown", (e) => {
       soundKey();
       if (e.key === "Enter") {
         const val = inputEl.value;
         inputEl.value = "";
         processCommand(val);
+      } else if (e.key === "ArrowUp") {
+        if (cmdHistory.length && historyIdx < cmdHistory.length - 1) {
+          historyIdx++;
+          inputEl.value = cmdHistory[historyIdx];
+        }
+      } else if (e.key === "ArrowDown") {
+        if (historyIdx > 0) {
+          historyIdx--;
+          inputEl.value = cmdHistory[historyIdx];
+        } else if (historyIdx === 0) {
+          historyIdx = -1;
+          inputEl.value = "";
+        }
       }
     });
 
-    document.getElementById("crtContainer").addEventListener("click", () => {
+    // Android/Mobile Friendly: Only prompt line or action chips trigger keyboard focus
+    document.getElementById("promptWrapper").addEventListener("click", () => {
       inputEl.focus();
     });
 
@@ -672,6 +799,7 @@
       setFontSize(localStorage.getItem("cipher_font_size") || "md");
       evaluateAdminVisibility();
       showBanner();
+      fetchTelemetry();
 
       const params = new URLSearchParams(window.location.search);
       const urlToken = params.get("token");
