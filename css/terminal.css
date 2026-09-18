@@ -4,6 +4,7 @@
   --crt-dim: #008833;
   --crt-alert: #ffb000;
   --crt-error: #ff3333;
+  --crt-admin: #38bdf8;
   --crt-glow: rgba(0, 255, 102, 0.4);
 
   /* Dynamic font sizing */
@@ -45,7 +46,7 @@ body {
 
 .crt-chassis {
   width: 100%;
-  max-width: 860px;
+  max-width: 880px;
   background-color: var(--crt-bg);
   border: 3px solid var(--crt-text);
   border-radius: 12px;
@@ -101,7 +102,7 @@ body {
   color: #fff;
 }
 
-/* Output Screen & Structured Layout Rules */
+/* Output Screen & Structured Layout */
 .terminal-screen {
   flex: 1;
   padding: 16px;
@@ -168,6 +169,29 @@ body {
   font-weight: bold;
 }
 
+.term-badge-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.term-badge {
+  background: rgba(0, 255, 102, 0.15);
+  border: 1px solid var(--crt-text);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+
+.term-badge.locked {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #444;
+  color: #666;
+}
+
 .term-callout {
   background: rgba(0, 255, 102, 0.12);
   border: 2px solid var(--crt-text);
@@ -185,6 +209,7 @@ body {
   text-shadow: 0 0 8px #00ff66;
 }
 
+/* Status Cards & Color Variants */
 .term-block.error {
   background: rgba(45, 10, 10, 0.45);
   border-color: var(--crt-error);
@@ -200,6 +225,12 @@ body {
 .term-block.success {
   background: rgba(0, 45, 20, 0.5);
   border-color: var(--crt-text);
+}
+
+.term-block.admin {
+  background: rgba(5, 30, 45, 0.55);
+  border-color: var(--crt-admin);
+  color: #bae6fd;
 }
 
 /* Action Deck & Input Line */
@@ -231,6 +262,17 @@ body {
   background: var(--crt-text);
   color: var(--crt-bg);
   transform: translateY(1px);
+}
+
+.chip-btn.admin-chip {
+  border-color: var(--crt-admin);
+  color: var(--crt-admin);
+  display: none; /* Only shown if handle is a Rat Pack member */
+}
+
+.chip-btn.admin-chip:active {
+  background: var(--crt-admin);
+  color: #000;
 }
 
 .input-line-wrap {
