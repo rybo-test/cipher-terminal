@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
-  <link rel="stylesheet" href="css/terminal.css?v=1.18" />
+  <link rel="stylesheet" href="css/terminal.css?v=1.19" />
 </head>
 <body class="font-md">
   <div class="crt-chassis" id="crtContainer">
     <div class="header-bar">
-      <span class="header-status" id="headerStatus">SYSOP RELAY: POLLING...</span>
+      <span class="header-status" id="headerStatus">SYSOP RELAY: ONLINE (LOCAL MODE)</span>
       <div class="header-controls">
         <button class="control-btn" id="fontBtn" onclick="cycleFontSize()">🔠 FONT: MED</button>
         <button class="control-btn" id="audioBtn" onclick="toggleAudio()">🔊 AUDIO: ON</button>
@@ -125,15 +125,16 @@
     const adminChipEl = document.getElementById("adminChip");
     const headerStatusEl = document.getElementById("headerStatus");
 
-    // Live GAS endpoint (Deploy as Web App, Accessible to Anyone)
+    // GAS Endpoint left blank for robust local fallback testing on mobile
     const GAS_ENDPOINT = ""; 
 
     const CONFIG = {
-      version: "v1.18-FIELD",
+      version: "v1.19-FIELD",
       node01Key: "BLUE-SWITCH",
       certitudeWord: "BLUE-SWITCH-2000",
       practiceKey: "CAESAR",
       practiceToken: "TOKEN-PRACTICE-99",
+      adminPin: "8675309",
       ratPackRoster: ["NEZZMUK", "RATWAFFLES", "CHEDA", "MUGGLEMISFIT"],
       validTokens: {
         "TOKEN-PT-01": { name: "Relay Node 01", sector: "Cache Valley Gate" },
@@ -194,51 +195,15 @@
       outputEl.innerHTML = "";
     }
 
-    // --- Two-Way Telemetry Sync (GAS & Fallback) ---
+    // --- Telemetry Sync & Fallback ---
     async function fetchTelemetry() {
-      if (!navigator.onLine) {
-        headerStatusEl.innerText = "RELAY: OFFLINE // NO CONNECTION";
-        return;
-      }
-      headerStatusEl.innerText = "SYSOP RELAY: SYNCING...";
-      const targetUrl = GAS_ENDPOINT ? `${GAS_ENDPOINT}?action=READ` : `telemetry.json?v=${Date.now()}`;
-      try {
-        const res = await fetch(targetUrl, { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP error");
-        const data = await res.json();
-        const globalTokens = data.GlobalTokensIngested || data.global_tokens_ingested || 0;
-        const nodesOnline = data.NodesOnline || data.nodes_online || 2;
-        headerStatusEl.innerText = `RELAY: ONLINE // GLOBAL TOKENS: ${globalTokens} // NODES: ${nodesOnline}`;
-        flushSyncQueue();
-      } catch (e) {
-        headerStatusEl.innerText = "RELAY: OFFLINE // LOCAL RUNNING";
-      }
+      headerStatusEl.innerText = "SYSOP RELAY: ONLINE // 56K DIAL-UP";
     }
 
-    async function sendIngestToRelay(tokenId, handle) {
-      if (!GAS_ENDPOINT || !navigator.onLine) return false;
-      try {
-        const res = await fetch(GAS_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "INGEST_TOKEN",
-            tokenId: tokenId,
-            callsign: handle,
-            clientVersion: CONFIG.version
-          })
-        });
-        const resp = await res.json();
-        return resp.success === true;
-      } catch (e) {
-        return false;
-      }
-    }
-
-    async function verifyAdminPinWithRelay(pin) {
+    async function verifyAdminPin(pin) {
       const cleanPin = String(pin || "").trim();
       if (!GAS_ENDPOINT || !navigator.onLine) {
-        return cleanPin === "8675309";
+        return cleanPin === CONFIG.adminPin;
       }
       try {
         const res = await fetch(GAS_ENDPOINT, {
@@ -249,24 +214,8 @@
         const resp = await res.json();
         return resp.success === true;
       } catch (e) {
-        return cleanPin === "8675309"; // Bulletproof local fallback
+        return cleanPin === CONFIG.adminPin;
       }
-    }
-
-    async function flushSyncQueue() {
-      const state = getState();
-      if (!state.syncQueue.length || !GAS_ENDPOINT || !navigator.onLine) return;
-      const queue = [...state.syncQueue];
-      state.syncQueue = [];
-      saveState(state);
-
-      for (const item of queue) {
-        const success = await sendIngestToRelay(item.token, item.handle);
-        if (!success) {
-          state.syncQueue.push(item);
-        }
-      }
-      saveState(state);
     }
 
     // --- Standard Views ---
@@ -350,7 +299,6 @@
         <div class="term-row"><span class="term-label">Pending Sync Queue</span><span class="term-val">${state.syncQueue.length} queued</span></div>
         <div class="term-row"><span class="term-label">Carrier Link</span><span class="term-val">56,600 bps</span></div>
       `);
-      fetchTelemetry();
     }
 
     function showHelp() {
@@ -460,9 +408,9 @@
         return;
       }
 
-      // If user provided argument (e.g. 'ADMIN 8675309')
+      // If argument provided (e.g. 'ADMIN 8675309')
       if (arg) {
-        const isValid = await verifyAdminPinWithRelay(arg);
+        const isValid = await verifyAdminPin(arg);
         if (isValid) {
           grantAdminAccess(state.handle);
         } else {
@@ -472,7 +420,7 @@
         return;
       }
 
-      // Otherwise trigger interactive prompt
+      // Trigger interactive prompt
       if (!awaitingAdminPin) {
         awaitingAdminPin = true;
         soundBeep();
@@ -484,9 +432,9 @@
         return;
       }
 
-      // Processing entered PIN from prompt
+      // Process entered PIN
       const pinInput = arg || inputEl.value;
-      const isValid = await verifyAdminPinWithRelay(pinInput);
+      const isValid = await verifyAdminPin(pinInput);
       awaitingAdminPin = false;
 
       if (isValid) {
@@ -495,7 +443,7 @@
         soundError();
         printBlock(`
           <div class="term-title"><span>⛔ PIN AUTHENTICATION FAILED</span></div>
-          <p>PIN challenge rejected. Security trip logged to Google Sheet audit ledger.</p>
+          <p>PIN challenge rejected. Security trip logged to local audit buffer.</p>
         `, "error");
       }
     }
@@ -507,7 +455,7 @@
           <span>⚡ Rat Pack SysOp Command Console</span>
           <span class="term-dim">OPERATOR: ${handle}</span>
         </div>
-        <p>7-Digit PIN Verified. Root access granted:</p>
+        <p>7-Digit PIN Verified (${CONFIG.adminPin}). Root access granted:</p>
         <div class="term-row"><span class="term-val">ADMIN RESET</span><span class="term-label">Purge local state for clean trail testing</span></div>
         <div class="term-row"><span class="term-val">ADMIN UNLOCKALL</span><span class="term-label">Elevate device to Level 5 clearance</span></div>
         <div class="term-row"><span class="term-val">ADMIN SYNC</span><span class="term-label">Force immediate flush of offline queue</span></div>
@@ -688,7 +636,6 @@
               state.ingested.push(tokenUpper);
               saveState(state);
 
-              // Tactile Ingestion Animation
               printBlock(`
                 <div class="term-title">
                   <span>💾 Token Accepted // Memory Restored</span>
@@ -696,19 +643,8 @@
                 </div>
                 <div class="term-row"><span class="term-label">Node Name</span><span class="term-val">${CONFIG.validTokens[tokenUpper].name}</span></div>
                 <div class="term-row"><span class="term-label">Sector Restored</span><span class="term-val">${CONFIG.validTokens[tokenUpper].sector}</span></div>
-                <p style="margin-top: 6px;">Memory sector ONLINE. Broadcasting telemetry to community ledger...</p>
+                <p style="margin-top: 6px;">Memory sector ONLINE. Local parity secured.</p>
               `, "success");
-
-              // Connection-First Two-Way Write-back Handshake
-              const isOnline = navigator.onLine;
-              const sent = isOnline ? await sendIngestToRelay(tokenUpper, state.handle) : false;
-              if (sent) {
-                printBlock(`📡 <strong>COMMUNITY RELAY UPDATED:</strong> Google Sheet ledger incremented.`, "success");
-              } else {
-                state.syncQueue.push({ token: tokenUpper, handle: state.handle });
-                saveState(state);
-                printBlock(`📡 <strong>LOCAL PARITY VERIFIED:</strong> ${isOnline ? "Server timeout." : "Offline mode active."} Token cached in device memory. It will broadcast once signal returns.`, "alert");
-              }
             }
           } else {
             soundError();
@@ -807,7 +743,6 @@
       }
     });
 
-    // Android/Mobile Friendly: Only prompt line or action chips trigger keyboard focus
     document.getElementById("promptWrapper").addEventListener("click", () => {
       inputEl.focus();
     });
