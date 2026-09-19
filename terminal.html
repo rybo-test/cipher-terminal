@@ -127,7 +127,7 @@
 
   <div id="terminal-screen">
     <div class="term-block">
-      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.21</span></div>
+      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.22</span></div>
       <p>ESTABLISHING CARRIER... OK.<br>MEMORY INTEGRITY: 3.1% (DEGRADED).<br>Type <code>HELP</code> for available directives, or use the field action chips below.</p>
     </div>
   </div>
@@ -145,7 +145,7 @@
 
   <script>
     // PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE:
-    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzy_nVH9dNt12aTMkG7SK8SiX_3yv9I2S_JAt_QgaroaEvyaSoIR1fIkKVH__lxag7a/exec";
+    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbz_YOUR_ACTUAL_URL_HERE/exec";
 
     let awaitingAdminPin = false;
     
@@ -175,29 +175,26 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
-    async function sendTelemetry(action, payload) {
-      if (!GAS_ENDPOINT) return;
+    // Bulletproof GET-based Telemetry Dispatcher
+    async function sendTelemetry(action, params = {}) {
+      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
-        const data = Object.assign({ action: action, callsign: getState().handle, clientVersion: "v1.21" }, payload);
-        await fetch(GAS_ENDPOINT, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+        const urlParams = new URLSearchParams(Object.assign({
+          action: action,
+          callsign: getState().handle
+        }, params));
+        
+        // Fire and forget GET request
+        fetch(`${GAS_ENDPOINT}?${urlParams.toString()}`).catch(() => {});
       } catch (err) {
         console.error("Telemetry error:", err);
       }
     }
 
     async function verifyAdminPin(pin) {
-      if (!GAS_ENDPOINT) return pin === "8675309"; // local fallback
+      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return pin === "8675309";
       try {
-        const response = await fetch(GAS_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: "VERIFY_PIN", pin: pin })
-        });
+        const response = await fetch(`${GAS_ENDPOINT}?action=VERIFY_PIN&pin=${pin}`);
         const result = await response.json();
         return result.success;
       } catch (err) {
