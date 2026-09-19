@@ -411,7 +411,6 @@
       speakText("Training module loaded.");
     }
 
-    // --- Admin Console ---
     async function handleAdminCommand(arg) {
       const state = getState();
       if (!isRatPack(state.handle)) {
@@ -419,47 +418,51 @@
         printBlock(`
           <div class="term-title"><span>⛔ ACCESS DENIED</span></div>
           <p>Operator callsign '<strong>${state.handle}</strong>' is NOT authorized for S.O.S. Administrative Root.</p>
+          <div class="term-dim">Rat Pack clearance required. Use <code>HANDLE &lt;NAME&gt;</code> if you are an authorized pack member.</div>
         `, "error");
-        speakText("Access denied. Rat Pack clearance required.");
+        awaitingAdminPin = false; // Ensure prompt lock clears
         return;
       }
 
+      // If argument provided directly (e.g. 'ADMIN 8675309')
       if (arg) {
+        awaitingAdminPin = false; // Clear any hanging prompts
         const isValid = await verifyAdminPin(arg);
-        if (isValid) grantAdminAccess(state.handle);
-        else printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div>`, "error");
+        if (isValid) {
+          grantAdminAccess(state.handle);
+        } else {
+          soundError();
+          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid 7-digit SysOp PIN.</p>`, "error");
+        }
         return;
       }
 
-      if (!awaitingAdminPin) {
-        awaitingAdminPin = true;
-        soundBeep();
-        printBlock(`
-          <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
-          <p>Enter your <strong>7-digit SysOp Admin PIN</strong> below:</p>
-        `, "admin");
-        speakText("Security challenge. Enter 7-digit PIN.");
+      // If waiting for prompt input
+      if (awaitingAdminPin) {
+        const pinInput = arg || inputEl.value;
+        awaitingAdminPin = false; // Reset lock immediately
+        const isValid = await verifyAdminPin(pinInput);
+
+        if (isValid) {
+          grantAdminAccess(state.handle);
+        } else {
+          soundError();
+          printBlock(`
+            <div class="term-title"><span>⛔ PIN AUTHENTICATION FAILED</span></div>
+            <p>PIN challenge rejected. Security trip logged to local audit buffer.</p>
+          `, "error");
+        }
         return;
       }
 
-      const pinInput = arg || inputEl.value;
-      const isValid = await verifyAdminPin(pinInput);
-      awaitingAdminPin = false;
-
-      if (isValid) grantAdminAccess(state.handle);
-      else printBlock(`<div class="term-title"><span>⛔ PIN FAILED</span></div>`, "error");
-    }
-
-    function grantAdminAccess(handle) {
-      soundAdmin();
+      // Trigger interactive prompt if no arg given
+      awaitingAdminPin = true;
+      soundBeep();
       printBlock(`
-        <div class="term-title">
-          <span>⚡ Rat Pack SysOp Command Console</span>
-          <span class="term-dim">OPERATOR: ${handle}</span>
-        </div>
-        <p>7-Digit PIN Verified (${CONFIG.adminPin}). Root access granted.</p>
+        <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
+        <p>Welcome, Rat Pack operative. Enter your <strong>7-digit SysOp Admin PIN</strong> below:</p>
+        <div class="term-dim">Prompt locked: Type your 7-digit PIN and press Enter.</div>
       `, "admin");
-      speakText("Admin PIN verified. Root access granted.");
     }
 
     // --- Command Processing Engine ---
