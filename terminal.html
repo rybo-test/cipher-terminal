@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-  <title>C.I.P.H.E.R. // Cache Tales Field Terminal</title>
+  <title>C.I.P.H.E.R. // Cache Tales Field Transceiver</title>
   <style>
     :root {
       --bg-color: #080d0a;
@@ -15,9 +15,7 @@
       --input-size-default: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       background-color: var(--bg-color);
@@ -101,9 +99,7 @@
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
-    #action-deck::-webkit-scrollbar {
-      display: none;
-    }
+    #action-deck::-webkit-scrollbar { display: none; }
 
     .action-chip {
       background: rgba(0, 255, 102, 0.08);
@@ -124,7 +120,6 @@
       color: var(--bg-color);
     }
 
-    /* Fixed bottom input dock */
     #input-form {
       display: flex;
       align-items: center;
@@ -178,16 +173,9 @@
     }
 
     @media (max-width: 600px) {
-      #app-container {
-        padding: 6px 8px;
-      }
-      .action-chip {
-        padding: 8px 10px;
-        font-size: 0.8em;
-      }
-      #cli-input {
-        font-size: 16px;
-      }
+      #app-container { padding: 6px 8px; }
+      .action-chip { padding: 8px 10px; font-size: 0.8em; }
+      #cli-input { font-size: 16px; }
     }
   </style>
 </head>
@@ -196,113 +184,111 @@
   <div id="app-container">
     <div id="header-bar">
       <div class="header-row">
-        <span id="sat-link">CIPHER LINK: ACQUIRING...</span>
-        <span id="cacher-id">USER/GC NAME: UNREGISTERED</span>
+        <span id="sat-link">CORRIDOR BEACON: ACQUIRING GPS LOCK...</span>
+        <span id="cacher-id">CACHER: UNREGISTERED</span>
       </div>
       <div class="header-row term-dim">
-        <span id="mem-status">MEMORY: 3.1%</span>
-        <span id="bat-status">BATTERY: 84% [SOLAR FLOAT]</span>
+        <span id="mem-status">RESTORED STAGE DATA: 3.1%</span>
+        <span id="bat-status">SOLAR CELL: 84% [FLOAT]</span>
       </div>
     </div>
 
     <div id="terminal-screen">
       <div class="term-block">
         <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
-        <p class="term-dim">CACHE TALES ARCHIVE RECOVERY SYSTEM // S.O.S. GRID NODE</p>
-        <p>Physical vault casing: 1/4-inch rolled rocket steel (RSI origin).<br>
-        Core Engine: Modular Dispatch & History Navigation Active.<br>
-        Type <code>HELP</code> for field directives, or tap an action chip below.</p>
+        <p class="term-dim">CACHE TALES TRAIL LOG &amp; RECOVERY SYSTEM // CACHE COUNTY POWER TRAIL</p>
+        <p>Container casing: 1/4-inch rolled rocket steel (RSI origin).<br>
+        Trail command table &amp; log history: Online.<br>
+        Type <code>HELP</code> for trail directives, or tap an action chip below.</p>
       </div>
     </div>
 
     <div id="action-deck">
-      <button class="action-chip" onclick="executeDirective('STATUS')">[ 📊 STATUS ]</button>
-      <button class="action-chip" onclick="executeDirective('HINT')">[ 💡 HINT ]</button>
-      <button class="action-chip" onclick="executeDirective('SYNC')">[ 🔄 SYNC ]</button>
-      <button class="action-chip" onclick="executeDirective('SWAG')">[ 📦 SWAG ]</button>
-      <button class="action-chip" onclick="executeDirective('KICK')">[ 🥾 KICK ]</button>
+      <button class="action-chip" onclick="executeTrailCommand('STATUS')">[ 📊 STATUS ]</button>
+      <button class="action-chip" onclick="executeTrailCommand('HINT')">[ 💡 HINT ]</button>
+      <button class="action-chip" onclick="executeTrailCommand('SYNC')">[ 🔄 SYNC ]</button>
+      <button class="action-chip" onclick="executeTrailCommand('SWAG')">[ 📦 SWAG ]</button>
+      <button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK ]</button>
     </div>
 
-    <form id="input-form" onsubmit="handleFormSubmit(event)">
-      <button type="button" class="nav-btn" title="Previous Command" onclick="historyNavigate(-1)">▲</button>
-      <button type="button" class="nav-btn" title="Next Command" onclick="historyNavigate(1)">▼</button>
+    <form id="input-form" onsubmit="handleLogSubmit(event)">
+      <button type="button" class="nav-btn" title="Previous Trail Command" onclick="historyCycle(-1)">▲</button>
+      <button type="button" class="nav-btn" title="Next Trail Command" onclick="historyCycle(1)">▼</button>
       <span id="prompt-symbol">&gt;</span>
-      <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter directive...">
+      <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter trail command...">
     </form>
   </div>
 
   <script>
     const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
 
-    const SATELLITE_CONSTELLATION = [
+    const GPS_CONSTELLATION = [
       "NAVSTAR-34 (PRN-18)", "GPS-BIIR-2 (PRN-13)", "USA-132 (WAAS-L1)", 
       "NAVSTAR-IIA (PRN-24)", "GPS-BIIF-9 (PRN-06)"
     ];
 
     let awaitingAdminPin = false;
 
-    // --- COMMAND HISTORY BUFFER (BACKLOG-02) ---
-    const HISTORY_MAX = 30;
-    let commandHistory = [];
-    let historyIndex = -1;
-    let tempDraft = "";
+    // --- TRAIL COMMAND HISTORY BUFFER ---
+    const TRAIL_HISTORY_MAX = 30;
+    let trailCommandHistory = [];
+    let trailHistoryPointer = -1;
+    let trailDraftInput = "";
 
-    function pushHistory(cmd) {
-      if (!cmd || (commandHistory.length > 0 && commandHistory[commandHistory.length - 1] === cmd)) {
-        historyIndex = -1;
+    function recordHistory(commandText) {
+      if (!commandText || (trailCommandHistory.length > 0 && trailCommandHistory[trailCommandHistory.length - 1] === commandText)) {
+        trailHistoryPointer = -1;
         return;
       }
-      commandHistory.push(cmd);
-      if (commandHistory.length > HISTORY_MAX) {
-        commandHistory.shift();
+      trailCommandHistory.push(commandText);
+      if (trailCommandHistory.length > TRAIL_HISTORY_MAX) {
+        trailCommandHistory.shift();
       }
-      historyIndex = -1;
-      tempDraft = "";
+      trailHistoryPointer = -1;
+      trailDraftInput = "";
     }
 
-    function historyNavigate(direction) {
+    function historyCycle(direction) {
       const input = document.getElementById("cli-input");
-      if (commandHistory.length === 0) return;
+      if (trailCommandHistory.length === 0) return;
 
-      if (historyIndex === -1) {
-        tempDraft = input.value;
-        historyIndex = commandHistory.length;
+      if (trailHistoryPointer === -1) {
+        trailDraftInput = input.value;
+        trailHistoryPointer = trailCommandHistory.length;
       }
 
-      historyIndex += direction;
+      trailHistoryPointer += direction;
 
-      if (historyIndex < 0) {
-        historyIndex = 0;
-      } else if (historyIndex >= commandHistory.length) {
-        historyIndex = commandHistory.length;
-        input.value = tempDraft;
+      if (trailHistoryPointer < 0) {
+        trailHistoryPointer = 0;
+      } else if (trailHistoryPointer >= trailCommandHistory.length) {
+        trailHistoryPointer = trailCommandHistory.length;
+        input.value = trailDraftInput;
         return;
       }
 
-      input.value = commandHistory[historyIndex];
-      // Move cursor to end
+      input.value = trailCommandHistory[trailHistoryPointer];
       setTimeout(() => {
         input.selectionStart = input.selectionEnd = input.value.length;
       }, 0);
     }
 
-    // Physical Arrow Key Listener
     document.getElementById("cli-input").addEventListener("keydown", function(e) {
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        historyNavigate(-1);
+        historyCycle(-1);
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        historyNavigate(1);
+        historyCycle(1);
       }
     });
 
-    // --- MOBILE VIEWPORT & KEYBOARD HARDENING ---
+    // --- MOBILE VIEWPORT & TOUCH FIELD LOCK ---
     function adjustForMobileViewport() {
       if (window.visualViewport) {
         const height = window.visualViewport.height;
         document.getElementById("app-container").style.height = `${height}px`;
-        scrollTerminalToBottom();
+        scrollTerminalToGZ();
       }
     }
 
@@ -311,13 +297,13 @@
       window.visualViewport.addEventListener("scroll", adjustForMobileViewport);
     }
 
-    function scrollTerminalToBottom() {
+    function scrollTerminalToGZ() {
       const screen = document.getElementById("terminal-screen");
       screen.scrollTop = screen.scrollHeight;
     }
 
-    // --- LOCAL DOSSIER STATE ---
-    function getDossier() {
+    // --- CACHER DOSSIER & FIELD STATE ---
+    function getCacherDossier() {
       let profile = {};
       try {
         profile = JSON.parse(localStorage.getItem("cipher_profile") || "{}");
@@ -344,34 +330,34 @@
       return key;
     }
 
-    function saveDossierLocally(dossier) {
+    function saveCacherDossier(dossier) {
       localStorage.setItem("cipher_gc_name", dossier.username);
       localStorage.setItem("cipher_sync_key", dossier.syncKey);
       localStorage.setItem("cipher_rat_brain", dossier.ratBrainUnlocked ? "true" : "false");
       localStorage.setItem("cipher_profile", JSON.stringify(dossier.profileData));
-      updateHeader();
+      updateFieldVitals();
     }
 
-    function calculateMemoryIntegrity() {
-      const dossier = getDossier();
-      let integrity = 3.1;
+    function calculateStageRestoration() {
+      const dossier = getCacherDossier();
+      let restored = 3.1;
       const count = (dossier.profileData.stagesLogged || []).length;
-      integrity += Math.min(count * 0.4, 96.9);
-      return integrity.toFixed(1);
+      restored += Math.min(count * 0.4, 96.9);
+      return restored.toFixed(1);
     }
 
-    function updateHeader() {
-      const dossier = getDossier();
-      document.getElementById("cacher-id").innerText = `USER/GC: ${dossier.username}`;
-      document.getElementById("mem-status").innerText = `MEM: ${calculateMemoryIntegrity()}%`;
+    function updateFieldVitals() {
+      const dossier = getCacherDossier();
+      document.getElementById("cacher-id").innerText = `CACHER: ${dossier.username}`;
+      document.getElementById("mem-status").innerText = `RESTORED STAGE DATA: ${calculateStageRestoration()}%`;
     }
 
-    function initSatelliteLink() {
+    function acquireGpsFix() {
       if (navigator.onLine) {
-        const sat = SATELLITE_CONSTELLATION[Math.floor(Math.random() * SATELLITE_CONSTELLATION.length)];
-        document.getElementById("sat-link").innerText = `LINK: ${sat} // OK`;
+        const sat = GPS_CONSTELLATION[Math.floor(Math.random() * GPS_CONSTELLATION.length)];
+        document.getElementById("sat-link").innerText = `GPS BEACON: ${sat} // LOCKED`;
       } else {
-        document.getElementById("sat-link").innerText = `LINK: NO SERVICE // LOCAL`;
+        document.getElementById("sat-link").innerText = `GPS BEACON: NO SATELLITE FIX // TRAIL CACHE`;
       }
     }
 
@@ -381,30 +367,30 @@
       block.className = `term-block ${type}`;
       block.innerHTML = htmlContent;
       screen.appendChild(block);
-      scrollTerminalToBottom();
+      scrollTerminalToGZ();
     }
 
-    // --- TELEMETRY & CLOUD SYNC ---
-    async function sendTelemetry(action, customParams = {}) {
+    // --- FIELD LOG RELAY TO SPREADSHEET ---
+    async function transmitFieldLog(action, fieldDetails = {}) {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
-        const dossier = getDossier();
-        const baseParams = {
+        const dossier = getCacherDossier();
+        const baseTransmission = {
           action: action,
           username: dossier.username,
           syncKey: dossier.syncKey,
           tokenId: "NONE",
           stageId: "STAGE_01_GZ",
-          deviceStatus: "ONLINE_56K"
+          deviceStatus: "GZ_HANDSHAKE_OK"
         };
-        const urlParams = new URLSearchParams(Object.assign(baseParams, customParams));
-        fetch(`${GAS_ENDPOINT}?${urlParams.toString()}`).catch(() => {});
+        const searchParams = new URLSearchParams(Object.assign(baseTransmission, fieldDetails));
+        fetch(`${GAS_ENDPOINT}?${searchParams.toString()}`).catch(() => {});
       } catch (err) {}
     }
 
     async function syncDossierToCloud() {
-      const dossier = getDossier();
-      await sendTelemetry("SAVE_DOSSIER", {
+      const dossier = getCacherDossier();
+      await transmitFieldLog("SAVE_DOSSIER", {
         ratBrainUnlocked: dossier.ratBrainUnlocked,
         profileData: JSON.stringify(dossier.profileData)
       });
@@ -412,12 +398,12 @@
 
     async function restoreDossierFromCloud(syncKey) {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
-      printBlock(`<div class="term-dim">Querying satellite ledger for key ${syncKey}...</div>`);
+      printBlock(`<div class="term-dim">Scanning corridor archives for sync key ${syncKey}...</div>`);
       try {
         const res = await fetch(`${GAS_ENDPOINT}?action=GET_DOSSIER&syncKey=${encodeURIComponent(syncKey)}`);
         const data = await res.json();
         if (data.success) {
-          saveDossierLocally({
+          saveCacherDossier({
             username: data.username,
             syncKey: data.syncKey,
             ratBrainUnlocked: data.ratBrainUnlocked,
@@ -425,20 +411,20 @@
           });
           printBlock(`
             <div class="term-title"><span>📡 DOSSIER RESTORED</span></div>
-            <p>Welcome back, <strong>${data.username}</strong>!<br>
-            Stages: ${(data.profileData.stagesLogged || []).length} | Inventory: ${(data.profileData.inventory || []).length} items.<br>
-            Rat Brain: <strong>${data.ratBrainUnlocked ? "MOUNTED" : "DORMANT"}</strong>.</p>
+            <p>Welcome back to the trail, <strong>${data.username}</strong>!<br>
+            Physical stages stamped: ${(data.profileData.stagesLogged || []).length} | Swag &amp; Trackables: ${(data.profileData.inventory || []).length}.<br>
+            Rat Brain status: <strong>${data.ratBrainUnlocked ? "MOUNTED" : "DORMANT"}</strong>.</p>
           `);
         } else {
-          printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>Key not found in corridor archives.</p>`, "error");
+          printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>No cacher dossier found matching key '${syncKey}'.</p>`, "error");
         }
       } catch (err) {
-        printBlock(`<p class="error">Relay timeout while restoring dossier.</p>`, "error");
+        printBlock(`<p class="error">Canopy bounce or timeout while restoring cacher dossier.</p>`, "error");
       }
     }
 
-    function displaySyncInfo() {
-      const dossier = getDossier();
+    function showSyncDossier() {
+      const dossier = getCacherDossier();
       const currentUrl = window.location.origin + window.location.pathname;
       const syncUrl = `${currentUrl}?sync=${dossier.syncKey}`;
       const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(syncUrl)}`;
@@ -446,27 +432,28 @@
       syncDossierToCloud();
 
       printBlock(`
-        <div class="term-title"><span>🔄 MULTI-DEVICE SYNC</span></div>
+        <div class="term-title"><span>🔄 MULTI-DEVICE DOSSIER SYNC</span></div>
         <p><strong>Cacher:</strong> ${dossier.username}<br>
         <strong>Sync Key:</strong> <code>${dossier.syncKey}</code></p>
-        <p>Open on desktop/tablet:<br>
+        <p>Open this session on your desktop or secondary field phone:<br>
         <a class="term-link" href="${syncUrl}" target="_blank">${syncUrl}</a></p>
         <div style="background:white; padding:6px; display:inline-block; border-radius:4px; margin:4px 0;">
-          <img src="${qrApiUrl}" alt="QR Sync" width="140" height="140" style="display:block;">
+          <img src="${qrApiUrl}" alt="Trail Sync QR" width="140" height="140" style="display:block;">
         </div>
-        <div class="term-dim">Point another camera at this QR code to load this session.</div>
+        <div class="term-dim">Scan with another camera to transfer your physical finds, inventory, and Rat Brain tools.</div>
       `);
     }
 
-    // --- ADMIN PROTOCOL ---
-    async function handleAdminCommand(arg) {
-      const dossier = getDossier();
-      const authorizedRatPack = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"];
+    // --- RAT PACK SYSOP PIN VERIFICATION ---
+    async function handleRatPackAdmin(arg) {
+      const dossier = getCacherDossier();
+      const ratPackRoster = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"];
 
-      if (!authorizedRatPack.includes(dossier.username)) {
+      if (!ratPackRoster.includes(dossier.username)) {
         printBlock(`
-          <div class="term-title"><span>⛔ RESTRICTED</span></div>
-          <p>Handle '<strong>${dossier.username}</strong>' lacks Rat Pack clearance.</p>
+          <div class="term-title"><span>⛔ CLEARANCE RESTRICTED</span></div>
+          <p>Cacher '<strong>${dossier.username}</strong>' is not indexed in the Rat Pack roster.</p>
+          <div class="term-dim">Maintenance clearance reserved for trail stewards.</div>
         `, "error");
         awaitingAdminPin = false;
         return;
@@ -477,117 +464,118 @@
         const cleanPin = String(arg).trim();
         if (cleanPin === "8675309") {
           dossier.ratBrainUnlocked = true;
-          saveDossierLocally(dossier);
+          saveCacherDossier(dossier);
           syncDossierToCloud();
-          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Rat Pack override active. Rat Brain coprocessor permanently mounted.</p>`, "alert");
+          printBlock(`<div class="term-title"><span>⚡ RAT PACK OVERRIDE GRANTED</span></div><p>Welcome back. Trail maintenance access engaged; Rat Brain puzzle coprocessor mounted.</p>`, "alert");
         } else {
-          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid maintenance PIN.</p>`, "error");
+          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid SysOp maintenance PIN.</p>`, "error");
         }
         return;
       }
 
       awaitingAdminPin = true;
       printBlock(`
-        <div class="term-title"><span>🔐 SYSOP CHALLENGE</span></div>
-        <p>Enter <strong>7-digit Admin PIN</strong>:</p>
+        <div class="term-title"><span>🔐 RAT PACK CHALLENGE</span></div>
+        <p>Enter <strong>7-digit SysOp PIN</strong>:</p>
       `, "alert");
     }
 
-    // --- MODULAR COMMAND DISPATCH REGISTRY (BACKLOG-01) ---
-    const COMMAND_REGISTRY = {
+    // --- GEOCACHING TRAIL COMMAND TABLE ---
+    const TRAIL_COMMANDS = {
       HELP: {
-        aliases: ["?", "MAN", "DIRECTIVES"],
-        summary: "Display available field directives",
-        exec: () => {
-          let listHtml = `<div class="term-title"><span>📖 FIELD DIRECTIVES</span></div>`;
-          const seen = new Set();
-          for (const key in COMMAND_REGISTRY) {
-            const cmd = COMMAND_REGISTRY[key];
-            if (seen.has(cmd.exec)) continue;
-            seen.add(cmd.exec);
-            listHtml += `<p><strong>${cmd.syntax || key}</strong> - ${cmd.summary}</p>`;
+        aliases: ["?", "COMMANDS", "DIRECTIVES"],
+        syntax: "HELP",
+        description: "List all active trail directives",
+        run: () => {
+          let output = `<div class="term-title"><span>📖 CACHE TRAIL DIRECTIVES</span></div>`;
+          const visited = new Set();
+          for (const key in TRAIL_COMMANDS) {
+            const cmd = TRAIL_COMMANDS[key];
+            if (visited.has(cmd.run)) continue;
+            visited.add(cmd.run);
+            output += `<p><strong>${cmd.syntax || key}</strong> - ${cmd.description}</p>`;
           }
-          printBlock(listHtml);
+          printBlock(output);
         }
       },
 
       LOG: {
-        aliases: ["FEED", "STAMP"],
-        syntax: "LOG <target | token | clue>",
-        summary: "Record physical field stage or token find",
-        exec: (arg, dossier) => {
+        aliases: ["SIGN", "STAMP", "FEED"],
+        syntax: "LOG <stage_code | token | clue>",
+        description: "Log a physical trail stage or stamped container token",
+        run: (arg, dossier) => {
           if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: LOG &lt;target | token | clue&gt;</div>`);
+            printBlock(`<div class="term-dim">Syntax: LOG &lt;stage_code | token | clue&gt;</div>`);
             return;
           }
-          const cleanTarget = arg.toUpperCase().trim();
-          if (!dossier.profileData.stagesLogged.includes(cleanTarget)) {
-            dossier.profileData.stagesLogged.push(cleanTarget);
-            saveDossierLocally(dossier);
+          const stageToken = arg.toUpperCase().trim();
+          if (!dossier.profileData.stagesLogged.includes(stageToken)) {
+            dossier.profileData.stagesLogged.push(stageToken);
+            saveCacherDossier(dossier);
             syncDossierToCloud();
           }
           printBlock(`
-            <div class="term-title"><span>📝 FIELD LOG STAMPED</span></div>
-            <p>Target logged: <strong>${cleanTarget}</strong><br>
-            Parity updated. GZ coordinates verified.</p>
+            <div class="term-title"><span>📝 PHYSICAL STAGE LOGGED</span></div>
+            <p>Signed into log for: <strong>${stageToken}</strong><br>
+            Vault parity updated. GZ coordinates locked into trail ledger.</p>
           `);
-          sendTelemetry("LOG_FIND", { tokenId: cleanTarget });
+          transmitFieldLog("LOG_FIND", { tokenId: stageToken });
         }
       },
 
       COLLECT: {
         aliases: ["GRAB", "TAKE"],
         syntax: "COLLECT <item | card | TB>",
-        summary: "Pick up trackable or stage item into inventory",
-        exec: (arg, dossier) => {
+        description: "Retrieve a trackable, signature item, or clue tag into field inventory",
+        run: (arg, dossier) => {
           if (!arg) {
             printBlock(`<div class="term-dim">Syntax: COLLECT &lt;item | card | TB&gt;</div>`);
             return;
           }
-          const cleanTarget = arg.toUpperCase().trim();
-          if (!dossier.profileData.inventory.includes(cleanTarget)) {
-            dossier.profileData.inventory.push(cleanTarget);
-            saveDossierLocally(dossier);
+          const item = arg.toUpperCase().trim();
+          if (!dossier.profileData.inventory.includes(item)) {
+            dossier.profileData.inventory.push(item);
+            saveCacherDossier(dossier);
             syncDossierToCloud();
           }
           printBlock(`
-            <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
-            <p>Added <strong>${cleanTarget}</strong> to active inventory.</p>
+            <div class="term-title"><span>🎒 SWAG / ITEM COLLECTED</span></div>
+            <p>Transferred <strong>${item}</strong> into your active field pack.</p>
           `);
-          sendTelemetry("COLLECT_ITEM", { tokenId: cleanTarget });
+          transmitFieldLog("COLLECT_ITEM", { tokenId: item });
         }
       },
 
       HANDLE: {
-        aliases: ["NAME", "CALLSIGN"],
-        syntax: "HANDLE <name>",
-        summary: "Register or inspect active User / GC Name",
-        exec: (arg, dossier) => {
+        aliases: ["NAME", "CACHER"],
+        syntax: "HANDLE <GC_name>",
+        description: "Set or inspect your Geocaching username",
+        run: (arg, dossier) => {
           if (arg) {
             dossier.username = arg.trim().toUpperCase();
-            saveDossierLocally(dossier);
+            saveCacherDossier(dossier);
             syncDossierToCloud();
-            printBlock(`<p>User / GC Name: <strong>${dossier.username}</strong></p>`);
+            printBlock(`<p>Field callsign updated: <strong>${dossier.username}</strong></p>`);
           } else {
-            printBlock(`<p>Current User / GC Name: <strong>${dossier.username}</strong></p>`);
+            printBlock(`<p>Current Geocaching handle: <strong>${dossier.username}</strong></p>`);
           }
         }
       },
 
       SYNC: {
-        aliases: ["EXPORT"],
+        aliases: ["DOSSIER", "EXPORT"],
         syntax: "SYNC",
-        summary: "Generate multi-device sync link and QR code",
-        exec: () => {
-          displaySyncInfo();
+        description: "Generate multi-device sync link and QR code",
+        run: () => {
+          showSyncDossier();
         }
       },
 
       RESTORE: {
         aliases: ["IMPORT"],
         syntax: "RESTORE <sync_key>",
-        summary: "Ingest dossier session from another device",
-        exec: (arg) => {
+        description: "Restore your physical finds and inventory from another device",
+        run: (arg) => {
           if (!arg) {
             printBlock(`<div class="term-dim">Syntax: RESTORE &lt;CYPHER-SYNC-XXXX-XXXX&gt;</div>`);
           } else {
@@ -597,176 +585,176 @@
       },
 
       STATUS: {
-        aliases: ["STATS", "DIAG"],
+        aliases: ["VITALS", "DIAG"],
         syntax: "STATUS",
-        summary: "Display satellite link, memory & battery vitals",
-        exec: (arg, dossier) => {
+        description: "Display GPS link, restored stage memory, and solar battery vitals",
+        run: (arg, dossier) => {
           printBlock(`
-            <div class="term-title"><span>📊 GZ SYSTEM METRICS</span></div>
-            <p>Operator: ${dossier.username}<br>
+            <div class="term-title"><span>📊 GZ SYSTEM STATUS</span></div>
+            <p>Cacher: ${dossier.username}<br>
             Sync Key: <code>${dossier.syncKey}</code><br>
-            Rat Brain: ${dossier.ratBrainUnlocked ? "ACTIVE [HEURISTIC OVERCLOCK]" : "DORMANT"}<br>
-            Memory: ${calculateMemoryIntegrity()}%<br>
-            Battery: 84% (Solar float)<br>
-            Stages: ${dossier.profileData.stagesLogged.length}<br>
-            Inventory: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
+            Rat Brain: ${dossier.ratBrainUnlocked ? "ACTIVE [HEURISTIC COPROCESSOR]" : "DORMANT"}<br>
+            Vault Memory: ${calculateStageRestoration()}% (Rolled steel chassis)<br>
+            Solar Battery: 84% (Float trickle)<br>
+            Stages Stamped: ${dossier.profileData.stagesLogged.length}<br>
+            Field Inventory: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
           `);
         }
       },
 
       SWAG: {
-        aliases: ["CONTAINER", "CONTENTS"],
+        aliases: ["AMMOBOX", "TRINKETS"],
         syntax: "SWAG",
-        summary: "Inspect physical container contents",
-        exec: () => {
+        description: "Inspect the physical ammo can swag contents",
+        run: () => {
           printBlock(`
             <div class="term-title"><span>📦 AMMO BOX SWAG</span></div>
             <p>- 1x Waterlogged wooden nickel<br>
-            - 1x Broken carabiner<br>
-            - 1x 2004 Arby's coupon<br>
-            - 1x S.O.S. challenge coin</p>
-            <div class="term-dim">Trade equal or trade up. Please seal gasket tight.</div>
+            - 1x Broken plastic carabiner<br>
+            - 1x Expired 2004 Arby's coupon<br>
+            - 1x S.O.S. challenge token</p>
+            <div class="term-dim">Trade equal or trade up. Be sure the rubber gasket is seated tight!</div>
           `);
         }
       },
 
       HINT: {
-        aliases: ["CLUE"],
+        aliases: ["CLUE", "SPOILER"],
         syntax: "HINT",
-        summary: "Corridor decryption nudge",
-        exec: () => {
-          printBlock(`<p>Step away from the sprinklers. Look for the rusted magnetic plate bolted near the 1/4-inch weld line.</p>`);
+        description: "GZ field hint and natural camouflage notes",
+        run: () => {
+          printBlock(`<p>Step back from the sprinkler heads and leave the decorative landscaping alone. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
         }
       },
 
       BYOP: {
-        aliases: ["PEN"],
+        aliases: ["PEN", "PENCIL"],
         syntax: "BYOP",
-        summary: "Pen reminder & field notes",
-        exec: () => {
-          printBlock(`<p>Bring Your Own Pen. Do not scratch initials into rolled steel with a car key—pin 4 doesn't like static discharge.</p>`);
+        description: "Logbook pen reminder and field tips",
+        run: () => {
+          printBlock(`<p>Bring Your Own Pen. Do not try scratching your initials into the rolled steel with your truck key—pin 4 does not like static discharge.</p>`);
         }
       },
 
       TFTC: {
-        aliases: ["THANKS"],
+        aliases: ["THANKS", "FINISH"],
         syntax: "TFTC",
-        summary: "Sign digital log entry",
-        exec: () => {
-          printBlock(`<p>Thanks for the find! Two-word logs on custom welded containers hurt the chassis' feelings. Drop a real story when logging online!</p>`);
+        description: "Sign the digital field log",
+        run: () => {
+          printBlock(`<p>Thanks for the Cache! A two-word log on a custom welded container hurts the chassis' feelings. Drop a real story when you submit your log online!</p>`);
         }
       },
 
       DNF: {
-        aliases: ["FAIL", "LOST"],
+        aliases: ["DIDNOTFIND", "MISSING"],
         syntax: "DNF",
-        summary: "Signal search failure or needed maintenance",
-        exec: () => {
+        description: "Signal a Did Not Find or request container maintenance",
+        run: () => {
           printBlock(`
             <div class="term-title"><span>⚠️ DNF SIGNAL RECORDED</span></div>
-            <p>Heavy canopy bounce? Expand your search radius by 15 feet and check for natural camouflage.</p>
+            <p>Heavy tree canopy or high muggle traffic? Take a breather, expand your search radius by 15 feet, and check for natural camouflage.</p>
           `, "alert");
-          sendTelemetry("DNF_SIGNAL", { tokenId: "DNF_FLAG" });
+          transmitFieldLog("DNF_SIGNAL", { tokenId: "DNF_FLAG" });
         }
       },
 
       KICK: {
-        aliases: ["THUMP", "HIT"],
+        aliases: ["THUMP", "BOOT"],
         syntax: "KICK",
-        summary: "Physical diagnostic percussive maintenance",
-        exec: () => {
+        description: "Percussive maintenance check against the container welds",
+        run: () => {
           printBlock(`
             <div class="term-title"><span>*THUD*</span></div>
-            <p>Solid 1/4-inch rolled rocket steel. Rocket Science Institute welds don't give a millimeter to hiking boots.</p>
+            <p>Solid 1/4-inch rolled rocket steel. Rocket Science Institute welds don't yield a millimeter to hiking boots.</p>
           `);
         }
       },
 
       ADMIN: {
-        aliases: ["SYSOP", "ROOT"],
+        aliases: ["SYSOP", "MAINTENANCE"],
         syntax: "ADMIN [pin]",
-        summary: "Restricted Rat Pack SysOp maintenance suite",
-        exec: (arg) => {
-          handleAdminCommand(arg);
+        description: "Restricted Rat Pack trail maintenance console",
+        run: (arg) => {
+          handleRatPackAdmin(arg);
         }
       },
 
       CLEAR: {
         aliases: ["CLS"],
         syntax: "CLEAR",
-        summary: "Clear the terminal display",
-        exec: () => {
+        description: "Clear the terminal screen",
+        run: () => {
           document.getElementById("terminal-screen").innerHTML = "";
         }
       }
     };
 
-    // Build Aliases Map dynamically
-    const ALIAS_LOOKUP = {};
-    for (const key in COMMAND_REGISTRY) {
-      ALIAS_LOOKUP[key] = COMMAND_REGISTRY[key];
-      if (COMMAND_REGISTRY[key].aliases) {
-        COMMAND_REGISTRY[key].aliases.forEach(alias => {
-          ALIAS_LOOKUP[alias.toUpperCase()] = COMMAND_REGISTRY[key];
+    // Fast trail alias resolution table
+    const TRAIL_ALIAS_INDEX = {};
+    for (const key in TRAIL_COMMANDS) {
+      TRAIL_ALIAS_INDEX[key] = TRAIL_COMMANDS[key];
+      if (TRAIL_COMMANDS[key].aliases) {
+        TRAIL_COMMANDS[key].aliases.forEach(alias => {
+          TRAIL_ALIAS_INDEX[alias.toUpperCase()] = TRAIL_COMMANDS[key];
         });
       }
     }
 
-    // --- MAIN DISPATCH ENGINE ---
-    async function executeDirective(cmdText) {
-      const cleanText = cmdText.trim();
+    // --- COMMAND DISPATCH ---
+    async function executeTrailCommand(commandText) {
+      const cleanText = commandText.trim();
       if (!cleanText) return;
 
-      pushHistory(cleanText);
+      recordHistory(cleanText);
       printBlock(`<span class="term-dim">&gt; ${cleanText}</span>`);
 
       if (awaitingAdminPin) {
-        handleAdminCommand(cleanText);
+        handleRatPackAdmin(cleanText);
         return;
       }
 
-      const parts = cleanText.split(" ");
-      const verb = parts[0].toUpperCase();
-      const arg = parts.slice(1).join(" ");
-      const dossier = getDossier();
+      const splitLine = cleanText.split(" ");
+      const verb = splitLine[0].toUpperCase();
+      const argument = splitLine.slice(1).join(" ");
+      const dossier = getCacherDossier();
 
-      const targetCommand = ALIAS_LOOKUP[verb];
-      if (targetCommand) {
-        targetCommand.exec(arg, dossier);
+      const matchedCommand = TRAIL_ALIAS_INDEX[verb];
+      if (matchedCommand) {
+        matchedCommand.run(argument, dossier);
       } else {
-        printBlock(`<div class="term-block error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for available directives.</div>`, "error");
+        printBlock(`<div class="term-block error">Unknown trail command '<strong>${verb}</strong>'. Type <code>HELP</code> for available trail directives.</div>`, "error");
       }
     }
 
-    function handleFormSubmit(event) {
+    function handleLogSubmit(event) {
       event.preventDefault();
       const input = document.getElementById("cli-input");
       const val = input.value.trim();
       if (!val) return;
       input.value = "";
-      executeDirective(val);
+      executeTrailCommand(val);
       input.focus();
     }
 
-    function checkUrlPayloads() {
-      const params = new URLSearchParams(window.location.search);
-      const syncKey = params.get("sync");
-      const token = params.get("token") || params.get("clue") || params.get("log") || params.get("restore");
+    function checkTrailScans() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const syncKey = urlParams.get("sync");
+      const token = urlParams.get("token") || urlParams.get("clue") || urlParams.get("log") || urlParams.get("restore");
 
       if (syncKey) {
         restoreDossierFromCloud(syncKey);
       } else if (token) {
         setTimeout(() => {
-          printBlock(`<span class="term-dim">[AUTO-SATELLITE INGEST: SCAN DETECTED]</span>`);
-          executeDirective(`LOG ${token}`);
+          printBlock(`<span class="term-dim">[PHYSICAL NFC/QR TAG DETECTED AT GZ]</span>`);
+          executeTrailCommand(`LOG ${token}`);
         }, 400);
       }
     }
 
-    // Startup
-    updateHeader();
-    initSatelliteLink();
-    checkUrlPayloads();
+    // Boot routines
+    updateFieldVitals();
+    acquireGpsFix();
+    checkTrailScans();
     adjustForMobileViewport();
   </script>
 </body>
