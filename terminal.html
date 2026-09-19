@@ -127,7 +127,7 @@
 
   <div id="terminal-screen">
     <div class="term-block">
-      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.24</span></div>
+      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.26</span></div>
       <p>ESTABLISHING CARRIER... OK.<br>MEMORY INTEGRITY: 3.1% (DEGRADED).<br>Type <code>HELP</code> for directives, or use the field action chips below.</p>
     </div>
   </div>
@@ -144,14 +144,14 @@
   </form>
 
   <script>
-    // PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE:
-    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbz_YOUR_ACTUAL_URL_HERE/exec";
+    // REPLACE THIS WITH YOUR NEW COPIED WEB APP URL ENDING IN /exec:
+    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
 
     let awaitingAdminPin = false;
     
     function getState() {
       return {
-        handle: localStorage.getItem("cipher_handle") || "ANONYMOUS",
+        handle: localStorage.getItem("cipher_handle") || "NEZZMUK",
         tokensIngested: Number(localStorage.getItem("cipher_tokens") || 0)
       };
     }
@@ -176,7 +176,7 @@
     }
 
     async function sendTelemetry(action, params = {}) {
-      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
+      if (!GAS_ENDPOINT || GAS_ENDPOINT.includes("PASTE_NEW_URL_HERE")) return;
       try {
         const urlParams = new URLSearchParams(Object.assign({
           action: action,
@@ -188,13 +188,11 @@
       }
     }
 
-    // Bulletproof validation: Instant local check + background cloud audit log
     async function verifyAdminPin(pin) {
       const cleanPin = String(pin).trim();
       const isValid = (cleanPin === "8675309");
 
       if (isValid) {
-        // Log to spreadsheet in the background without blocking UI
         sendTelemetry("VERIFY_PIN", { pin: cleanPin, status: "SUCCESS" });
       }
       return isValid;
@@ -260,7 +258,7 @@
             <div class="term-title"><span>📖 DIRECTIVES DIRECTORY</span></div>
             <p><strong>HANDLE &lt;name&gt;</strong> - Set your geocaching callsign<br>
             <strong>FEED &lt;token&gt;</strong> - Ingest a field token (e.g. FEED TOKEN-PT-01)<br>
-            <strong>ADMIN</strong> - Request root access (Rat Pack only)<br>
+            <strong>ADMIN &lt;pin&gt;</strong> - Request root access<br>
             <strong>STATUS</strong> - Display system metrics<br>
             <strong>CLEAR</strong> - Clear terminal buffer</p>
           `);
@@ -316,7 +314,7 @@
     }
 
     updateHeader();
-    if (GAS_ENDPOINT && GAS_ENDPOINT.includes("exec")) {
+    if (GAS_ENDPOINT && !GAS_ENDPOINT.includes("PASTE_NEW_URL_HERE")) {
       document.getElementById("sys-status").innerText = "SYSOP RELAY: ONLINE // 56K";
     } else {
       document.getElementById("sys-status").innerText = "SYSOP RELAY: ONLINE (LOCAL)";
