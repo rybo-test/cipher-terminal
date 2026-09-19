@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>C.I.P.H.E.R. // Field Terminal</title>
+  <title>C.I.P.H.E.R. // Cache Tales Field Terminal</title>
   <style>
     :root {
-      --bg-color: #0b0f10;
+      --bg-color: #080d0a;
       --term-green: #00ff66;
       --term-dim: #008833;
+      --term-alert: #ffaa00;
       --term-error: #ff3333;
-      --term-admin: #ffaa00;
       --font-size-default: 16px;
       --input-size-default: 17px;
     }
@@ -31,9 +31,15 @@
 
     #header-bar {
       border-bottom: 1px dashed var(--term-dim);
-      padding-bottom: 8px;
-      margin-bottom: 10px;
-      font-size: 0.9em;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      font-size: 0.82em;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .header-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -55,8 +61,8 @@
       margin-bottom: 4px;
     }
 
+    .term-block.alert { border-left-color: var(--term-alert); color: var(--term-alert); }
     .term-block.error { border-left-color: var(--term-error); color: var(--term-error); }
-    .term-block.admin { border-left-color: var(--term-admin); color: var(--term-admin); }
 
     .term-title {
       font-weight: bold;
@@ -74,11 +80,11 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 6px;
-      margin: 10px 0;
+      margin: 8px 0;
     }
 
     .action-chip {
-      background: rgba(0, 255, 102, 0.1);
+      background: rgba(0, 255, 102, 0.08);
       border: 1px solid var(--term-dim);
       color: var(--term-green);
       padding: 8px 4px;
@@ -121,49 +127,82 @@
 <body>
 
   <div id="header-bar">
-    <span id="sys-status">SYSOP RELAY: CONNECTING...</span>
-    <span id="sys-handle">CALLSIGN: UNKNOWN</span>
+    <div class="header-row">
+      <span id="sat-link">CIPHER LINK: ACQUIRING...</span>
+      <span id="cacher-id">USER/GC NAME: UNREGISTERED</span>
+    </div>
+    <div class="header-row term-dim">
+      <span id="mem-status">MEMORY: 3.1% (CONTAINER WEATHERED)</span>
+      <span id="bat-status">BATTERY: 84% [SOLAR FLOAT]</span>
+    </div>
   </div>
 
   <div id="terminal-screen">
     <div class="term-block">
-      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.26</span></div>
-      <p>ESTABLISHING CARRIER... OK.<br>MEMORY INTEGRITY: 3.1% (DEGRADED).<br>Type <code>HELP</code> for directives, or use the field action chips below.</p>
+      <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
+      <p class="term-dim">CACHE TALES ARCHIVE RECOVERY SYSTEM // S.O.S. GRID NODE</p>
+      <p>Physical vault casing: 1/4-inch rolled rocket steel (RSI origin).<br>
+      Ground zero telemetry locked. Earwig truce on pin 4 remains honored.<br>
+      Type <code>HELP</code> for field directives, or tap an action chip below.</p>
     </div>
   </div>
 
   <div id="action-deck">
-    <button class="action-chip" onclick="runCommand('SLEUTH')">[ 🔍 SLEUTH ]</button>
     <button class="action-chip" onclick="runCommand('STATUS')">[ 📊 STATUS ]</button>
-    <button class="action-chip" onclick="runCommand('TRAIN')">[ 🎓 TRAIN ]</button>
+    <button class="action-chip" onclick="runCommand('HINT')">[ 💡 HINT ]</button>
+    <button class="action-chip" onclick="runCommand('SWAG')">[ 📦 SWAG ]</button>
   </div>
 
   <form id="input-form" onsubmit="handleFormSubmit(event)">
     <span id="prompt-symbol">&gt;</span>
-    <input type="text" id="cli-input" autocomplete="off" autofocus placeholder="Enter directive...">
+    <input type="text" id="cli-input" autocomplete="off" autofocus placeholder="Enter cache directive...">
   </form>
 
   <script>
-    // REPLACE THIS WITH YOUR NEW COPIED WEB APP URL ENDING IN /exec:
     const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
 
+    const SATELLITE_CONSTELLATION = [
+      "NAVSTAR-34 (PRN-18)", "GPS-BIIR-2 (PRN-13)", "USA-132 (WAAS-L1)", 
+      "NAVSTAR-IIA (PRN-24)", "GPS-BIIF-9 (PRN-06)"
+    ];
+
     let awaitingAdminPin = false;
-    
-    function getState() {
+
+    function getFinderState() {
       return {
-        handle: localStorage.getItem("cipher_handle") || "NEZZMUK",
-        tokensIngested: Number(localStorage.getItem("cipher_tokens") || 0)
+        username: localStorage.getItem("cipher_gc_name") || "NEZZMUK",
+        unlockedSectors: JSON.parse(localStorage.getItem("cipher_sectors") || "[]"),
+        inventory: JSON.parse(localStorage.getItem("cipher_inventory") || "[]")
       };
     }
 
-    function setHandle(newHandle) {
-      localStorage.setItem("cipher_handle", newHandle.toUpperCase());
+    function setCacherName(name) {
+      const clean = name.trim().toUpperCase();
+      localStorage.setItem("cipher_gc_name", clean);
       updateHeader();
     }
 
+    function calculateMemoryIntegrity() {
+      const state = getFinderState();
+      let integrity = 3.1;
+      if (state.unlockedSectors.includes("SECTOR_01")) integrity += 0.2;
+      if (state.unlockedSectors.includes("SECTOR_02")) integrity += 3.5;
+      return integrity.toFixed(1);
+    }
+
     function updateHeader() {
-      const state = getState();
-      document.getElementById("sys-handle").innerText = `CALLSIGN: ${state.handle}`;
+      const state = getFinderState();
+      document.getElementById("cacher-id").innerText = `USER/GC NAME: ${state.username}`;
+      document.getElementById("mem-status").innerText = `MEMORY: ${calculateMemoryIntegrity()}% (WEATHERED)`;
+    }
+
+    function initSatelliteLink() {
+      if (navigator.onLine) {
+        const sat = SATELLITE_CONSTELLATION[Math.floor(Math.random() * SATELLITE_CONSTELLATION.length)];
+        document.getElementById("sat-link").innerText = `CIPHER LINK: ${sat} // ACTIVE`;
+      } else {
+        document.getElementById("sat-link").innerText = `CIPHER LINK: NO SERVICE // LOCAL CACHE`;
+      }
     }
 
     function printBlock(htmlContent, type = "") {
@@ -175,36 +214,41 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
-    async function sendTelemetry(action, params = {}) {
-      if (!GAS_ENDPOINT || GAS_ENDPOINT.includes("PASTE_NEW_URL_HERE")) return;
+    // Dispatches matching headers: Timestamp | Username | TokenID | StageID | Action | DeviceStatus
+    async function sendTelemetry(action, customParams = {}) {
+      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
-        const urlParams = new URLSearchParams(Object.assign({
+        const state = getFinderState();
+        const baseParams = {
           action: action,
-          callsign: getState().handle
-        }, params));
+          username: state.username,
+          tokenId: "NONE",
+          stageId: "STAGE_01_GZ",
+          deviceStatus: "ONLINE_56K"
+        };
+        const urlParams = new URLSearchParams(Object.assign(baseParams, customParams));
         fetch(`${GAS_ENDPOINT}?${urlParams.toString()}`).catch(() => {});
-      } catch (err) {
-        console.error("Telemetry error:", err);
-      }
+      } catch (err) {}
     }
 
     async function verifyAdminPin(pin) {
       const cleanPin = String(pin).trim();
       const isValid = (cleanPin === "8675309");
-
       if (isValid) {
-        sendTelemetry("VERIFY_PIN", { pin: cleanPin, status: "SUCCESS" });
+        sendTelemetry("VERIFY_PIN", { pin: cleanPin, deviceStatus: "SYSOP_OVERRIDE" });
       }
       return isValid;
     }
 
     async function handleAdminCommand(arg) {
-      const state = getState();
-      if (state.handle !== "NEZZMUK" && !state.handle.includes("RATPACK")) {
+      const state = getFinderState();
+      const authorizedRatPack = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"];
+
+      if (!authorizedRatPack.includes(state.username)) {
         printBlock(`
-          <div class="term-title"><span>⛔ ACCESS DENIED</span></div>
-          <p>Operator callsign '<strong>${state.handle}</strong>' lacks administrative clearance.</p>
-          <div class="term-dim">Rat Pack or authorized SysOp credentials required.</div>
+          <div class="term-title"><span>⛔ CLEARANCE RESTRICTED</span></div>
+          <p>User/GC Name '<strong>${state.username}</strong>' not indexed in Rat Pack operations registry.</p>
+          <div class="term-dim">Physical access requires authorized field maintenance credentials.</div>
         `, "error");
         awaitingAdminPin = false;
         return;
@@ -214,9 +258,9 @@
         awaitingAdminPin = false;
         const isValid = await verifyAdminPin(arg);
         if (isValid) {
-          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, commander. Root privileges active.</p>`, "admin");
+          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, Rat Pack op. Maintenance override enabled.</p>`, "alert");
         } else {
-          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid 7-digit SysOp PIN.</p>`, "error");
+          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid SysOp maintenance PIN.</p>`, "error");
         }
         return;
       }
@@ -226,7 +270,7 @@
         awaitingAdminPin = false;
         const isValid = await verifyAdminPin(pinInput);
         if (isValid) {
-          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, commander. Root privileges active.</p>`, "admin");
+          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, Rat Pack op. Maintenance override enabled.</p>`, "alert");
         } else {
           printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Authentication challenge failed.</p>`, "error");
         }
@@ -236,62 +280,176 @@
       awaitingAdminPin = true;
       printBlock(`
         <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
-        <p>Enter your <strong>7-digit SysOp Admin PIN</strong> below:</p>
-      `, "admin");
+        <p>Enter <strong>7-digit SysOp Admin PIN</strong>:</p>
+      `, "alert");
+    }
+
+    function processFieldLog(target) {
+      const cleanTarget = target.toUpperCase().trim();
+      const state = getFinderState();
+
+      if (!state.unlockedSectors.includes("SECTOR_01")) {
+        state.unlockedSectors.push("SECTOR_01");
+        localStorage.setItem("cipher_sectors", JSON.stringify(state.unlockedSectors));
+      }
+
+      printBlock(`
+        <div class="term-title"><span>📝 FIELD LOG RECORDED</span></div>
+        <p>Entry stamped for target: <strong>${cleanTarget}</strong><br>
+        Physical vault parity updated. GZ coordinates verified.</p>
+        <div class="term-dim">Transmitted to S.O.S. corridor ledger via active satellite link.</div>
+      `);
+
+      sendTelemetry("LOG_FIND", { tokenId: cleanTarget, stageId: "STAGE_01_GZ" });
+      updateHeader();
+    }
+
+    function processCollect(target) {
+      const cleanTarget = target.toUpperCase().trim();
+      const state = getFinderState();
+
+      if (!state.inventory.includes(cleanTarget)) {
+        state.inventory.push(cleanTarget);
+        localStorage.setItem("cipher_inventory", JSON.stringify(state.inventory));
+      }
+
+      printBlock(`
+        <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
+        <p>Transferred <strong>${cleanTarget}</strong> into active field inventory.<br>
+        Digital trackable signature logged.</p>
+      `);
+
+      sendTelemetry("COLLECT_ITEM", { tokenId: cleanTarget, stageId: "STAGE_01_GZ" });
     }
 
     async function runCommand(cmdText) {
-      const parts = cmdText.trim().split(" ");
+      const cleanText = cmdText.trim();
+      if (!cleanText) return;
+
+      const parts = cleanText.split(" ");
       const verb = parts[0].toUpperCase();
       const arg = parts.slice(1).join(" ");
 
-      printBlock(`<span class="term-dim">&gt; ${cmdText}</span>`);
+      printBlock(`<span class="term-dim">&gt; ${cleanText}</span>`);
 
       if (awaitingAdminPin) {
-        handleAdminCommand(cmdText.trim());
+        handleAdminCommand(cleanText);
         return;
       }
 
       switch (verb) {
         case "HELP":
           printBlock(`
-            <div class="term-title"><span>📖 DIRECTIVES DIRECTORY</span></div>
-            <p><strong>HANDLE &lt;name&gt;</strong> - Set your geocaching callsign<br>
-            <strong>FEED &lt;token&gt;</strong> - Ingest a field token (e.g. FEED TOKEN-PT-01)<br>
-            <strong>ADMIN &lt;pin&gt;</strong> - Request root access<br>
-            <strong>STATUS</strong> - Display system metrics<br>
-            <strong>CLEAR</strong> - Clear terminal buffer</p>
+            <div class="term-title"><span>📖 FIELD DIRECTIVES</span></div>
+            <p><strong>LOG &lt;token | cache | clue&gt;</strong> - Record field stage or token find<br>
+            <strong>COLLECT &lt;item | card | TB | clue&gt;</strong> - Pick up trackable or stage item<br>
+            <strong>HANDLE &lt;name&gt;</strong> or <strong>NAME &lt;name&gt;</strong> - Set User / GC Name<br>
+            <strong>STATUS</strong> - Display satellite link, memory, and battery vitals<br>
+            <strong>SWAG</strong> - Inspect contents of the physical container<br>
+            <strong>HINT</strong> - Corridor decryption nudge<br>
+            <strong>BYOP</strong> - Pen reminder & field notes<br>
+            <strong>TFTC</strong> - Sign the digital log<br>
+            <strong>DNF</strong> - Signal cache maintenance / search failure<br>
+            <strong>KICK</strong> - Physical diagnostic test<br>
+            <strong>CLEAR</strong> - Clear terminal screen</p>
           `);
           break;
 
-        case "HANDLE":
-          if (arg) {
-            setHandle(arg);
-            printBlock(`<p>Operator callsign updated to: <strong>${getState().handle}</strong></p>`);
-            sendTelemetry("LOG_EVENT", { eventId: "HANDLE_SET" });
+        case "LOG":
+        case "FEED":
+        case "RESTORE":
+          if (!arg) {
+            printBlock(`<div class="term-dim">Usage: LOG &lt;token | cache | clue&gt; (e.g. LOG TOKEN-PT-01)</div>`);
           } else {
-            printBlock(`<p>Active Operator: <strong>${getState().handle}</strong></p>`);
+            processFieldLog(arg);
           }
           break;
 
-        case "FEED":
-          const tokenId = arg || "TOKEN-UNKNOWN";
-          printBlock(`
-            <div class="term-title"><span>💾 INGESTING TOKEN...</span></div>
-            <p>Token ID: <strong>${tokenId}</strong> processed successfully.<br>Parity synchronized with corridor ledger.</p>
-          `);
-          sendTelemetry("INGEST_TOKEN", { tokenId: tokenId });
+        case "COLLECT":
+        case "DISCOVER":
+        case "GRAB":
+          if (!arg) {
+            printBlock(`<div class="term-dim">Usage: COLLECT &lt;item | card | TB | clue&gt;</div>`);
+          } else {
+            processCollect(arg);
+          }
           break;
 
-        case "ADMIN":
-          handleAdminCommand(arg);
+        case "HANDLE":
+        case "NAME":
+          if (arg) {
+            setCacherName(arg);
+            printBlock(`<p>User / GC Name updated: <strong>${getFinderState().username}</strong></p>`);
+            sendTelemetry("NAME_UPDATE", { tokenId: "USERNAME_CHANGE", stageId: "CORRIDOR" });
+          } else {
+            printBlock(`<p>Current User / GC Name: <strong>${getFinderState().username}</strong></p>`);
+          }
           break;
 
         case "STATUS":
           printBlock(`
-            <div class="term-title"><span>📊 SYSTEM METRICS</span></div>
-            <p>Operator: ${getState().handle}<br>Memory Integrity: 3.1%<br>Relay Nodes: Online</p>
+            <div class="term-title"><span>📊 GZ SYSTEM METRICS</span></div>
+            <p>Operator: ${getFinderState().username}<br>
+            Memory Parity: ${calculateMemoryIntegrity()}% (Weathered chassis)<br>
+            Power: 84% (Solar float trickle)<br>
+            Transceiver Link: Online (Box Elder Corridor)<br>
+            Inventory: ${getFinderState().inventory.join(", ") || "[EMPTY]"}</p>
           `);
+          break;
+
+        case "TFTC":
+          printBlock(`
+            <p>Thanks for the find! Just remember—a two-word log on a custom welded container hurts the chassis' feelings. Drop a real field story when you log online!</p>
+          `);
+          break;
+
+        case "SWAG":
+          printBlock(`
+            <div class="term-title"><span>📦 AMMO BOX SWAG INVENTORY</span></div>
+            <p>- 1x Waterlogged wooden nickel<br>
+            - 1x Broken plastic carabiner<br>
+            - 1x Expired 2004 Arby's coupon<br>
+            - 1x S.O.S. brass challenge token (Do not remove)</p>
+            <div class="term-dim">Trade equal or trade up. Please seal the ammo can gasket tight.</div>
+          `);
+          break;
+
+        case "HINT":
+          printBlock(`
+            <p>Stop digging in the decorative mulch and step away from the sprinkler heads. Look for the rusted magnetic plate bolted near the 1/4-inch weld line.</p>
+          `);
+          break;
+
+        case "BYOP":
+          printBlock(`
+            <p>Bring Your Own Pen. Do NOT try scratching your initials into the rolled steel with a car key—pin 4 doesn't like the static discharge.</p>
+          `);
+          break;
+
+        case "DNF":
+          printBlock(`
+            <div class="term-title"><span>⚠️ DNF SIGNAL RECORDED</span></div>
+            <p>High muggle presence or heavy canopy bounce? Take a breath, expand your search radius by 15 feet, and check for natural camouflage.</p>
+          `, "alert");
+          sendTelemetry("DNF_SIGNAL", { tokenId: "DNF_FLAG", stageId: "STAGE_01_GZ" });
+          break;
+
+        case "TB":
+        case "TRACKABLE":
+          printBlock(`
+            <p>To record a trackable item or geocoin, use: <code>COLLECT &lt;tracking_code&gt;</code></p>
+          `);
+          break;
+
+        case "KICK":
+          printBlock(`
+            <div class="term-title"><span>*THUD*</span></div>
+            <p>Solid 1/4-inch rolled rocket steel. The Rocket Science Institute may have left it in the dirt, but their welds don't give a millimeter to hiking boots.</p>
+          `);
+          break;
+
+        case "ADMIN":
+          handleAdminCommand(arg);
           break;
 
         case "CLEAR":
@@ -299,7 +457,7 @@
           break;
 
         default:
-          printBlock(`<div class="error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for options.</div>`, "error");
+          printBlock(`<div class="term-block error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for available field commands.</div>`, "error");
           break;
       }
     }
@@ -313,12 +471,20 @@
       runCommand(val);
     }
 
-    updateHeader();
-    if (GAS_ENDPOINT && !GAS_ENDPOINT.includes("PASTE_NEW_URL_HERE")) {
-      document.getElementById("sys-status").innerText = "SYSOP RELAY: ONLINE // 56K";
-    } else {
-      document.getElementById("sys-status").innerText = "SYSOP RELAY: ONLINE (LOCAL)";
+    function checkUrlPayloads() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token") || params.get("clue") || params.get("log") || params.get("restore");
+      if (token) {
+        setTimeout(() => {
+          printBlock(`<span class="term-dim">[AUTO-SATELLITE INGEST: SCAN DETECTED]</span>`);
+          runCommand(`LOG ${token}`);
+        }, 400);
+      }
     }
+
+    updateHeader();
+    initSatelliteLink();
+    checkUrlPayloads();
   </script>
 </body>
 </html>
