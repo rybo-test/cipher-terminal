@@ -1,724 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Field Terminal Gateway</title>
-  <link rel="stylesheet" href="css/terminal.css?v=1.20" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C.I.P.H.E.R. // Field Terminal</title>
+  <style>
+    :root {
+      --bg-color: #0b0f10;
+      --term-green: #00ff66;
+      --term-dim: #008833;
+      --term-error: #ff3333;
+      --term-admin: #ffaa00;
+      --font-size-default: 16px;
+      --input-size-default: 17px;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--term-green);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: var(--font-size-default);
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    #header-bar {
+      border-bottom: 1px dashed var(--term-dim);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      font-size: 0.9em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #terminal-screen {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 5px;
+      scroll-behavior: smooth;
+    }
+
+    .term-block {
+      border-left: 3px solid var(--term-green);
+      padding-left: 10px;
+      margin-bottom: 4px;
+    }
+
+    .term-block.error { border-left-color: var(--term-error); color: var(--term-error); }
+    .term-block.admin { border-left-color: var(--term-admin); color: var(--term-admin); }
+
+    .term-title {
+      font-weight: bold;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .term-dim {
+      color: var(--term-dim);
+      font-size: 0.85em;
+    }
+
+    #action-deck {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin: 10px 0;
+    }
+
+    .action-chip {
+      background: rgba(0, 255, 102, 0.1);
+      border: 1px solid var(--term-dim);
+      color: var(--term-green);
+      padding: 8px 4px;
+      font-family: inherit;
+      font-size: 0.8em;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+    .action-chip:active {
+      background: var(--term-green);
+      color: var(--bg-color);
+    }
+
+    #input-form {
+      display: flex;
+      gap: 8px;
+      border-top: 1px dashed var(--term-dim);
+      padding-top: 10px;
+    }
+
+    #prompt-symbol {
+      color: var(--term-green);
+      font-weight: bold;
+      align-self: center;
+    }
+
+    #cli-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--term-green);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: var(--input-size-default);
+      outline: none;
+    }
+  </style>
 </head>
-<body class="font-md">
-  <div class="crt-chassis" id="crtContainer">
-    <div class="header-bar">
-      <span class="header-status" id="headerStatus">SYSOP RELAY: ACTIVE // ENERGY: 50%</span>
-      <div class="header-controls">
-        <button class="control-btn" id="fontBtn" onclick="cycleFontSize()">🔠 FONT: MED</button>
-        <button class="control-btn" id="audioBtn" onclick="toggleAudio()">🔊 AUDIO: ON</button>
-      </div>
-    </div>
+<body>
 
-    <!-- Scoped Touch Output Buffer -->
-    <div class="terminal-screen" id="termOutput"></div>
+  <div id="header-bar">
+    <span id="sys-status">SYSOP RELAY: CONNECTING...</span>
+    <span id="sys-handle">CALLSIGN: UNKNOWN</span>
+  </div>
 
-    <div class="action-deck" id="actionDeck">
-      <button class="chip-btn" onclick="triggerAction('SLEUTH')">🔍 SLEUTH</button>
-      <button class="chip-btn" onclick="triggerAction('UNLOCK ')">🔑 UNLOCK</button>
-      <button class="chip-btn" onclick="triggerAction('FEED ')">💾 FEED TOKEN</button>
-      <button class="chip-btn" onclick="triggerAction('PROFILE')">👤 PROFILE</button>
-      <button class="chip-btn" onclick="triggerAction('TRAIN')">🎓 TRAIN</button>
-      <button class="chip-btn" onclick="triggerAction('MAP')">🗺️ MAP</button>
-      <button class="chip-btn" onclick="triggerAction('HELP')">❓ HELP</button>
-      <button class="chip-btn admin-chip" id="adminChip" onclick="triggerAction('ADMIN')">⚡ ADMIN</button>
-    </div>
-
-    <div class="input-line-wrap" id="promptWrapper">
-      <span class="prompt-label" id="promptLabel">C.I.P.H.E.R.&gt;</span>
-      <input 
-        type="text" 
-        id="cliInput" 
-        class="cli-input" 
-        autocomplete="off" 
-        autocorrect="off" 
-        autocapitalize="off" 
-        spellcheck="false" 
-      />
+  <div id="terminal-screen">
+    <div class="term-block">
+      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.21</span></div>
+      <p>ESTABLISHING CARRIER... OK.<br>MEMORY INTEGRITY: 3.1% (DEGRADED).<br>Type <code>HELP</code> for available directives, or use the field action chips below.</p>
     </div>
   </div>
 
+  <div id="action-deck">
+    <button class="action-chip" onclick="runCommand('SLEUTH')">[ 🔍 SLEUTH ]</button>
+    <button class="action-chip" onclick="runCommand('STATUS')">[ 📊 STATUS ]</button>
+    <button class="action-chip" onclick="runCommand('TRAIN')">[ 🎓 TRAIN ]</button>
+  </div>
+
+  <form id="input-form" onsubmit="handleFormSubmit(event)">
+    <span id="prompt-symbol">&gt;</span>
+    <input type="text" id="cli-input" autocomplete="off" autofocus placeholder="Enter directive...">
+  </form>
+
   <script>
-    // --- Audio Synthesis & Progressive Voice Engine ---
-    let audioContext = null;
-    let audioEnabled = true;
+    // PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE:
+    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbz_YOUR_ACTUAL_URL_HERE/exec";
 
-    function initAudio() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-    }
-
-    function playTone(freq, type = "square", duration = 0.08, delay = 0) {
-      if (!audioEnabled) return;
-      initAudio();
-      setTimeout(() => {
-        try {
-          const osc = audioContext.createOscillator();
-          const gain = audioContext.createGain();
-          osc.type = type;
-          osc.frequency.setValueAtTime(freq, audioContext.currentTime);
-          gain.gain.setValueAtTime(0.04, audioContext.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
-          osc.connect(gain);
-          gain.connect(audioContext.destination);
-          osc.start();
-          osc.stop(audioContext.currentTime + duration);
-        } catch (e) {}
-      }, delay * 1000);
-    }
-
-    function soundBeep() { playTone(880, "sine", 0.05); }
-    function soundKey() { playTone(1200 + Math.random() * 200, "square", 0.015); }
-    function soundAdmin() {
-      playTone(587.33, "triangle", 0.08, 0);
-      playTone(880, "triangle", 0.12, 0.08);
-      playTone(1174.66, "triangle", 0.2, 0.18);
-    }
-    function soundError() {
-      playTone(150, "sawtooth", 0.15, 0);
-      playTone(110, "sawtooth", 0.25, 0.15);
-    }
-    function soundSuccess() {
-      playTone(440, "sine", 0.08, 0);
-      playTone(554.37, "sine", 0.08, 0.08);
-      playTone(659.25, "sine", 0.12, 0.16);
-      playTone(880, "sine", 0.25, 0.24);
-    }
-
-    function toggleAudio() {
-      audioEnabled = !audioEnabled;
-      document.getElementById("audioBtn").innerText = audioEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: MUTED";
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      if (audioEnabled) soundBeep();
-    }
-
-    // Progressive Speech Synthesis (1–100 Energy Scaling)
-    function speakText(text) {
-      if (!audioEnabled || !window.speechSynthesis) return;
-      window.speechSynthesis.cancel(); // Stop prior speech
-
-      const state = getState();
-      const energy = state.energy;
-
-      // Rate: 0.45 (sluggish crawl at 0 energy) to 1.05 (crisp at 100)
-      const rate = 0.45 + (energy / 100) * 0.60;
-      // Pitch: 0.30 (deep groaning at 0) to 1.00 (natural at 100)
-      const pitch = 0.30 + (energy / 100) * 0.70;
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = rate;
-      utterance.pitch = pitch;
-      utterance.volume = 0.9;
-
-      window.speechSynthesis.speak(utterance);
-    }
-
-    // --- Font Size Controller ---
-    const fontSizes = ["sm", "md", "lg"];
-    const fontLabels = { sm: "🔠 FONT: SMALL", md: "🔠 FONT: MED", lg: "🔠 FONT: LARGE" };
-
-    function setFontSize(size) {
-      if (!fontSizes.includes(size)) size = "md";
-      document.body.classList.remove("font-sm", "font-md", "font-lg");
-      document.body.classList.add(`font-${size}`);
-      localStorage.setItem("cipher_font_size", size);
-      const btn = document.getElementById("fontBtn");
-      if (btn) btn.innerText = fontLabels[size];
-    }
-
-    function cycleFontSize() {
-      const current = localStorage.getItem("cipher_font_size") || "md";
-      const nextIdx = (fontSizes.indexOf(current) + 1) % fontSizes.length;
-      setFontSize(fontSizes[nextIdx]);
-      soundBeep();
-    }
-
-    // --- Terminal State & Energy Engine ---
-    const outputEl = document.getElementById("termOutput");
-    const inputEl = document.getElementById("cliInput");
-    const adminChipEl = document.getElementById("adminChip");
-    const headerStatusEl = document.getElementById("headerStatus");
-
-    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzy_nVH9dNt12aTMkG7SK8SiX_3yv9I2S_JAt_QgaroaEvyaSoIR1fIkKVH__lxag7a/exec"; 
-
-    const CONFIG = {
-      version: "v1.20-FIELD",
-      node01Key: "BLUE-SWITCH",
-      certitudeWord: "BLUE-SWITCH-2000",
-      practiceKey: "CAESAR",
-      practiceToken: "TOKEN-PRACTICE-99",
-      adminPin: "8675309",
-      ratPackRoster: ["NEZZMUK", "RATWAFFLES", "CHEDA", "MUGGLEMISFIT"],
-      validTokens: {
-        "TOKEN-PT-01": { name: "Relay Node 01", sector: "Cache Valley Gate" },
-        "TOKEN-PT-02": { name: "Relay Node 02", sector: "Corridor Fence Line" },
-        "TOKEN-PT-03": { name: "Relay Node 03", sector: "Railway Siding" }
-      }
-    };
-
-    const cmdHistory = [];
-    let historyIdx = -1;
     let awaitingAdminPin = false;
-
+    
     function getState() {
-      let energyVal = parseInt(localStorage.getItem("cipher_energy"), 10);
-      if (isNaN(energyVal)) energyVal = 50; // Default starting battery
-
       return {
-        handle: localStorage.getItem("cipher_handle") || "ANONYMOUS_CACHER",
-        clearance: parseInt(localStorage.getItem("cipher_clearance") || "0", 10),
-        energy: Math.max(0, Math.min(100, energyVal)),
-        ingested: JSON.parse(localStorage.getItem("cipher_tokens") || "[]"),
-        syncQueue: JSON.parse(localStorage.getItem("cipher_sync_queue") || "[]")
+        handle: localStorage.getItem("cipher_handle") || "ANONYMOUS",
+        tokensIngested: Number(localStorage.getItem("cipher_tokens") || 0)
       };
     }
 
-    function saveState(state) {
-      state.energy = Math.max(0, Math.min(100, state.energy));
-      localStorage.setItem("cipher_handle", state.handle);
-      localStorage.setItem("cipher_clearance", state.clearance.toString());
-      localStorage.setItem("cipher_energy", state.energy.toString());
-      localStorage.setItem("cipher_tokens", JSON.stringify(state.ingested));
-      localStorage.setItem("cipher_sync_queue", JSON.stringify(state.syncQueue));
-      evaluateAdminVisibility();
-      updateHeaderStatus();
+    function setHandle(newHandle) {
+      localStorage.setItem("cipher_handle", newHandle.toUpperCase());
+      updateHeader();
     }
 
-    function updateHeaderStatus() {
+    function updateHeader() {
       const state = getState();
-      const filled = Math.round(state.energy / 10);
-      const empty = 10 - filled;
-      const bar = "▓".repeat(filled) + "░".repeat(empty);
-      headerStatusEl.innerText = `SYSOP: ONLINE // BATTERY: [${bar}] ${state.energy}%`;
+      document.getElementById("sys-handle").innerText = `CALLSIGN: ${state.handle}`;
     }
 
-    function adjustEnergy(amount, reason = "") {
-      const state = getState();
-      const oldEnergy = state.energy;
-      state.energy = Math.max(0, Math.min(100, state.energy + amount));
-      saveState(state);
+    function printBlock(htmlContent, type = "") {
+      const screen = document.getElementById("terminal-screen");
+      const block = document.createElement("div");
+      block.className = `term-block ${type}`;
+      block.innerHTML = htmlContent;
+      screen.appendChild(block);
+      screen.scrollTop = screen.scrollHeight;
+    }
 
-      if (amount !== 0) {
-        const sign = amount > 0 ? `+${amount}` : `${amount}`;
-        printBlock(`
-          <div class="term-title"><span>⚡ ENERGY SHIFT (${sign})</span></div>
-          <p>${reason} (Current Battery: <strong>${state.energy}%</strong>)</p>
-        `, amount > 0 ? "success" : "alert");
+    async function sendTelemetry(action, payload) {
+      if (!GAS_ENDPOINT) return;
+      try {
+        const data = Object.assign({ action: action, callsign: getState().handle, clientVersion: "v1.21" }, payload);
+        await fetch(GAS_ENDPOINT, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } catch (err) {
+        console.error("Telemetry error:", err);
       }
-    }
-
-    function isRatPack(handle) {
-      return CONFIG.ratPackRoster.includes((handle || "").toUpperCase().trim());
-    }
-
-    function evaluateAdminVisibility() {
-      const state = getState();
-      adminChipEl.style.display = isRatPack(state.handle) ? "inline-block" : "none";
-    }
-
-    function printBlock(contentHtml, type = "") {
-      const card = document.createElement("div");
-      card.className = `term-block ${type}`.trim();
-      card.innerHTML = contentHtml;
-      outputEl.appendChild(card);
-      outputEl.scrollTop = outputEl.scrollHeight;
-    }
-
-    function printEcho(rawInput) {
-      const echo = document.createElement("div");
-      echo.className = "user-echo";
-      echo.innerText = `C.I.P.H.E.R.> ${rawInput}`;
-      outputEl.appendChild(echo);
-    }
-
-    function clearScreen() {
-      outputEl.innerHTML = "";
     }
 
     async function verifyAdminPin(pin) {
-      const cleanPin = String(pin || "").trim();
-      return cleanPin === CONFIG.adminPin;
-    }
-
-    // --- Standard Views ---
-    function showBanner() {
-      const state = getState();
-      updateHeaderStatus();
-      printBlock(`
-        <div class="term-title">
-          <span>⚡ C.I.P.H.E.R. SYSOP OS ${CONFIG.version}</span>
-          <span class="term-dim">OPERATOR: ${state.handle}</span>
-        </div>
-        <p>Sensors detect an active GPS receiver in the corridor.</p>
-        <p>My memory relays are scrambled across northern Utah. Crack the encrypted dispatch, feed physical tokens from field hides, and I will release the Certitude coordinates.</p>
-        <div class="term-dim">
-          👉 <strong>Quick Start:</strong> Tap <code>[ 🎓 TRAIN ]</code> for interactive practice, <code>[ 🔍 SLEUTH ]</code> for your mission clue, or <code>[ 👤 PROFILE ]</code> for your stats.
-        </div>
-      `);
-      speakText("System online. Backup capacitors active. Awaiting your command.");
-    }
-
-    function showProfile() {
-      const state = getState();
-      const isMember = isRatPack(state.handle);
-      const restored = (state.clearance * 20) + (state.ingested.length * 15);
-
-      const b1 = '<span class="term-badge">🎖️ [INITIATE]</span>';
-      const b2 = state.clearance >= 1 ? '<span class="term-badge">🔓 [CIPHER-CRACKER]</span>' : '<span class="term-badge locked">🔒 [CIPHER-CRACKER]</span>';
-      const b3 = state.ingested.length > 0 ? '<span class="term-badge">💾 [FIELD-AGENT]</span>' : '<span class="term-badge locked">🔒 [FIELD-AGENT]</span>';
-      const b4 = state.ingested.length >= 3 ? '<span class="term-badge">🗺️ [CORRIDOR-MASTER]</span>' : '<span class="term-badge locked">🔒 [CORRIDOR-MASTER]</span>';
-      const bAdmin = isMember ? '<span class="term-badge" style="border-color:#38bdf8; color:#38bdf8;">⚡ [RAT PACK SYSOP]</span>' : '';
-
-      printBlock(`
-        <div class="term-title">
-          <span>👤 Operator Dossier & Field Identity</span>
-          <span class="term-dim">${isMember ? "RAT PACK CLEARANCE" : "GUEST CACHER"}</span>
-        </div>
-        <div class="term-row"><span class="term-label">Registered Callsign</span><span class="term-val">${state.handle}</span></div>
-        <div class="term-row"><span class="term-label">Security Clearance</span><span class="term-val">Level ${state.clearance}</span></div>
-        <div class="term-row"><span class="term-label">Battery Energy</span><span class="term-val">${state.energy}%</span></div>
-        <div class="term-row"><span class="term-label">Memory Restored</span><span class="term-val">${restored}%</span></div>
-        <div class="term-row"><span class="term-label">Tokens Ingested</span><span class="term-val">${state.ingested.length} Verified</span></div>
-        <div style="margin-top: 6px; font-weight: bold;">Earned Badges:</div>
-        <div class="term-badge-tray">
-          ${b1} ${b2} ${b3} ${b4} ${bAdmin}
-        </div>
-      `);
-      speakText(`Operator ${state.handle}. Clearance tier ${state.clearance}. Battery at ${state.energy} percent.`);
-    }
-
-    function showMap() {
-      const state = getState();
-      const s1 = state.clearance >= 1 ? "██" : "░░";
-      const s2 = state.ingested.includes("TOKEN-PT-01") ? "██" : "░░";
-      const s3 = state.ingested.includes("TOKEN-PT-02") ? "██" : "░░";
-      const s4 = state.ingested.includes("TOKEN-PT-03") ? "██" : "▒▒";
-      const pct = (state.clearance * 20) + (state.ingested.length * 15);
-
-      printBlock(`
-        <div class="term-title">
-          <span>🗺️ Corridor Sector Restoration Grid</span>
-          <span class="term-dim">${pct}% RESTORED</span>
-        </div>
-        <div class="term-row"><span class="term-label">[01: GATEWAY RELAY]</span><span class="term-val">${s1} ONLINE</span></div>
-        <div class="term-row"><span class="term-label">[02: CORRIDOR FENCE]</span><span class="term-val">${s2} ${state.ingested.includes("TOKEN-PT-01") ? "ONLINE" : "DORMANT"}</span></div>
-        <div class="term-row"><span class="term-label">[03: RAILWAY SIDING]</span><span class="term-val">${s3} ${state.ingested.includes("TOKEN-PT-02") ? "ONLINE" : "DORMANT"}</span></div>
-        <div class="term-row"><span class="term-label">[04: SENTINEL FINAL]</span><span class="term-val">${s4} ${state.ingested.includes("TOKEN-PT-03") ? "ONLINE" : "LOCKED"}</span></div>
-      `);
-      speakText("Corridor grid loaded.");
-    }
-
-    function showStatus() {
-      const state = getState();
-      printBlock(`
-        <div class="term-title">
-          <span>📡 SysOp Telemetry Audit</span>
-          <span class="term-dim">PORT 56K</span>
-        </div>
-        <div class="term-row"><span class="term-label">Active Callsign</span><span class="term-val">${state.handle}</span></div>
-        <div class="term-row"><span class="term-label">Clearance Level</span><span class="term-val">Tier ${state.clearance}</span></div>
-        <div class="term-row"><span class="term-label">Battery Level</span><span class="term-val">${state.energy}%</span></div>
-        <div class="term-row"><span class="term-label">Ingested Tokens</span><span class="term-val">${state.ingested.length} Verified</span></div>
-      `);
-      speakText(`Battery level is ${state.energy} percent. All systems stable.`);
-    }
-
-    function showHelp() {
-      const state = getState();
-      const adminHelp = isRatPack(state.handle) ? '<div class="term-row"><span class="term-val">ADMIN</span><span class="term-label">Open Rat Pack administrative console</span></div>' : '';
-
-      printBlock(`
-        <div class="term-title">
-          <span>❓ SysOp Command Index</span>
-          <span class="term-dim">OPERATOR MANUAL</span>
-        </div>
-        <div class="term-row"><span class="term-val">TRAIN</span><span class="term-label">Launch interactive practice sandbox</span></div>
-        <div class="term-row"><span class="term-val">PROFILE</span><span class="term-label">View operator dossier and earned badges</span></div>
-        <div class="term-row"><span class="term-val">DNF / RSI / MUGGLE</span><span class="term-label">Simulate trail hazards & energy drains</span></div>
-        <div class="term-row"><span class="term-val">SLEUTH</span><span class="term-label">Inspect encrypted case dispatch</span></div>
-        <div class="term-row"><span class="term-val">UNLOCK &lt;WORD&gt;</span><span class="term-label">Submit decoded passcode for GZ (+15 Energy)</span></div>
-        <div class="term-row"><span class="term-val">FEED &lt;TOKEN&gt;</span><span class="term-label">Feed physical token code (+25 Energy)</span></div>
-        <div class="term-row"><span class="term-val">MAP</span><span class="term-label">View corridor sector restoration grid</span></div>
-        <div class="term-row"><span class="term-val">STATUS</span><span class="term-label">Check callsign, battery & clearance</span></div>
-        <div class="term-row"><span class="term-val">KICK</span><span class="term-label">Percussive maintenance (-2 Energy)</span></div>
-        ${adminHelp}
-        <div class="term-row"><span class="term-val">CLEAR</span><span class="term-label">Wipe terminal screen buffer</span></div>
-      `);
-      speakText("Command index displayed.");
-    }
-
-    function showSleuth() {
-      soundBeep();
-      printBlock(`
-        <div class="term-title">
-          <span>🔍 Intercepted Dispatch // Node 01</span>
-          <span class="term-dim">S.O.S. ARCHIVE</span>
-        </div>
-        <p>Incoming packet intercepted from legacy dial-up relay. Decode the cipher string to extract the clearance passkey:</p>
-        <div class="term-callout">
-          <div class="term-callout-code">EOXH-VZLWFK</div>
-          <div class="term-dim" style="margin-top: 4px;">Cipher Type: Caesar Shift (+3)</div>
-        </div>
-        <div class="term-dim">
-          👉 <strong>Instructions:</strong> Decode using CacheSleuth or your cipher toolbox. Then type <code>UNLOCK &lt;WORD&gt;</code>.
-        </div>
-      `);
-      speakText("Incoming intelligence packet intercepted. Decode the Caesar shift string.");
-    }
-
-    function showTrain(step = "ALL") {
-      soundBeep();
-      if (step === "1") {
-        printBlock(`
-          <div class="term-title"><span>🎓 TRAIN 1: Basic Navigation</span></div>
-          <p>The action buttons above the prompt are quick shortcuts!</p>
-          <p>Tap <code>[ 📡 STATUS ]</code> to inspect your signal, or tap <code>[ ❓ HELP ]</code> to see all commands.</p>
-        `);
-      } else if (step === "2") {
-        printBlock(`
-          <div class="term-title"><span>🎓 TRAIN 2: Decryption & Passcodes</span></div>
-          <p>Practice puzzle cipher:</p>
-          <div class="term-callout">
-            <div class="term-callout-code">FDHVDU</div>
-            <div class="term-dim">Hint: Caesar Shift (-3) spells a Roman ruler!</div>
-          </div>
-          <p>Authenticate using: <code>UNLOCK CAESAR</code></p>
-        `);
-      } else if (step === "3") {
-        printBlock(`
-          <div class="term-title"><span>🎓 TRAIN 3: Field Token Ingestion</span></div>
-          <p>Practice feeding a token code into the machine by typing:</p>
-          <div class="term-callout">
-            <div class="term-callout-code">TOKEN-PRACTICE-99</div>
-          </div>
-        `);
-      } else {
-        printBlock(`
-          <div class="term-title">
-            <span>🎓 C.I.P.H.E.R. Training Sandbox</span>
-            <span class="term-dim">PRACTICE PROTOCOLS</span>
-          </div>
-          <p>Type <code>TRAIN 1</code>, <code>TRAIN 2</code>, <code>TRAIN 3</code>, or test hazards with <code>DNF</code>, <code>RSI</code>!</p>
-        `);
+      if (!GAS_ENDPOINT) return pin === "8675309"; // local fallback
+      try {
+        const response = await fetch(GAS_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: "VERIFY_PIN", pin: pin })
+        });
+        const result = await response.json();
+        return result.success;
+      } catch (err) {
+        console.error("PIN verification error:", err);
+        return false;
       }
-      speakText("Training module loaded.");
     }
 
     async function handleAdminCommand(arg) {
       const state = getState();
-      if (!isRatPack(state.handle)) {
-        soundError();
+      if (state.handle !== "NEZZMUK" && !state.handle.includes("RATPACK")) {
         printBlock(`
           <div class="term-title"><span>⛔ ACCESS DENIED</span></div>
-          <p>Operator callsign '<strong>${state.handle}</strong>' is NOT authorized for S.O.S. Administrative Root.</p>
-          <div class="term-dim">Rat Pack clearance required. Use <code>HANDLE &lt;NAME&gt;</code> if you are an authorized pack member.</div>
+          <p>Operator callsign '<strong>${state.handle}</strong>' lacks administrative clearance.</p>
+          <div class="term-dim">Rat Pack or authorized SysOp credentials required.</div>
         `, "error");
-        awaitingAdminPin = false; // Ensure prompt lock clears
+        awaitingAdminPin = false;
         return;
       }
 
-      // If argument provided directly (e.g. 'ADMIN 8675309')
       if (arg) {
-        awaitingAdminPin = false; // Clear any hanging prompts
+        awaitingAdminPin = false;
         const isValid = await verifyAdminPin(arg);
         if (isValid) {
-          grantAdminAccess(state.handle);
+          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, commander. Root privileges active.</p>`, "admin");
         } else {
-          soundError();
           printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid 7-digit SysOp PIN.</p>`, "error");
         }
         return;
       }
 
-      // If waiting for prompt input
       if (awaitingAdminPin) {
-        const pinInput = arg || inputEl.value;
-        awaitingAdminPin = false; // Reset lock immediately
+        const pinInput = document.getElementById("cli-input").value;
+        awaitingAdminPin = false;
         const isValid = await verifyAdminPin(pinInput);
-
         if (isValid) {
-          grantAdminAccess(state.handle);
+          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, commander. Root privileges active.</p>`, "admin");
         } else {
-          soundError();
-          printBlock(`
-            <div class="term-title"><span>⛔ PIN AUTHENTICATION FAILED</span></div>
-            <p>PIN challenge rejected. Security trip logged to local audit buffer.</p>
-          `, "error");
+          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Authentication challenge failed.</p>`, "error");
         }
         return;
       }
 
-      // Trigger interactive prompt if no arg given
       awaitingAdminPin = true;
-      soundBeep();
       printBlock(`
         <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
-        <p>Welcome, Rat Pack operative. Enter your <strong>7-digit SysOp Admin PIN</strong> below:</p>
-        <div class="term-dim">Prompt locked: Type your 7-digit PIN and press Enter.</div>
+        <p>Enter your <strong>7-digit SysOp Admin PIN</strong> below:</p>
       `, "admin");
     }
 
-    // --- Command Processing Engine ---
-    async function processCommand(rawInput) {
-      const clean = rawInput.trim();
-      if (!clean) return;
+    async function runCommand(cmdText) {
+      const parts = cmdText.trim().split(" ");
+      const verb = parts[0].toUpperCase();
+      const arg = parts.slice(1).join(" ");
 
-      printEcho(clean);
-
-      cmdHistory.unshift(clean);
-      if (cmdHistory.length > 20) cmdHistory.pop();
-      historyIdx = -1;
+      printBlock(`<span class="term-dim">&gt; ${cmdText}</span>`);
 
       if (awaitingAdminPin) {
-        await handleAdminCommand(clean);
+        handleAdminCommand(cmdText);
         return;
       }
 
-      const parts = clean.split(/\s+/);
-      const cmd = parts[0].toUpperCase();
-      const arg = parts.slice(1).join(" ").trim();
-      const state = getState();
-
-      switch (cmd) {
+      switch (verb) {
         case "HELP":
-        case "?":
-          soundBeep();
-          showHelp();
+          printBlock(`
+            <div class="term-title"><span>📖 DIRECTIVES DIRECTORY</span></div>
+            <p><strong>HANDLE &lt;name&gt;</strong> - Set your geocaching callsign<br>
+            <strong>FEED &lt;token&gt;</strong> - Ingest a field token (e.g. FEED TOKEN-PT-01)<br>
+            <strong>ADMIN</strong> - Request root access (Rat Pack only)<br>
+            <strong>STATUS</strong> - Display system metrics<br>
+            <strong>CLEAR</strong> - Clear terminal buffer</p>
+          `);
           break;
 
-        case "CLEAR":
-        case "CLS":
-          clearScreen();
-          break;
-
-        case "STATUS":
-        case "DIAG":
-          soundBeep();
-          showStatus();
-          break;
-
-        case "PROFILE":
-        case "WHOAMI":
-        case "ID":
-          soundBeep();
-          showProfile();
-          break;
-
-        case "TRAIN":
-        case "PRACTICE":
-          showTrain(arg);
-          break;
-
-        case "ADMIN":
-        case "SYSOP":
-        case "ROOT":
-          await handleAdminCommand(arg);
-          break;
-
-        case "MAP":
-        case "GRID":
-        case "NODES":
-          soundBeep();
-          showMap();
-          break;
-
-        // --- Sprint 2: Trail Hazard Drains & Surge Recovery ---
-        case "DNF":
-        case "STUMBLE":
-          soundError();
-          adjustEnergy(-10, "DNF Trauma: Spent hours searching the wrong guardrail!");
-          speakText("Did not find? My capacitors are draining.");
-          break;
-
-        case "RSI":
-        case "TRAP":
-          soundError();
-          adjustEnergy(-15, "RSI Junkyard Trap: Fell for BigG59's fake dummy coordinate!");
-          speakText("RSI decoy frequency detected. System brownout.");
-          break;
-
-        case "MUGGLE":
-          soundBeep();
-          adjustEnergy(-5, "Muggle Panic: Ducked into the brush in stealth mode.");
-          speakText("Stealth mode active. Lowering power signature.");
-          break;
-
-        case "FONT":
-        case "FONTSIZE":
-        case "TEXT":
-          if (!arg) {
-            cycleFontSize();
+        case "HANDLE":
+          if (arg) {
+            setHandle(arg);
+            printBlock(`<p>Operator callsign updated to: <strong>${getState().handle}</strong></p>`);
+            sendTelemetry("LOG_EVENT", { eventId: "HANDLE_SET" });
           } else {
-            const target = arg.toLowerCase();
-            if (["sm", "small", "1"].includes(target)) setFontSize("sm");
-            else if (["lg", "large", "3"].includes(target)) setFontSize("lg");
-            else setFontSize("md");
-            printBlock(`🔠 Font size updated to: ${localStorage.getItem("cipher_font_size").toUpperCase()}`, "success");
-          }
-          break;
-
-        case "SLEUTH":
-        case "CASE":
-        case "CLUE":
-          soundBeep();
-          showSleuth();
-          break;
-
-        case "UNLOCK":
-        case "AUTH":
-        case "CODE":
-        case "PASS":
-          if (!arg) {
-            soundError();
-            printBlock(`⚠️ Missing Passcode. Syntax: <code>UNLOCK &lt;WORD&gt;</code>`, "error");
-            return;
-          }
-          if (arg.toUpperCase() === CONFIG.practiceKey) {
-            soundSuccess();
-            adjustEnergy(15, "Practice Cipher Solved!");
-            printBlock(`🎓 TRAIN 2 Complete!`, "success");
-            speakText("Practice cipher solved. Energy surged.");
-          } else if (arg.toUpperCase() === CONFIG.node01Key) {
-            soundSuccess();
-            state.clearance = Math.max(state.clearance, 1);
-            saveState(state);
-            adjustEnergy(15, "Cipher Authenticated (+15 Energy Surge)");
-            printBlock(`
-              <div class="term-title"><span>🔓 Access Granted // Level 1 Clearance</span></div>
-              <div class="term-callout">
-                <div class="term-callout-code">${CONFIG.certitudeWord}</div>
-              </div>
-            `, "success");
-            speakText("Passcode verified. Certitude keyword unlocked.");
-          } else {
-            soundError();
-            printBlock(`⛔ Passcode '${arg}' rejected. Radio static detected.`, "error");
-            speakText("Passcode rejected.");
+            printBlock(`<p>Active Operator: <strong>${getState().handle}</strong></p>`);
           }
           break;
 
         case "FEED":
-        case "INGEST":
-        case "TOKEN":
-          if (!arg) {
-            soundError();
-            printBlock(`⚠️ Missing Token Code. Syntax: <code>FEED &lt;TOKEN-CODE&gt;</code>`, "error");
-            return;
-          }
-          const tokenUpper = arg.toUpperCase();
-          if (tokenUpper === CONFIG.practiceToken) {
-            soundSuccess();
-            adjustEnergy(20, "Practice Token Fed!");
-            printBlock(`🎓 TRAIN 3 Complete!`, "success");
-          } else if (CONFIG.validTokens[tokenUpper]) {
-            if (state.ingested.includes(tokenUpper)) {
-              soundBeep();
-              printBlock(`ℹ️ Token <strong>${tokenUpper}</strong> already ingested.`, "alert");
-            } else {
-              soundSuccess();
-              state.ingested.push(tokenUpper);
-              saveState(state);
-              adjustEnergy(25, "Physical Token Ingested (+25 Energy Surge)");
-              printBlock(`
-                <div class="term-title"><span>💾 Token Accepted // Memory Restored</span></div>
-                <p>Node: ${CONFIG.validTokens[tokenUpper].name}</p>
-              `, "success");
-              speakText("Physical token accepted. Memory sector online.");
-            }
-          } else {
-            soundError();
-            printBlock(`⛔ Unrecognized token '${arg}'.`, "error");
-          }
+          const tokenId = arg || "TOKEN-UNKNOWN";
+          printBlock(`
+            <div class="term-title"><span>💾 INGESTING TOKEN...</span></div>
+            <p>Token ID: <strong>${tokenId}</strong> processed successfully.<br>Parity synchronized with corridor ledger.</p>
+          `);
+          sendTelemetry("INGEST_TOKEN", { tokenId: tokenId });
           break;
 
-        case "HANDLE":
-        case "NAME":
-        case "USER":
-          if (!arg) {
-            printBlock(`👤 Callsign: <strong>${state.handle}</strong>`);
-          } else {
-            state.handle = arg.toUpperCase();
-            saveState(state);
-            soundSuccess();
-            printBlock(`👤 Callsign registered as: <strong>${state.handle}</strong>`, "success");
-            speakText(`Callsign registered as ${state.handle}`);
-          }
+        case "ADMIN":
+          handleAdminCommand(arg);
           break;
 
-        case "KICK":
-        case "HIT":
-        case "BANG":
-          soundError();
-          adjustEnergy(-2, "Percussive Maintenance: Smacked the chassis.");
-          printBlock(`*THWACK!* Signal jumped 0.2%.`, "alert");
-          speakText("Ouch! Stop kicking the steel box.");
+        case "STATUS":
+          printBlock(`
+            <div class="term-title"><span>📊 SYSTEM METRICS</span></div>
+            <p>Operator: ${getState().handle}<br>Memory Integrity: 3.1%<br>Relay Nodes: Online</p>
+          `);
           break;
 
-        case "COFFEE":
-          soundError();
-          printBlock(`ERROR 418: CD drive tray extended.`, "alert");
-          break;
-
-        case "MUGGLE":
-          soundBeep();
-          adjustEnergy(-5, "Muggle Stepped In");
-          printBlock(`Muggle in vicinity! Look casual.`, "alert");
+        case "CLEAR":
+          document.getElementById("terminal-screen").innerHTML = "";
           break;
 
         default:
-          soundError();
-          printBlock(`❓ Unrecognized command '${clean}'. Type <code>HELP</code>.`, "error");
+          printBlock(`<div class="error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for options.</div>`, "error");
           break;
       }
     }
 
-    function triggerAction(actionText) {
-      if (actionText.endsWith(" ")) {
-        inputEl.value = actionText;
-        inputEl.focus();
-      } else {
-        processCommand(actionText);
-      }
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const input = document.getElementById("cli-input");
+      const val = input.value.trim();
+      if (!val) return;
+      input.value = "";
+      runCommand(val);
     }
 
-    inputEl.addEventListener("keydown", (e) => {
-      soundKey();
-      if (e.key === "Enter") {
-        const val = inputEl.value;
-        inputEl.value = "";
-        processCommand(val);
-      } else if (e.key === "ArrowUp") {
-        if (cmdHistory.length && historyIdx < cmdHistory.length - 1) {
-          historyIdx++;
-          inputEl.value = cmdHistory[historyIdx];
-        }
-      } else if (e.key === "ArrowDown") {
-        if (historyIdx > 0) {
-          historyIdx--;
-          inputEl.value = cmdHistory[historyIdx];
-        } else if (historyIdx === 0) {
-          historyIdx = -1;
-          inputEl.value = "";
-        }
-      }
-    });
-
-    document.getElementById("promptWrapper").addEventListener("click", () => {
-      inputEl.focus();
-    });
-
-    window.addEventListener("DOMContentLoaded", () => {
-      setFontSize(localStorage.getItem("cipher_font_size") || "md");
-      evaluateAdminVisibility();
-      showBanner();
-    });
+    // Initialize UI state on boot
+    updateHeader();
+    if (GAS_ENDPOINT && GAS_ENDPOINT.includes("exec")) {
+      document.getElementById("sys-status").innerText = "SYSOP RELAY: ONLINE // 56K";
+    } else {
+      document.getElementById("sys-status").innerText = "SYSOP RELAY: ONLINE (LOCAL)";
+    }
   </script>
 </body>
 </html>
