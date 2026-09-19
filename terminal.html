@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <title>C.I.P.H.E.R. // Cache Tales Field Terminal</title>
   <style>
     :root {
@@ -11,32 +11,46 @@
       --term-dim: #008833;
       --term-alert: #ffaa00;
       --term-error: #ff3333;
-      --font-size-default: 16px;
-      --input-size-default: 17px;
+      --font-size-default: 15px;
+      --input-size-default: 16px; /* Prevents auto-zoom on mobile safari */
     }
 
-    body {
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
       background-color: var(--bg-color);
       color: var(--term-green);
       font-family: 'Courier New', Courier, monospace;
       font-size: var(--font-size-default);
       margin: 0;
-      padding: 10px;
+      padding: 0;
+      height: 100%;
+      height: 100dvh; /* Dynamic viewport height handles keyboard popups */
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+    }
+
+    #app-container {
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      box-sizing: border-box;
-      overflow: hidden;
+      height: 100%;
+      height: 100dvh;
+      padding: 8px 10px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
     }
 
     #header-bar {
       border-bottom: 1px dashed var(--term-dim);
-      padding-bottom: 6px;
-      margin-bottom: 8px;
-      font-size: 0.82em;
+      padding-bottom: 5px;
+      margin-bottom: 6px;
+      font-size: 0.8em;
       display: flex;
       flex-direction: column;
       gap: 3px;
+      flex-shrink: 0;
     }
 
     .header-row {
@@ -46,19 +60,21 @@
     }
 
     #terminal-screen {
-      flex: 1;
+      flex: 1 1 auto;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding-right: 5px;
+      gap: 10px;
+      padding-right: 4px;
       scroll-behavior: smooth;
     }
 
     .term-block {
       border-left: 3px solid var(--term-green);
-      padding-left: 10px;
-      margin-bottom: 4px;
+      padding-left: 8px;
+      margin-bottom: 2px;
+      word-break: break-word;
     }
 
     .term-block.alert { border-left-color: var(--term-alert); color: var(--term-alert); }
@@ -66,9 +82,9 @@
 
     .term-title {
       font-weight: bold;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     .term-dim {
@@ -77,40 +93,53 @@
     }
 
     #action-deck {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
       gap: 6px;
-      margin: 8px 0;
+      overflow-x: auto;
+      padding: 6px 0;
+      flex-shrink: 0;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE */
+    }
+    #action-deck::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
     }
 
     .action-chip {
       background: rgba(0, 255, 102, 0.08);
       border: 1px solid var(--term-dim);
       color: var(--term-green);
-      padding: 8px 4px;
+      padding: 8px 12px;
       font-family: inherit;
-      font-size: 0.8em;
+      font-size: 0.78em;
+      white-space: nowrap;
       text-align: center;
       cursor: pointer;
       border-radius: 3px;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
     .action-chip:active {
       background: var(--term-green);
       color: var(--bg-color);
     }
 
+    /* Fixed bottom input dock */
     #input-form {
       display: flex;
+      align-items: center;
       gap: 8px;
       border-top: 1px dashed var(--term-dim);
-      padding-top: 10px;
+      padding-top: 6px;
+      background: var(--bg-color);
+      flex-shrink: 0;
     }
 
     #prompt-symbol {
       color: var(--term-green);
       font-weight: bold;
-      align-self: center;
+      font-size: 1.1em;
+      user-select: none;
     }
 
     #cli-input {
@@ -121,47 +150,68 @@
       font-family: 'Courier New', Courier, monospace;
       font-size: var(--input-size-default);
       outline: none;
+      padding: 6px 0;
+      border-radius: 0;
+      -webkit-appearance: none;
     }
 
     a.term-link {
       color: var(--term-green);
       text-decoration: underline;
     }
+
+    /* Mobile fine-tuning */
+    @media (max-width: 600px) {
+      #app-container {
+        padding: 6px 8px;
+      }
+      .action-chip {
+        padding: 9px 10px;
+        font-size: 0.82em;
+      }
+      #cli-input {
+        font-size: 16px; /* Lock to 16px to prevent iOS auto-zoom */
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div id="header-bar">
-    <div class="header-row">
-      <span id="sat-link">CIPHER LINK: ACQUIRING...</span>
-      <span id="cacher-id">USER/GC NAME: UNREGISTERED</span>
+  <div id="app-container">
+    <div id="header-bar">
+      <div class="header-row">
+        <span id="sat-link">CIPHER LINK: ACQUIRING...</span>
+        <span id="cacher-id">USER/GC NAME: UNREGISTERED</span>
+      </div>
+      <div class="header-row term-dim">
+        <span id="mem-status">MEMORY: 3.1%</span>
+        <span id="bat-status">BATTERY: 84% [SOLAR FLOAT]</span>
+      </div>
     </div>
-    <div class="header-row term-dim">
-      <span id="mem-status">MEMORY: 3.1% (CONTAINER WEATHERED)</span>
-      <span id="bat-status">BATTERY: 84% [SOLAR FLOAT]</span>
+
+    <div id="terminal-screen">
+      <div class="term-block">
+        <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
+        <p class="term-dim">CACHE TALES ARCHIVE RECOVERY SYSTEM // S.O.S. GRID NODE</p>
+        <p>Physical vault casing: 1/4-inch rolled rocket steel (RSI origin).<br>
+        Mobile UI: Dynamic Viewport Lock Active.<br>
+        Type <code>HELP</code> for field directives, or tap an action chip below.</p>
+      </div>
     </div>
-  </div>
 
-  <div id="terminal-screen">
-    <div class="term-block">
-      <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
-      <p class="term-dim">CACHE TALES ARCHIVE RECOVERY SYSTEM // S.O.S. GRID NODE</p>
-      <p>Physical vault casing: 1/4-inch rolled rocket steel (RSI origin).<br>
-      Multi-device sync: Online. Type <code>SYNC</code> to export dossier link.<br>
-      Type <code>HELP</code> for field directives, or tap an action chip below.</p>
+    <div id="action-deck">
+      <button class="action-chip" onclick="runCommand('STATUS')">[ 📊 STATUS ]</button>
+      <button class="action-chip" onclick="runCommand('HINT')">[ 💡 HINT ]</button>
+      <button class="action-chip" onclick="runCommand('SYNC')">[ 🔄 SYNC ]</button>
+      <button class="action-chip" onclick="runCommand('SWAG')">[ 📦 SWAG ]</button>
+      <button class="action-chip" onclick="runCommand('KICK')">[ 🥾 KICK ]</button>
     </div>
-  </div>
 
-  <div id="action-deck">
-    <button class="action-chip" onclick="runCommand('STATUS')">[ 📊 STATUS ]</button>
-    <button class="action-chip" onclick="runCommand('HINT')">[ 💡 HINT ]</button>
-    <button class="action-chip" onclick="runCommand('SYNC')">[ 🔄 SYNC ]</button>
+    <form id="input-form" onsubmit="handleFormSubmit(event)">
+      <span id="prompt-symbol">&gt;</span>
+      <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter directive...">
+    </form>
   </div>
-
-  <form id="input-form" onsubmit="handleFormSubmit(event)">
-    <span id="prompt-symbol">&gt;</span>
-    <input type="text" id="cli-input" autocomplete="off" autofocus placeholder="Enter cache directive...">
-  </form>
 
   <script>
     const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
@@ -172,6 +222,25 @@
     ];
 
     let awaitingAdminPin = false;
+
+    // --- MOBILE VIEWPORT & KEYBOARD HARDENING ---
+    function adjustForMobileViewport() {
+      if (window.visualViewport) {
+        const height = window.visualViewport.height;
+        document.getElementById("app-container").style.height = `${height}px`;
+        scrollTerminalToBottom();
+      }
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", adjustForMobileViewport);
+      window.visualViewport.addEventListener("scroll", adjustForMobileViewport);
+    }
+
+    function scrollTerminalToBottom() {
+      const screen = document.getElementById("terminal-screen");
+      screen.scrollTop = screen.scrollHeight;
+    }
 
     function getDossier() {
       let profile = {};
@@ -218,16 +287,16 @@
 
     function updateHeader() {
       const dossier = getDossier();
-      document.getElementById("cacher-id").innerText = `USER/GC NAME: ${dossier.username}`;
-      document.getElementById("mem-status").innerText = `MEMORY: ${calculateMemoryIntegrity()}% (WEATHERED)`;
+      document.getElementById("cacher-id").innerText = `USER/GC: ${dossier.username}`;
+      document.getElementById("mem-status").innerText = `MEM: ${calculateMemoryIntegrity()}%`;
     }
 
     function initSatelliteLink() {
       if (navigator.onLine) {
         const sat = SATELLITE_CONSTELLATION[Math.floor(Math.random() * SATELLITE_CONSTELLATION.length)];
-        document.getElementById("sat-link").innerText = `CIPHER LINK: ${sat} // ACTIVE`;
+        document.getElementById("sat-link").innerText = `LINK: ${sat} // OK`;
       } else {
-        document.getElementById("sat-link").innerText = `CIPHER LINK: NO SERVICE // LOCAL CACHE`;
+        document.getElementById("sat-link").innerText = `LINK: NO SERVICE // LOCAL`;
       }
     }
 
@@ -237,7 +306,7 @@
       block.className = `term-block ${type}`;
       block.innerHTML = htmlContent;
       screen.appendChild(block);
-      screen.scrollTop = screen.scrollHeight;
+      scrollTerminalToBottom();
     }
 
     async function sendTelemetry(action, customParams = {}) {
@@ -257,7 +326,6 @@
       } catch (err) {}
     }
 
-    // Persists full profile state to Google Sheet Cachers tab
     async function syncDossierToCloud() {
       const dossier = getDossier();
       await sendTelemetry("SAVE_DOSSIER", {
@@ -266,10 +334,9 @@
       });
     }
 
-    // Restores profile state from Cloud by SyncKey
     async function restoreDossierFromCloud(syncKey) {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
-      printBlock(`<div class="term-dim">Querying S.O.S. satellite archive for key ${syncKey}...</div>`);
+      printBlock(`<div class="term-dim">Querying satellite ledger for key ${syncKey}...</div>`);
       try {
         const res = await fetch(`${GAS_ENDPOINT}?action=GET_DOSSIER&syncKey=${encodeURIComponent(syncKey)}`);
         const data = await res.json();
@@ -281,13 +348,13 @@
             profileData: data.profileData
           });
           printBlock(`
-            <div class="term-title"><span>📡 DOSSIER SYNCHRONIZED</span></div>
+            <div class="term-title"><span>📡 DOSSIER RESTORED</span></div>
             <p>Welcome back, <strong>${data.username}</strong>!<br>
-            Restored ${(data.profileData.stagesLogged || []).length} stage logs, ${(data.profileData.inventory || []).length} inventory items.<br>
-            Rat Brain status: <strong>${data.ratBrainUnlocked ? "MOUNTED" : "DORMANT"}</strong>.</p>
+            Stages: ${(data.profileData.stagesLogged || []).length} | Inventory: ${(data.profileData.inventory || []).length} items.<br>
+            Rat Brain: <strong>${data.ratBrainUnlocked ? "MOUNTED" : "DORMANT"}</strong>.</p>
           `);
         } else {
-          printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>No dossier found matching key '${syncKey}'.</p>`, "error");
+          printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>Key not found in corridor archives.</p>`, "error");
         }
       } catch (err) {
         printBlock(`<p class="error">Relay timeout while restoring dossier.</p>`, "error");
@@ -298,21 +365,20 @@
       const dossier = getDossier();
       const currentUrl = window.location.origin + window.location.pathname;
       const syncUrl = `${currentUrl}?sync=${dossier.syncKey}`;
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(syncUrl)}`;
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(syncUrl)}`;
 
       syncDossierToCloud();
 
       printBlock(`
-        <div class="term-title"><span>🔄 PORTABLE DOSSIER SYNC</span></div>
-        <p><strong>User / GC Name:</strong> ${dossier.username}<br>
+        <div class="term-title"><span>🔄 MULTI-DEVICE SYNC</span></div>
+        <p><strong>Cacher:</strong> ${dossier.username}<br>
         <strong>Sync Key:</strong> <code>${dossier.syncKey}</code></p>
-        <p>To transfer your session to your laptop or another phone, use this link:<br>
+        <p>Open on desktop/tablet:<br>
         <a class="term-link" href="${syncUrl}" target="_blank">${syncUrl}</a></p>
-        <p>Or scan this QR code with another device camera:</p>
-        <div style="background:white; padding:8px; display:inline-block; border-radius:4px; margin-top:4px;">
-          <img src="${qrApiUrl}" alt="Terminal Sync QR Code" width="160" height="160" style="display:block;">
+        <div style="background:white; padding:6px; display:inline-block; border-radius:4px; margin:4px 0;">
+          <img src="${qrApiUrl}" alt="QR Sync" width="140" height="140" style="display:block;">
         </div>
-        <div class="term-dim" style="margin-top:6px;">Your stages, inventory, and Rat Brain state persist across all devices.</div>
+        <div class="term-dim">Point another camera at this QR code to load this session.</div>
       `);
     }
 
@@ -322,9 +388,8 @@
 
       if (!authorizedRatPack.includes(dossier.username)) {
         printBlock(`
-          <div class="term-title"><span>⛔ CLEARANCE RESTRICTED</span></div>
-          <p>User/GC Name '<strong>${dossier.username}</strong>' not indexed in Rat Pack operations registry.</p>
-          <div class="term-dim">Physical access requires authorized field maintenance credentials.</div>
+          <div class="term-title"><span>⛔ RESTRICTED</span></div>
+          <p>Handle '<strong>${dossier.username}</strong>' lacks Rat Pack clearance.</p>
         `, "error");
         awaitingAdminPin = false;
         return;
@@ -337,17 +402,17 @@
           dossier.ratBrainUnlocked = true;
           saveDossierLocally(dossier);
           syncDossierToCloud();
-          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, Rat Pack op. Maintenance override & Rat Brain coprocessor permanently mounted.</p>`, "alert");
+          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Rat Pack override active. Rat Brain coprocessor permanently mounted.</p>`, "alert");
         } else {
-          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid SysOp maintenance PIN.</p>`, "error");
+          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid maintenance PIN.</p>`, "error");
         }
         return;
       }
 
       awaitingAdminPin = true;
       printBlock(`
-        <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
-        <p>Enter <strong>7-digit SysOp Admin PIN</strong>:</p>
+        <div class="term-title"><span>🔐 SYSOP CHALLENGE</span></div>
+        <p>Enter <strong>7-digit Admin PIN</strong>:</p>
       `, "alert");
     }
 
@@ -371,18 +436,18 @@
       switch (verb) {
         case "HELP":
           printBlock(`
-            <div class="term-title"><span>📖 FIELD DIRECTIVES</span></div>
-            <p><strong>LOG &lt;token | cache | clue&gt;</strong> - Record field stage or token find<br>
-            <strong>COLLECT &lt;item | card | TB | clue&gt;</strong> - Pick up trackable or stage item<br>
-            <strong>HANDLE &lt;name&gt;</strong> or <strong>NAME &lt;name&gt;</strong> - Set User / GC Name<br>
-            <strong>SYNC</strong> - Generate multi-device sync link and QR code<br>
-            <strong>RESTORE &lt;sync_key&gt;</strong> - Ingest dossier from another device<br>
-            <strong>STATUS</strong> - Display satellite link, memory, and battery vitals<br>
-            <strong>SWAG</strong> - Inspect contents of the physical container<br>
+            <div class="term-title"><span>📖 DIRECTIVES</span></div>
+            <p><strong>LOG &lt;target&gt;</strong> - Record field stage or token find<br>
+            <strong>COLLECT &lt;item&gt;</strong> - Pick up trackable or stage item<br>
+            <strong>HANDLE &lt;name&gt;</strong> - Set User / GC Name<br>
+            <strong>SYNC</strong> - Generate sync link and QR code<br>
+            <strong>RESTORE &lt;key&gt;</strong> - Ingest dossier from other device<br>
+            <strong>STATUS</strong> - Display link, memory & battery vitals<br>
+            <strong>SWAG</strong> - Inspect container inventory<br>
             <strong>HINT</strong> - Corridor decryption nudge<br>
             <strong>BYOP</strong> - Pen reminder & field notes<br>
             <strong>TFTC</strong> - Sign the digital log<br>
-            <strong>DNF</strong> - Signal cache maintenance / search failure<br>
+            <strong>DNF</strong> - Signal cache search failure<br>
             <strong>KICK</strong> - Physical diagnostic test<br>
             <strong>CLEAR</strong> - Clear terminal screen</p>
           `);
@@ -412,9 +477,9 @@
               syncDossierToCloud();
             }
             printBlock(`
-              <div class="term-title"><span>📝 FIELD LOG RECORDED</span></div>
-              <p>Entry stamped for target: <strong>${cleanTarget}</strong><br>
-              Physical vault parity updated. GZ coordinates verified.</p>
+              <div class="term-title"><span>📝 FIELD LOG STAMPED</span></div>
+              <p>Target logged: <strong>${cleanTarget}</strong><br>
+              Parity updated. GZ coordinates verified.</p>
             `);
             sendTelemetry("LOG_FIND", { tokenId: cleanTarget });
           }
@@ -422,7 +487,7 @@
 
         case "COLLECT":
           if (!arg) {
-            printBlock(`<div class="term-dim">Usage: COLLECT &lt;item | card | TB | clue&gt;</div>`);
+            printBlock(`<div class="term-dim">Usage: COLLECT &lt;item | card | TB&gt;</div>`);
           } else {
             const cleanTarget = arg.toUpperCase().trim();
             if (!dossier.profileData.inventory.includes(cleanTarget)) {
@@ -432,7 +497,7 @@
             }
             printBlock(`
               <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
-              <p>Transferred <strong>${cleanTarget}</strong> into active field inventory.</p>
+              <p>Added <strong>${cleanTarget}</strong> to active inventory.</p>
             `);
             sendTelemetry("COLLECT_ITEM", { tokenId: cleanTarget });
           }
@@ -444,7 +509,7 @@
             dossier.username = arg.trim().toUpperCase();
             saveDossierLocally(dossier);
             syncDossierToCloud();
-            printBlock(`<p>User / GC Name updated: <strong>${dossier.username}</strong></p>`);
+            printBlock(`<p>User / GC Name: <strong>${dossier.username}</strong></p>`);
           } else {
             printBlock(`<p>Current User / GC Name: <strong>${dossier.username}</strong></p>`);
           }
@@ -456,40 +521,40 @@
             <p>Operator: ${dossier.username}<br>
             Sync Key: <code>${dossier.syncKey}</code><br>
             Rat Brain: ${dossier.ratBrainUnlocked ? "ACTIVE [HEURISTIC OVERCLOCK]" : "DORMANT"}<br>
-            Memory Parity: ${calculateMemoryIntegrity()}% (Weathered chassis)<br>
-            Power: 84% (Solar float trickle)<br>
-            Stages Stamped: ${dossier.profileData.stagesLogged.length}<br>
+            Memory: ${calculateMemoryIntegrity()}%<br>
+            Battery: 84% (Solar float)<br>
+            Stages: ${dossier.profileData.stagesLogged.length}<br>
             Inventory: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
           `);
           break;
 
         case "TFTC":
-          printBlock(`<p>Thanks for the find! Just remember—a two-word log on a custom welded container hurts the chassis' feelings. Drop a real field story when you log online!</p>`);
+          printBlock(`<p>Thanks for the find! Two-word logs on custom welded containers hurt the chassis' feelings. Drop a real story when logging online!</p>`);
           break;
 
         case "SWAG":
           printBlock(`
-            <div class="term-title"><span>📦 AMMO BOX SWAG INVENTORY</span></div>
+            <div class="term-title"><span>📦 AMMO BOX SWAG</span></div>
             <p>- 1x Waterlogged wooden nickel<br>
-            - 1x Broken plastic carabiner<br>
-            - 1x Expired 2004 Arby's coupon<br>
-            - 1x S.O.S. brass challenge token (Do not remove)</p>
-            <div class="term-dim">Trade equal or trade up. Please seal the ammo can gasket tight.</div>
+            - 1x Broken carabiner<br>
+            - 1x 2004 Arby's coupon<br>
+            - 1x S.O.S. challenge coin</p>
+            <div class="term-dim">Trade equal or trade up. Please seal gasket tight.</div>
           `);
           break;
 
         case "HINT":
-          printBlock(`<p>Stop digging in the decorative mulch and step away from the sprinkler heads. Look for the rusted magnetic plate bolted near the 1/4-inch weld line.</p>`);
+          printBlock(`<p>Step away from the sprinklers. Look for the rusted magnetic plate bolted near the 1/4-inch weld line.</p>`);
           break;
 
         case "BYOP":
-          printBlock(`<p>Bring Your Own Pen. Do NOT try scratching your initials into the rolled steel with a car key—pin 4 doesn't like the static discharge.</p>`);
+          printBlock(`<p>Bring Your Own Pen. Do not scratch initials into rolled steel with a car key—pin 4 doesn't like static discharge.</p>`);
           break;
 
         case "DNF":
           printBlock(`
             <div class="term-title"><span>⚠️ DNF SIGNAL RECORDED</span></div>
-            <p>High muggle presence or heavy canopy bounce? Take a breath, expand your search radius by 15 feet, and check for natural camouflage.</p>
+            <p>Heavy canopy bounce? Expand your search radius by 15 feet and check for natural camouflage.</p>
           `, "alert");
           sendTelemetry("DNF_SIGNAL", { tokenId: "DNF_FLAG" });
           break;
@@ -497,7 +562,7 @@
         case "KICK":
           printBlock(`
             <div class="term-title"><span>*THUD*</span></div>
-            <p>Solid 1/4-inch rolled rocket steel. The Rocket Science Institute may have left it in the dirt, but their welds don't give a millimeter to hiking boots.</p>
+            <p>Solid 1/4-inch rolled rocket steel. Rocket Science Institute welds don't give a millimeter to hiking boots.</p>
           `);
           break;
 
@@ -510,7 +575,7 @@
           break;
 
         default:
-          printBlock(`<div class="term-block error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for available field commands.</div>`, "error");
+          printBlock(`<div class="term-block error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for directives.</div>`, "error");
           break;
       }
     }
@@ -522,9 +587,10 @@
       if (!val) return;
       input.value = "";
       runCommand(val);
+      // Keep keyboard open and in view on mobile
+      input.focus();
     }
 
-    // Auto-detect multi-device sync or token parameter on launch
     function checkUrlPayloads() {
       const params = new URLSearchParams(window.location.search);
       const syncKey = params.get("sync");
@@ -540,9 +606,11 @@
       }
     }
 
+    // Startup routines
     updateHeader();
     initSatelliteLink();
     checkUrlPayloads();
+    adjustForMobileViewport();
   </script>
 </body>
 </html>
