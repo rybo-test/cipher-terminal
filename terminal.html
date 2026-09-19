@@ -122,6 +122,11 @@
       font-size: var(--input-size-default);
       outline: none;
     }
+
+    a.term-link {
+      color: var(--term-green);
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -142,7 +147,7 @@
       <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
       <p class="term-dim">CACHE TALES ARCHIVE RECOVERY SYSTEM // S.O.S. GRID NODE</p>
       <p>Physical vault casing: 1/4-inch rolled rocket steel (RSI origin).<br>
-      Ground zero telemetry locked. Earwig truce on pin 4 remains honored.<br>
+      Multi-device sync: Online. Type <code>SYNC</code> to export dossier link.<br>
       Type <code>HELP</code> for field directives, or tap an action chip below.</p>
     </div>
   </div>
@@ -150,7 +155,7 @@
   <div id="action-deck">
     <button class="action-chip" onclick="runCommand('STATUS')">[ 📊 STATUS ]</button>
     <button class="action-chip" onclick="runCommand('HINT')">[ 💡 HINT ]</button>
-    <button class="action-chip" onclick="runCommand('SWAG')">[ 📦 SWAG ]</button>
+    <button class="action-chip" onclick="runCommand('SYNC')">[ 🔄 SYNC ]</button>
   </div>
 
   <form id="input-form" onsubmit="handleFormSubmit(event)">
@@ -168,31 +173,52 @@
 
     let awaitingAdminPin = false;
 
-    function getFinderState() {
+    function getDossier() {
+      let profile = {};
+      try {
+        profile = JSON.parse(localStorage.getItem("cipher_profile") || "{}");
+      } catch (e) {}
+
       return {
         username: localStorage.getItem("cipher_gc_name") || "NEZZMUK",
-        unlockedSectors: JSON.parse(localStorage.getItem("cipher_sectors") || "[]"),
-        inventory: JSON.parse(localStorage.getItem("cipher_inventory") || "[]")
+        syncKey: localStorage.getItem("cipher_sync_key") || generateSyncKey(),
+        ratBrainUnlocked: localStorage.getItem("cipher_rat_brain") === "true",
+        profileData: Object.assign({
+          stagesLogged: ["STAGE_01_GZ"],
+          inventory: ["BRASS_WASHER"],
+          fieldNotes: [],
+          collectedSwag: [],
+          unlockedTools: [],
+          settings: { soundEnabled: true, highContrast: false }
+        }, profile)
       };
     }
 
-    function setCacherName(name) {
-      const clean = name.trim().toUpperCase();
-      localStorage.setItem("cipher_gc_name", clean);
+    function generateSyncKey() {
+      const key = "CYPHER-SYNC-" + Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+      localStorage.setItem("cipher_sync_key", key);
+      return key;
+    }
+
+    function saveDossierLocally(dossier) {
+      localStorage.setItem("cipher_gc_name", dossier.username);
+      localStorage.setItem("cipher_sync_key", dossier.syncKey);
+      localStorage.setItem("cipher_rat_brain", dossier.ratBrainUnlocked ? "true" : "false");
+      localStorage.setItem("cipher_profile", JSON.stringify(dossier.profileData));
       updateHeader();
     }
 
     function calculateMemoryIntegrity() {
-      const state = getFinderState();
+      const dossier = getDossier();
       let integrity = 3.1;
-      if (state.unlockedSectors.includes("SECTOR_01")) integrity += 0.2;
-      if (state.unlockedSectors.includes("SECTOR_02")) integrity += 3.5;
+      const count = (dossier.profileData.stagesLogged || []).length;
+      integrity += Math.min(count * 0.4, 96.9);
       return integrity.toFixed(1);
     }
 
     function updateHeader() {
-      const state = getFinderState();
-      document.getElementById("cacher-id").innerText = `USER/GC NAME: ${state.username}`;
+      const dossier = getDossier();
+      document.getElementById("cacher-id").innerText = `USER/GC NAME: ${dossier.username}`;
       document.getElementById("mem-status").innerText = `MEMORY: ${calculateMemoryIntegrity()}% (WEATHERED)`;
     }
 
@@ -214,14 +240,14 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
-    // Dispatches matching headers: Timestamp | Username | TokenID | StageID | Action | DeviceStatus
     async function sendTelemetry(action, customParams = {}) {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
-        const state = getFinderState();
+        const dossier = getDossier();
         const baseParams = {
           action: action,
-          username: state.username,
+          username: dossier.username,
+          syncKey: dossier.syncKey,
           tokenId: "NONE",
           stageId: "STAGE_01_GZ",
           deviceStatus: "ONLINE_56K"
@@ -231,23 +257,73 @@
       } catch (err) {}
     }
 
-    async function verifyAdminPin(pin) {
-      const cleanPin = String(pin).trim();
-      const isValid = (cleanPin === "8675309");
-      if (isValid) {
-        sendTelemetry("VERIFY_PIN", { pin: cleanPin, deviceStatus: "SYSOP_OVERRIDE" });
+    // Persists full profile state to Google Sheet Cachers tab
+    async function syncDossierToCloud() {
+      const dossier = getDossier();
+      await sendTelemetry("SAVE_DOSSIER", {
+        ratBrainUnlocked: dossier.ratBrainUnlocked,
+        profileData: JSON.stringify(dossier.profileData)
+      });
+    }
+
+    // Restores profile state from Cloud by SyncKey
+    async function restoreDossierFromCloud(syncKey) {
+      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
+      printBlock(`<div class="term-dim">Querying S.O.S. satellite archive for key ${syncKey}...</div>`);
+      try {
+        const res = await fetch(`${GAS_ENDPOINT}?action=GET_DOSSIER&syncKey=${encodeURIComponent(syncKey)}`);
+        const data = await res.json();
+        if (data.success) {
+          saveDossierLocally({
+            username: data.username,
+            syncKey: data.syncKey,
+            ratBrainUnlocked: data.ratBrainUnlocked,
+            profileData: data.profileData
+          });
+          printBlock(`
+            <div class="term-title"><span>📡 DOSSIER SYNCHRONIZED</span></div>
+            <p>Welcome back, <strong>${data.username}</strong>!<br>
+            Restored ${(data.profileData.stagesLogged || []).length} stage logs, ${(data.profileData.inventory || []).length} inventory items.<br>
+            Rat Brain status: <strong>${data.ratBrainUnlocked ? "MOUNTED" : "DORMANT"}</strong>.</p>
+          `);
+        } else {
+          printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>No dossier found matching key '${syncKey}'.</p>`, "error");
+        }
+      } catch (err) {
+        printBlock(`<p class="error">Relay timeout while restoring dossier.</p>`, "error");
       }
-      return isValid;
+    }
+
+    function displaySyncInfo() {
+      const dossier = getDossier();
+      const currentUrl = window.location.origin + window.location.pathname;
+      const syncUrl = `${currentUrl}?sync=${dossier.syncKey}`;
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(syncUrl)}`;
+
+      syncDossierToCloud();
+
+      printBlock(`
+        <div class="term-title"><span>🔄 PORTABLE DOSSIER SYNC</span></div>
+        <p><strong>User / GC Name:</strong> ${dossier.username}<br>
+        <strong>Sync Key:</strong> <code>${dossier.syncKey}</code></p>
+        <p>To transfer your session to your laptop or another phone, use this link:<br>
+        <a class="term-link" href="${syncUrl}" target="_blank">${syncUrl}</a></p>
+        <p>Or scan this QR code with another device camera:</p>
+        <div style="background:white; padding:8px; display:inline-block; border-radius:4px; margin-top:4px;">
+          <img src="${qrApiUrl}" alt="Terminal Sync QR Code" width="160" height="160" style="display:block;">
+        </div>
+        <div class="term-dim" style="margin-top:6px;">Your stages, inventory, and Rat Brain state persist across all devices.</div>
+      `);
     }
 
     async function handleAdminCommand(arg) {
-      const state = getFinderState();
+      const dossier = getDossier();
       const authorizedRatPack = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"];
 
-      if (!authorizedRatPack.includes(state.username)) {
+      if (!authorizedRatPack.includes(dossier.username)) {
         printBlock(`
           <div class="term-title"><span>⛔ CLEARANCE RESTRICTED</span></div>
-          <p>User/GC Name '<strong>${state.username}</strong>' not indexed in Rat Pack operations registry.</p>
+          <p>User/GC Name '<strong>${dossier.username}</strong>' not indexed in Rat Pack operations registry.</p>
           <div class="term-dim">Physical access requires authorized field maintenance credentials.</div>
         `, "error");
         awaitingAdminPin = false;
@@ -256,23 +332,14 @@
 
       if (arg) {
         awaitingAdminPin = false;
-        const isValid = await verifyAdminPin(arg);
-        if (isValid) {
-          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, Rat Pack op. Maintenance override enabled.</p>`, "alert");
+        const cleanPin = String(arg).trim();
+        if (cleanPin === "8675309") {
+          dossier.ratBrainUnlocked = true;
+          saveDossierLocally(dossier);
+          syncDossierToCloud();
+          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, Rat Pack op. Maintenance override & Rat Brain coprocessor permanently mounted.</p>`, "alert");
         } else {
           printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid SysOp maintenance PIN.</p>`, "error");
-        }
-        return;
-      }
-
-      if (awaitingAdminPin) {
-        const pinInput = arg;
-        awaitingAdminPin = false;
-        const isValid = await verifyAdminPin(pinInput);
-        if (isValid) {
-          printBlock(`<div class="term-title"><span>⚡ SYSOP ROOT GRANTED</span></div><p>Welcome back, Rat Pack op. Maintenance override enabled.</p>`, "alert");
-        } else {
-          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Authentication challenge failed.</p>`, "error");
         }
         return;
       }
@@ -282,44 +349,6 @@
         <div class="term-title"><span>🔐 S.O.S. ROOT CHALLENGE</span></div>
         <p>Enter <strong>7-digit SysOp Admin PIN</strong>:</p>
       `, "alert");
-    }
-
-    function processFieldLog(target) {
-      const cleanTarget = target.toUpperCase().trim();
-      const state = getFinderState();
-
-      if (!state.unlockedSectors.includes("SECTOR_01")) {
-        state.unlockedSectors.push("SECTOR_01");
-        localStorage.setItem("cipher_sectors", JSON.stringify(state.unlockedSectors));
-      }
-
-      printBlock(`
-        <div class="term-title"><span>📝 FIELD LOG RECORDED</span></div>
-        <p>Entry stamped for target: <strong>${cleanTarget}</strong><br>
-        Physical vault parity updated. GZ coordinates verified.</p>
-        <div class="term-dim">Transmitted to S.O.S. corridor ledger via active satellite link.</div>
-      `);
-
-      sendTelemetry("LOG_FIND", { tokenId: cleanTarget, stageId: "STAGE_01_GZ" });
-      updateHeader();
-    }
-
-    function processCollect(target) {
-      const cleanTarget = target.toUpperCase().trim();
-      const state = getFinderState();
-
-      if (!state.inventory.includes(cleanTarget)) {
-        state.inventory.push(cleanTarget);
-        localStorage.setItem("cipher_inventory", JSON.stringify(state.inventory));
-      }
-
-      printBlock(`
-        <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
-        <p>Transferred <strong>${cleanTarget}</strong> into active field inventory.<br>
-        Digital trackable signature logged.</p>
-      `);
-
-      sendTelemetry("COLLECT_ITEM", { tokenId: cleanTarget, stageId: "STAGE_01_GZ" });
     }
 
     async function runCommand(cmdText) {
@@ -337,6 +366,8 @@
         return;
       }
 
+      const dossier = getDossier();
+
       switch (verb) {
         case "HELP":
           printBlock(`
@@ -344,6 +375,8 @@
             <p><strong>LOG &lt;token | cache | clue&gt;</strong> - Record field stage or token find<br>
             <strong>COLLECT &lt;item | card | TB | clue&gt;</strong> - Pick up trackable or stage item<br>
             <strong>HANDLE &lt;name&gt;</strong> or <strong>NAME &lt;name&gt;</strong> - Set User / GC Name<br>
+            <strong>SYNC</strong> - Generate multi-device sync link and QR code<br>
+            <strong>RESTORE &lt;sync_key&gt;</strong> - Ingest dossier from another device<br>
             <strong>STATUS</strong> - Display satellite link, memory, and battery vitals<br>
             <strong>SWAG</strong> - Inspect contents of the physical container<br>
             <strong>HINT</strong> - Corridor decryption nudge<br>
@@ -355,52 +388,83 @@
           `);
           break;
 
-        case "LOG":
-        case "FEED":
+        case "SYNC":
+          displaySyncInfo();
+          break;
+
         case "RESTORE":
           if (!arg) {
-            printBlock(`<div class="term-dim">Usage: LOG &lt;token | cache | clue&gt; (e.g. LOG TOKEN-PT-01)</div>`);
+            printBlock(`<div class="term-dim">Usage: RESTORE &lt;CYPHER-SYNC-XXXX-XXXX&gt;</div>`);
           } else {
-            processFieldLog(arg);
+            restoreDossierFromCloud(arg.trim().toUpperCase());
+          }
+          break;
+
+        case "LOG":
+        case "FEED":
+          if (!arg) {
+            printBlock(`<div class="term-dim">Usage: LOG &lt;token | cache | clue&gt;</div>`);
+          } else {
+            const cleanTarget = arg.toUpperCase().trim();
+            if (!dossier.profileData.stagesLogged.includes(cleanTarget)) {
+              dossier.profileData.stagesLogged.push(cleanTarget);
+              saveDossierLocally(dossier);
+              syncDossierToCloud();
+            }
+            printBlock(`
+              <div class="term-title"><span>📝 FIELD LOG RECORDED</span></div>
+              <p>Entry stamped for target: <strong>${cleanTarget}</strong><br>
+              Physical vault parity updated. GZ coordinates verified.</p>
+            `);
+            sendTelemetry("LOG_FIND", { tokenId: cleanTarget });
           }
           break;
 
         case "COLLECT":
-        case "DISCOVER":
-        case "GRAB":
           if (!arg) {
             printBlock(`<div class="term-dim">Usage: COLLECT &lt;item | card | TB | clue&gt;</div>`);
           } else {
-            processCollect(arg);
+            const cleanTarget = arg.toUpperCase().trim();
+            if (!dossier.profileData.inventory.includes(cleanTarget)) {
+              dossier.profileData.inventory.push(cleanTarget);
+              saveDossierLocally(dossier);
+              syncDossierToCloud();
+            }
+            printBlock(`
+              <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
+              <p>Transferred <strong>${cleanTarget}</strong> into active field inventory.</p>
+            `);
+            sendTelemetry("COLLECT_ITEM", { tokenId: cleanTarget });
           }
           break;
 
         case "HANDLE":
         case "NAME":
           if (arg) {
-            setCacherName(arg);
-            printBlock(`<p>User / GC Name updated: <strong>${getFinderState().username}</strong></p>`);
-            sendTelemetry("NAME_UPDATE", { tokenId: "USERNAME_CHANGE", stageId: "CORRIDOR" });
+            dossier.username = arg.trim().toUpperCase();
+            saveDossierLocally(dossier);
+            syncDossierToCloud();
+            printBlock(`<p>User / GC Name updated: <strong>${dossier.username}</strong></p>`);
           } else {
-            printBlock(`<p>Current User / GC Name: <strong>${getFinderState().username}</strong></p>`);
+            printBlock(`<p>Current User / GC Name: <strong>${dossier.username}</strong></p>`);
           }
           break;
 
         case "STATUS":
           printBlock(`
             <div class="term-title"><span>📊 GZ SYSTEM METRICS</span></div>
-            <p>Operator: ${getFinderState().username}<br>
+            <p>Operator: ${dossier.username}<br>
+            Sync Key: <code>${dossier.syncKey}</code><br>
+            Rat Brain: ${dossier.ratBrainUnlocked ? "ACTIVE [HEURISTIC OVERCLOCK]" : "DORMANT"}<br>
             Memory Parity: ${calculateMemoryIntegrity()}% (Weathered chassis)<br>
             Power: 84% (Solar float trickle)<br>
-            Transceiver Link: Online (Box Elder Corridor)<br>
-            Inventory: ${getFinderState().inventory.join(", ") || "[EMPTY]"}</p>
+            Stages Stamped: ${dossier.profileData.stagesLogged.length}<br>
+            Inventory: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
           `);
           break;
 
         case "TFTC":
-          printBlock(`
-            <p>Thanks for the find! Just remember—a two-word log on a custom welded container hurts the chassis' feelings. Drop a real field story when you log online!</p>
-          `);
+          printBlock(`<p>Thanks for the find! Just remember—a two-word log on a custom welded container hurts the chassis' feelings. Drop a real field story when you log online!</p>`);
           break;
 
         case "SWAG":
@@ -415,15 +479,11 @@
           break;
 
         case "HINT":
-          printBlock(`
-            <p>Stop digging in the decorative mulch and step away from the sprinkler heads. Look for the rusted magnetic plate bolted near the 1/4-inch weld line.</p>
-          `);
+          printBlock(`<p>Stop digging in the decorative mulch and step away from the sprinkler heads. Look for the rusted magnetic plate bolted near the 1/4-inch weld line.</p>`);
           break;
 
         case "BYOP":
-          printBlock(`
-            <p>Bring Your Own Pen. Do NOT try scratching your initials into the rolled steel with a car key—pin 4 doesn't like the static discharge.</p>
-          `);
+          printBlock(`<p>Bring Your Own Pen. Do NOT try scratching your initials into the rolled steel with a car key—pin 4 doesn't like the static discharge.</p>`);
           break;
 
         case "DNF":
@@ -431,14 +491,7 @@
             <div class="term-title"><span>⚠️ DNF SIGNAL RECORDED</span></div>
             <p>High muggle presence or heavy canopy bounce? Take a breath, expand your search radius by 15 feet, and check for natural camouflage.</p>
           `, "alert");
-          sendTelemetry("DNF_SIGNAL", { tokenId: "DNF_FLAG", stageId: "STAGE_01_GZ" });
-          break;
-
-        case "TB":
-        case "TRACKABLE":
-          printBlock(`
-            <p>To record a trackable item or geocoin, use: <code>COLLECT &lt;tracking_code&gt;</code></p>
-          `);
+          sendTelemetry("DNF_SIGNAL", { tokenId: "DNF_FLAG" });
           break;
 
         case "KICK":
@@ -471,10 +524,15 @@
       runCommand(val);
     }
 
+    // Auto-detect multi-device sync or token parameter on launch
     function checkUrlPayloads() {
       const params = new URLSearchParams(window.location.search);
+      const syncKey = params.get("sync");
       const token = params.get("token") || params.get("clue") || params.get("log") || params.get("restore");
-      if (token) {
+
+      if (syncKey) {
+        restoreDossierFromCloud(syncKey);
+      } else if (token) {
         setTimeout(() => {
           printBlock(`<span class="term-dim">[AUTO-SATELLITE INGEST: SCAN DETECTED]</span>`);
           runCommand(`LOG ${token}`);
