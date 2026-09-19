@@ -11,6 +11,7 @@
       --term-dim: #008833;
       --term-alert: #ffaa00;
       --term-error: #ff3333;
+      --term-rat: #33ccff;
       --font-size-default: 15px;
       --input-size-default: 16px;
     }
@@ -77,6 +78,7 @@
 
     .term-block.alert { border-left-color: var(--term-alert); color: var(--term-alert); }
     .term-block.error { border-left-color: var(--term-error); color: var(--term-error); }
+    .term-block.ratlab { border-left-color: var(--term-rat); color: var(--term-rat); }
 
     .term-title {
       font-weight: bold;
@@ -117,6 +119,16 @@
     }
     .action-chip:active {
       background: var(--term-green);
+      color: var(--bg-color);
+    }
+
+    .action-chip.ratlab-chip {
+      border-color: var(--term-rat);
+      color: var(--term-rat);
+      background: rgba(51, 204, 255, 0.08);
+    }
+    .action-chip.ratlab-chip:active {
+      background: var(--term-rat);
       color: var(--bg-color);
     }
 
@@ -184,7 +196,7 @@
   <div id="app-container">
     <div id="header-bar">
       <div class="header-row">
-        <span id="sat-link">CORRIDOR BEACON: ACQUIRING GPS LOCK...</span>
+        <span id="sat-link">GPS BEACON: ACQUIRING LOCK...</span>
         <span id="cacher-id">CACHER: UNREGISTERED</span>
       </div>
       <div class="header-row term-dim">
@@ -198,7 +210,7 @@
         <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
         <p class="term-dim">CACHE TALES TRAIL LOG &amp; RECOVERY SYSTEM // CACHE COUNTY POWER TRAIL</p>
         <p>Container casing: 1/4-inch rolled rocket steel (RSI origin).<br>
-        Trail command table &amp; log history: Online.<br>
+        Trail command table: Online. Rat Lab environment: Staged.<br>
         Type <code>HELP</code> for trail directives, or tap an action chip below.</p>
       </div>
     </div>
@@ -212,8 +224,8 @@
     </div>
 
     <form id="input-form" onsubmit="handleLogSubmit(event)">
-      <button type="button" class="nav-btn" title="Previous Trail Command" onclick="historyCycle(-1)">▲</button>
-      <button type="button" class="nav-btn" title="Next Trail Command" onclick="historyCycle(1)">▼</button>
+      <button type="button" class="nav-btn" title="Previous Command" onclick="historyCycle(-1)">▲</button>
+      <button type="button" class="nav-btn" title="Next Command" onclick="historyCycle(1)">▼</button>
       <span id="prompt-symbol">&gt;</span>
       <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter trail command...">
     </form>
@@ -227,9 +239,12 @@
       "NAVSTAR-IIA (PRN-24)", "GPS-BIIF-9 (PRN-06)"
     ];
 
-    let awaitingAdminPin = false;
+    let inRatLabMode = false;
+    let awaitingPinForLab = false;
+    let simulatedBattery = 84;
+    let simulatedSolarFault = "OK";
 
-    // --- TRAIL COMMAND HISTORY BUFFER ---
+    // --- COMMAND HISTORY ---
     const TRAIL_HISTORY_MAX = 30;
     let trailCommandHistory = [];
     let trailHistoryPointer = -1;
@@ -283,7 +298,7 @@
       }
     });
 
-    // --- MOBILE VIEWPORT & TOUCH FIELD LOCK ---
+    // --- MOBILE VIEWPORT ---
     function adjustForMobileViewport() {
       if (window.visualViewport) {
         const height = window.visualViewport.height;
@@ -302,7 +317,7 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
-    // --- CACHER DOSSIER & FIELD STATE ---
+    // --- DOSSIER STATE ---
     function getCacherDossier() {
       let profile = {};
       try {
@@ -350,6 +365,16 @@
       const dossier = getCacherDossier();
       document.getElementById("cacher-id").innerText = `CACHER: ${dossier.username}`;
       document.getElementById("mem-status").innerText = `RESTORED STAGE DATA: ${calculateStageRestoration()}%`;
+      
+      let statusStr = `${simulatedBattery}%`;
+      if (simulatedBattery <= 19) {
+        statusStr += " [CRITICAL STANDBY]";
+      } else if (simulatedBattery <= 59) {
+        statusStr += " [BROWNOUT]";
+      } else {
+        statusStr += simulatedSolarFault === "DIRTY_GLASS" ? " [SOLAR DEGRADED]" : " [SOLAR FLOAT]";
+      }
+      document.getElementById("bat-status").innerText = `SOLAR CELL: ${statusStr}`;
     }
 
     function acquireGpsFix() {
@@ -370,7 +395,7 @@
       scrollTerminalToGZ();
     }
 
-    // --- FIELD LOG RELAY TO SPREADSHEET ---
+    // --- TELEMETRY ---
     async function transmitFieldLog(action, fieldDetails = {}) {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
@@ -381,7 +406,8 @@
           syncKey: dossier.syncKey,
           tokenId: "NONE",
           stageId: "STAGE_01_GZ",
-          deviceStatus: "GZ_HANDSHAKE_OK"
+          deviceStatus: inRatLabMode ? "RAT_LAB_ISOLATED" : "GZ_HANDSHAKE_OK",
+          isRatLabTest: inRatLabMode
         };
         const searchParams = new URLSearchParams(Object.assign(baseTransmission, fieldDetails));
         fetch(`${GAS_ENDPOINT}?${searchParams.toString()}`).catch(() => {});
@@ -419,7 +445,7 @@
           printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>No cacher dossier found matching key '${syncKey}'.</p>`, "error");
         }
       } catch (err) {
-        printBlock(`<p class="error">Canopy bounce or timeout while restoring cacher dossier.</p>`, "error");
+        printBlock(`<p class="error">Timeout while restoring cacher dossier.</p>`, "error");
       }
     }
 
@@ -444,40 +470,155 @@
       `);
     }
 
-    // --- RAT PACK SYSOP PIN VERIFICATION ---
-    async function handleRatPackAdmin(arg) {
-      const dossier = getCacherDossier();
-      const ratPackRoster = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"];
+    // --- RAT LAB WORKBENCH & TEST ENVIRONMENT ---
+    function openRatLab() {
+      inRatLabMode = true;
+      document.getElementById("prompt-symbol").innerText = "RAT_LAB>";
+      document.getElementById("prompt-symbol").style.color = "var(--term-rat)";
+      
+      const deck = document.getElementById("action-deck");
+      deck.innerHTML = `
+        <button class="action-chip ratlab-chip" onclick="executeTrailCommand('RATBRAIN')">[ 🧠 RAT BRAIN ]</button>
+        <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB HARDWARE')">[ ⚡ HARDWARE ]</button>
+        <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB DRAIN 3.1')">[ 🪫 DRAIN 3.1% ]</button>
+        <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB CHARGE')">[ 🔋 FULL CHARGE ]</button>
+        <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB PLANS')">[ 🗺️ PLANS ]</button>
+        <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB EXIT')">[ 🚪 EXIT LAB ]</button>
+      `;
 
-      if (!ratPackRoster.includes(dossier.username)) {
-        printBlock(`
-          <div class="term-title"><span>⛔ CLEARANCE RESTRICTED</span></div>
-          <p>Cacher '<strong>${dossier.username}</strong>' is not indexed in the Rat Pack roster.</p>
-          <div class="term-dim">Maintenance clearance reserved for trail stewards.</div>
-        `, "error");
-        awaitingAdminPin = false;
-        return;
-      }
-
-      if (arg) {
-        awaitingAdminPin = false;
-        const cleanPin = String(arg).trim();
-        if (cleanPin === "8675309") {
-          dossier.ratBrainUnlocked = true;
-          saveCacherDossier(dossier);
-          syncDossierToCloud();
-          printBlock(`<div class="term-title"><span>⚡ RAT PACK OVERRIDE GRANTED</span></div><p>Welcome back. Trail maintenance access engaged; Rat Brain puzzle coprocessor mounted.</p>`, "alert");
-        } else {
-          printBlock(`<div class="term-title"><span>⛔ PIN REJECTED</span></div><p>Invalid SysOp maintenance PIN.</p>`, "error");
-        }
-        return;
-      }
-
-      awaitingAdminPin = true;
       printBlock(`
-        <div class="term-title"><span>🔐 RAT PACK CHALLENGE</span></div>
-        <p>Enter <strong>7-digit SysOp PIN</strong>:</p>
-      `, "alert");
+        <div class="term-title" style="color:var(--term-rat);"><span>🧪 RAT LAB // SECRET WORKBENCH ACTIVE</span></div>
+        <p style="color:var(--term-rat);"><strong>[RAT BRAIN]:</strong> "Workbench online, Nezzmuk. Capacitors hummin'.<br>
+        All prototypes, cipher tests, and hardware staging remain isolated from the public trail ledger."</p>
+        <div class="term-dim">Type <code>LAB HELP</code> or tap the cyan action chips above.</div>
+      `, "ratlab");
+    }
+
+    function exitRatLab() {
+      inRatLabMode = false;
+      document.getElementById("prompt-symbol").innerText = ">";
+      document.getElementById("prompt-symbol").style.color = "var(--term-green)";
+      
+      const deck = document.getElementById("action-deck");
+      deck.innerHTML = `
+        <button class="action-chip" onclick="executeTrailCommand('STATUS')">[ 📊 STATUS ]</button>
+        <button class="action-chip" onclick="executeTrailCommand('HINT')">[ 💡 HINT ]</button>
+        <button class="action-chip" onclick="executeTrailCommand('SYNC')">[ 🔄 SYNC ]</button>
+        <button class="action-chip" onclick="executeTrailCommand('SWAG')">[ 📦 SWAG ]</button>
+        <button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK ]</button>
+      `;
+
+      printBlock(`<p>Exited RAT LAB. Re-engaged standard corridor trail transceiver.</p>`);
+    }
+
+    function executeRatBrainQuery(query) {
+      if (!query) {
+        printBlock(`
+          <div class="term-title" style="color:var(--term-rat);"><span>🧠 RAT BRAIN HEURISTIC COPROCESSOR</span></div>
+          <p>"Standing by. Feed me an encrypted string or stage clue using <code>RATBRAIN SOLVE &lt;text&gt;</code>."</p>
+        `, "ratlab");
+        return;
+      }
+
+      const cleanQuery = query.trim();
+      let rot13Decoded = cleanQuery.replace(/[a-zA-Z]/g, function(c) {
+        return String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26);
+      });
+
+      printBlock(`
+        <div class="term-title" style="color:var(--term-rat);"><span>🧠 RAT BRAIN HEURISTIC ANALYSIS</span></div>
+        <p><strong>Input Clue:</strong> <code>${cleanQuery}</code><br>
+        <strong>ROT-13 Evaluation:</strong> <code>${rot13Decoded}</code><br>
+        <strong>Heuristic Comment:</strong> "Examined character distribution. If RSI used a standard alphabet shift, check the ROT-13 buffer above. If it's coordinates, look for standard N 41° / W 111° Cache Valley markers."</p>
+      `, "ratlab");
+    }
+
+    function handleRatLabDirectives(verb, argument, dossier) {
+      switch (verb) {
+        case "HELP":
+          printBlock(`
+            <div class="term-title" style="color:var(--term-rat);"><span>🧪 RAT LAB BENCH DIRECTIVES</span></div>
+            <p><strong>RATBRAIN [SOLVE &lt;text&gt;]</strong> - Heuristic cipher and puzzle coprocessor<br>
+            <strong>LAB HARDWARE</strong> - Inspect live condition of solar arrays and battery banks<br>
+            <strong>LAB FAULT &lt;PANEL | BATTERY&gt;</strong> - Simulate hardware foul (dirty glass or dead cell)<br>
+            <strong>LAB DRAIN &lt;percent&gt;</strong> - Force battery voltage drop to test brownout mode<br>
+            <strong>LAB CHARGE</strong> - Restore battery to 100% solar float<br>
+            <strong>LAB FORGE &lt;item_tag&gt;</strong> - Spawn test salvage item directly into your field pack<br>
+            <strong>LAB PLANS</strong> - View secret upcoming stages and container designs<br>
+            <strong>LAB EXIT</strong> - Return to public trail transceiver</p>
+          `, "ratlab");
+          break;
+
+        case "RATBRAIN":
+          executeRatBrainQuery(argument.replace(/^SOLVE\s+/i, ""));
+          break;
+
+        case "HARDWARE":
+          printBlock(`
+            <div class="term-title" style="color:var(--term-rat);"><span>⚡ CORRIDOR HARDWARE BENCH TELEMETRY</span></div>
+            <p><strong>Primary 40W Solar Panel:</strong> Condition: 100% | Fault: <code>${simulatedSolarFault}</code><br>
+            <strong>Secondary Battery Bank:</strong> Condition: ${simulatedBattery}% | Health: <code>${simulatedBattery <= 19 ? "COLLAPSED" : "OK"}</code><br>
+            <strong>Repeater Antenna (GZ-25):</strong> Condition: 100% | Status: <code>STANDBY</code><br>
+            <strong>Trap Token Countermeasure:</strong> Active (2.5% glitch probability on unverified strings)</p>
+          `, "ratlab");
+          break;
+
+        case "FAULT":
+          if (argument.toUpperCase().includes("PANEL")) {
+            simulatedSolarFault = "DIRTY_GLASS";
+            updateFieldVitals();
+            printBlock(`<p style="color:var(--term-rat);">[SIMULATED FAULT INJECTED]: 40W Solar Panel glass coated in dust/sap. Trickle generation dropped.</p>`, "ratlab");
+          } else {
+            simulatedBattery = 14;
+            updateFieldVitals();
+            printBlock(`<p style="color:var(--term-rat);">[SIMULATED FAULT INJECTED]: Secondary battery cell collapsed. Unit forced into Critical Standby.</p>`, "ratlab");
+          }
+          break;
+
+        case "DRAIN":
+          const targetVolts = Math.max(3.1, Math.min(100, parseFloat(argument) || 3.1));
+          simulatedBattery = targetVolts;
+          updateFieldVitals();
+          printBlock(`<p style="color:var(--term-rat);">Battery cell drained to <strong>${simulatedBattery}%</strong>. Brownout &amp; lockout rules active.</p>`, "ratlab");
+          break;
+
+        case "CHARGE":
+          simulatedBattery = 100;
+          simulatedSolarFault = "OK";
+          updateFieldVitals();
+          printBlock(`<p style="color:var(--term-rat);">Battery bank restored to <strong>100% [SOLAR FLOAT]</strong>. All faults cleared.</p>`, "ratlab");
+          break;
+
+        case "FORGE":
+        case "SPAWN":
+          const itemTag = (argument || "PANEL-40W-SOLAR").toUpperCase().trim();
+          if (!dossier.profileData.inventory.includes(itemTag)) {
+            dossier.profileData.inventory.push(itemTag);
+            saveCacherDossier(dossier);
+          }
+          printBlock(`<p style="color:var(--term-rat);">Forged test salvage component: <strong>${itemTag}</strong> placed in your field pack.</p>`, "ratlab");
+          break;
+
+        case "PLANS":
+          printBlock(`
+            <div class="term-title" style="color:var(--term-rat);"><span>🗺️ CACHE COUNTY POWER TRAIL STAGING PLANS</span></div>
+            <p><strong>Corridor Target:</strong> 50 Physical Caches across Cache County.<br>
+            <strong>Stage 01 (Anchor):</strong> 1/4-inch rolled rocket steel transceiver.<br>
+            <strong>Stage 08 (Salvage):</strong> Ammo can housing 40W Aux Solar Panel.<br>
+            <strong>Stage 17 (Salvage):</strong> Magnetic lock-and-lock with 12V Deep-Cycle Cell.<br>
+            <strong>Stage 25 (Mid-Trail):</strong> Tree bracket container housing Repeater Mast.<br>
+            <strong>Stage 50 (Sentinel Final):</strong> Bolted puzzle vault with master memory core.</p>
+          `, "ratlab");
+          break;
+
+        case "EXIT":
+          exitRatLab();
+          break;
+
+        default:
+          printBlock(`<p style="color:var(--term-rat);">Unknown RAT LAB directive '<strong>${verb}</strong>'. Type <code>LAB HELP</code>.</p>`, "error");
+          break;
+      }
     }
 
     // --- GEOCACHING TRAIL COMMAND TABLE ---
@@ -514,10 +655,15 @@
             saveCacherDossier(dossier);
             syncDossierToCloud();
           }
+
+          // Logging a find provides a +15% solar charge boost
+          simulatedBattery = Math.min(100, simulatedBattery + 15);
+          updateFieldVitals();
+
           printBlock(`
             <div class="term-title"><span>📝 PHYSICAL STAGE LOGGED</span></div>
             <p>Signed into log for: <strong>${stageToken}</strong><br>
-            Vault parity updated. GZ coordinates locked into trail ledger.</p>
+            Vault parity updated. Solar cell boosted (+15%).</p>
           `);
           transmitFieldLog("LOG_FIND", { tokenId: stageToken });
         }
@@ -543,6 +689,40 @@
             <p>Transferred <strong>${item}</strong> into your active field pack.</p>
           `);
           transmitFieldLog("COLLECT_ITEM", { tokenId: item });
+        }
+      },
+
+      INSTALL: {
+        aliases: ["MOUNT", "ATTACH"],
+        syntax: "INSTALL <component_tag>",
+        description: "Mount a salvaged component from your field pack to GZ",
+        run: (arg, dossier) => {
+          if (!arg) {
+            printBlock(`<div class="term-dim">Syntax: INSTALL &lt;component_tag&gt; (e.g. PANEL-40W-SOLAR)</div>`);
+            return;
+          }
+          const comp = arg.toUpperCase().trim();
+          const idx = dossier.profileData.inventory.indexOf(comp);
+          if (idx === -1) {
+            printBlock(`<p class="error">You do not have <strong>${comp}</strong> in your field pack. Retrieve it from its cache first.</p>`, "error");
+            return;
+          }
+          dossier.profileData.inventory.splice(idx, 1);
+          saveCacherDossier(dossier);
+          syncDossierToCloud();
+          
+          if (comp.includes("PANEL")) {
+            simulatedSolarFault = "OK";
+            simulatedBattery = Math.min(100, simulatedBattery + 25);
+          }
+          updateFieldVitals();
+
+          printBlock(`
+            <div class="term-title"><span>🔧 HARDWARE MOUNTED AT GZ</span></div>
+            <p>Component <strong>${comp}</strong> successfully mounted to the container.<br>
+            Trickle generation increased. Field cell stabilized.</p>
+          `);
+          transmitFieldLog("MOUNT_HARDWARE", { tokenId: comp });
         }
       },
 
@@ -593,12 +773,49 @@
             <div class="term-title"><span>📊 GZ SYSTEM STATUS</span></div>
             <p>Cacher: ${dossier.username}<br>
             Sync Key: <code>${dossier.syncKey}</code><br>
-            Rat Brain: ${dossier.ratBrainUnlocked ? "ACTIVE [HEURISTIC COPROCESSOR]" : "DORMANT"}<br>
+            Rat Brain: ${dossier.ratBrainUnlocked ? "ACTIVE [RAT LAB COPROCESSOR]" : "DORMANT"}<br>
             Vault Memory: ${calculateStageRestoration()}% (Rolled steel chassis)<br>
-            Solar Battery: 84% (Float trickle)<br>
+            Solar Battery: ${simulatedBattery}% (${simulatedBattery <= 19 ? "Critical Standby" : (simulatedBattery <= 59 ? "Brownout" : "Solar Float")})<br>
             Stages Stamped: ${dossier.profileData.stagesLogged.length}<br>
-            Field Inventory: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
+            Field Pack: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
           `);
+        }
+      },
+
+      RATLAB: {
+        aliases: ["LAB", "WORKBENCH"],
+        syntax: "RATLAB",
+        description: "Restricted Rat Pack test lab & Rat Brain workbench",
+        run: () => {
+          const dossier = getCacherDossier();
+          const ratPackRoster = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"];
+
+          if (!ratPackRoster.includes(dossier.username)) {
+            printBlock(`
+              <div class="term-title"><span>⛔ CLEARANCE RESTRICTED</span></div>
+              <p>Physical junction locked. The Rat Pack hasn't left their workbench key under this rock.</p>
+            `, "error");
+            return;
+          }
+
+          awaitingPinForLab = true;
+          printBlock(`
+            <div class="term-title" style="color:var(--term-rat);"><span>🔐 RAT LAB ACCESS CHALLENGE</span></div>
+            <p>Enter <strong>7-digit SysOp PIN</strong> to unlock the workbench:</p>
+          `, "ratlab");
+        }
+      },
+
+      RATBRAIN: {
+        aliases: ["BRAIN"],
+        syntax: "RATBRAIN [clue | text]",
+        description: "Consult the Rat Brain heuristic puzzle coprocessor",
+        run: (arg, dossier) => {
+          if (!dossier.ratBrainUnlocked && !["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"].includes(dossier.username)) {
+            printBlock(`<p class="error">The Rat Brain is not mounted in your pack. Recover it from its high-difficulty field cache first.</p>`, "error");
+            return;
+          }
+          executeRatBrainQuery(arg);
         }
       },
 
@@ -607,6 +824,10 @@
         syntax: "SWAG",
         description: "Inspect the physical ammo can swag contents",
         run: () => {
+          if (simulatedBattery <= 19) {
+            printBlock(`<div class="term-title"><span>⚠️ LOW VOLTAGE LOCKOUT</span></div><p>Solar capacitor at ${simulatedBattery}%. Auxiliary systems offline to preserve core memory. Stamp a stage find (<code>LOG &lt;code&gt;</code>) to recharge.</p>`, "alert");
+            return;
+          }
           printBlock(`
             <div class="term-title"><span>📦 AMMO BOX SWAG</span></div>
             <p>- 1x Waterlogged wooden nickel<br>
@@ -623,7 +844,18 @@
         syntax: "HINT",
         description: "GZ field hint and natural camouflage notes",
         run: () => {
-          printBlock(`<p>Step back from the sprinkler heads and leave the decorative landscaping alone. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
+          if (simulatedBattery <= 19) {
+            printBlock(`<div class="term-title"><span>⚠️ LOW VOLTAGE LOCKOUT</span></div><p>Solar capacitor depleted. Auxiliary decoders unpowered. Stamp a physical find to recharge.</p>`, "alert");
+            return;
+          }
+          if (simulatedBattery <= 59) {
+            printBlock(`<div class="term-dim">[BROWNOUT DELAY: CAPACITOR CHARGING...]</div>`);
+            setTimeout(() => {
+              printBlock(`<p>Step back from the sprinkler heads. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
+            }, 1200);
+            return;
+          }
+          printBlock(`<p>Step back from the sprinkler heads. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
         }
       },
 
@@ -661,21 +893,12 @@
       KICK: {
         aliases: ["THUMP", "BOOT"],
         syntax: "KICK",
-        description: "Percussive maintenance check against the container welds",
+        description: "Percussive maintenance check against container welds",
         run: () => {
           printBlock(`
             <div class="term-title"><span>*THUD*</span></div>
             <p>Solid 1/4-inch rolled rocket steel. Rocket Science Institute welds don't yield a millimeter to hiking boots.</p>
           `);
-        }
-      },
-
-      ADMIN: {
-        aliases: ["SYSOP", "MAINTENANCE"],
-        syntax: "ADMIN [pin]",
-        description: "Restricted Rat Pack trail maintenance console",
-        run: (arg) => {
-          handleRatPackAdmin(arg);
         }
       },
 
@@ -689,7 +912,7 @@
       }
     };
 
-    // Fast trail alias resolution table
+    // Fast alias index
     const TRAIL_ALIAS_INDEX = {};
     for (const key in TRAIL_COMMANDS) {
       TRAIL_ALIAS_INDEX[key] = TRAIL_COMMANDS[key];
@@ -700,7 +923,7 @@
       }
     }
 
-    // --- COMMAND DISPATCH ---
+    // --- MAIN EXECUTION LOOP ---
     async function executeTrailCommand(commandText) {
       const cleanText = commandText.trim();
       if (!cleanText) return;
@@ -708,21 +931,46 @@
       recordHistory(cleanText);
       printBlock(`<span class="term-dim">&gt; ${cleanText}</span>`);
 
-      if (awaitingAdminPin) {
-        handleRatPackAdmin(cleanText);
+      const dossier = getCacherDossier();
+
+      // PIN Challenge handling for RAT LAB
+      if (awaitingPinForLab) {
+        awaitingPinForLab = false;
+        if (cleanText === "8675309") {
+          dossier.ratBrainUnlocked = true;
+          saveCacherDossier(dossier);
+          openRatLab();
+        } else {
+          printBlock(`<div class="term-title"><span>⛔ ACCESS DENIED</span></div><p>Incorrect SysOp PIN.</p>`, "error");
+        }
         return;
       }
 
       const splitLine = cleanText.split(" ");
       const verb = splitLine[0].toUpperCase();
       const argument = splitLine.slice(1).join(" ");
-      const dossier = getCacherDossier();
+
+      // If currently inside RAT LAB, prioritize LAB commands
+      if (inRatLabMode) {
+        if (verb === "LAB" || verb === "RATLAB") {
+          const subVerb = argument.split(" ")[0].toUpperCase() || "HELP";
+          const subArg = argument.split(" ").slice(1).join(" ");
+          handleRatLabDirectives(subVerb, subArg, dossier);
+          return;
+        } else if (verb === "RATBRAIN") {
+          executeRatBrainQuery(argument);
+          return;
+        } else if (verb === "EXIT") {
+          exitRatLab();
+          return;
+        }
+      }
 
       const matchedCommand = TRAIL_ALIAS_INDEX[verb];
       if (matchedCommand) {
         matchedCommand.run(argument, dossier);
       } else {
-        printBlock(`<div class="term-block error">Unknown trail command '<strong>${verb}</strong>'. Type <code>HELP</code> for available trail directives.</div>`, "error");
+        printBlock(`<div class="term-block error">Unknown trail command '<strong>${verb}</strong>'. Type <code>HELP</code> for directives.</div>`, "error");
       }
     }
 
@@ -751,7 +999,7 @@
       }
     }
 
-    // Boot routines
+    // Startup routines
     updateFieldVitals();
     acquireGpsFix();
     checkTrailScans();
