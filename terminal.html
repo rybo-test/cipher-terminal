@@ -12,7 +12,7 @@
       --term-alert: #ffaa00;
       --term-error: #ff3333;
       --font-size-default: 15px;
-      --input-size-default: 16px; /* Prevents auto-zoom on mobile safari */
+      --input-size-default: 16px;
     }
 
     * {
@@ -27,7 +27,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      height: 100dvh; /* Dynamic viewport height handles keyboard popups */
+      height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -98,11 +98,11 @@
       overflow-x: auto;
       padding: 6px 0;
       flex-shrink: 0;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
     #action-deck::-webkit-scrollbar {
-      display: none; /* Chrome/Safari */
+      display: none;
     }
 
     .action-chip {
@@ -128,11 +128,28 @@
     #input-form {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       border-top: 1px dashed var(--term-dim);
       padding-top: 6px;
       background: var(--bg-color);
       flex-shrink: 0;
+    }
+
+    .nav-btn {
+      background: rgba(0, 255, 102, 0.08);
+      border: 1px solid var(--term-dim);
+      color: var(--term-green);
+      font-family: inherit;
+      font-size: 0.75em;
+      padding: 4px 6px;
+      cursor: pointer;
+      border-radius: 2px;
+      user-select: none;
+      line-height: 1;
+    }
+    .nav-btn:active {
+      background: var(--term-green);
+      color: var(--bg-color);
     }
 
     #prompt-symbol {
@@ -160,17 +177,16 @@
       text-decoration: underline;
     }
 
-    /* Mobile fine-tuning */
     @media (max-width: 600px) {
       #app-container {
         padding: 6px 8px;
       }
       .action-chip {
-        padding: 9px 10px;
-        font-size: 0.82em;
+        padding: 8px 10px;
+        font-size: 0.8em;
       }
       #cli-input {
-        font-size: 16px; /* Lock to 16px to prevent iOS auto-zoom */
+        font-size: 16px;
       }
     }
   </style>
@@ -194,20 +210,22 @@
         <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
         <p class="term-dim">CACHE TALES ARCHIVE RECOVERY SYSTEM // S.O.S. GRID NODE</p>
         <p>Physical vault casing: 1/4-inch rolled rocket steel (RSI origin).<br>
-        Mobile UI: Dynamic Viewport Lock Active.<br>
+        Core Engine: Modular Dispatch & History Navigation Active.<br>
         Type <code>HELP</code> for field directives, or tap an action chip below.</p>
       </div>
     </div>
 
     <div id="action-deck">
-      <button class="action-chip" onclick="runCommand('STATUS')">[ 📊 STATUS ]</button>
-      <button class="action-chip" onclick="runCommand('HINT')">[ 💡 HINT ]</button>
-      <button class="action-chip" onclick="runCommand('SYNC')">[ 🔄 SYNC ]</button>
-      <button class="action-chip" onclick="runCommand('SWAG')">[ 📦 SWAG ]</button>
-      <button class="action-chip" onclick="runCommand('KICK')">[ 🥾 KICK ]</button>
+      <button class="action-chip" onclick="executeDirective('STATUS')">[ 📊 STATUS ]</button>
+      <button class="action-chip" onclick="executeDirective('HINT')">[ 💡 HINT ]</button>
+      <button class="action-chip" onclick="executeDirective('SYNC')">[ 🔄 SYNC ]</button>
+      <button class="action-chip" onclick="executeDirective('SWAG')">[ 📦 SWAG ]</button>
+      <button class="action-chip" onclick="executeDirective('KICK')">[ 🥾 KICK ]</button>
     </div>
 
     <form id="input-form" onsubmit="handleFormSubmit(event)">
+      <button type="button" class="nav-btn" title="Previous Command" onclick="historyNavigate(-1)">▲</button>
+      <button type="button" class="nav-btn" title="Next Command" onclick="historyNavigate(1)">▼</button>
       <span id="prompt-symbol">&gt;</span>
       <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter directive...">
     </form>
@@ -222,6 +240,62 @@
     ];
 
     let awaitingAdminPin = false;
+
+    // --- COMMAND HISTORY BUFFER (BACKLOG-02) ---
+    const HISTORY_MAX = 30;
+    let commandHistory = [];
+    let historyIndex = -1;
+    let tempDraft = "";
+
+    function pushHistory(cmd) {
+      if (!cmd || (commandHistory.length > 0 && commandHistory[commandHistory.length - 1] === cmd)) {
+        historyIndex = -1;
+        return;
+      }
+      commandHistory.push(cmd);
+      if (commandHistory.length > HISTORY_MAX) {
+        commandHistory.shift();
+      }
+      historyIndex = -1;
+      tempDraft = "";
+    }
+
+    function historyNavigate(direction) {
+      const input = document.getElementById("cli-input");
+      if (commandHistory.length === 0) return;
+
+      if (historyIndex === -1) {
+        tempDraft = input.value;
+        historyIndex = commandHistory.length;
+      }
+
+      historyIndex += direction;
+
+      if (historyIndex < 0) {
+        historyIndex = 0;
+      } else if (historyIndex >= commandHistory.length) {
+        historyIndex = commandHistory.length;
+        input.value = tempDraft;
+        return;
+      }
+
+      input.value = commandHistory[historyIndex];
+      // Move cursor to end
+      setTimeout(() => {
+        input.selectionStart = input.selectionEnd = input.value.length;
+      }, 0);
+    }
+
+    // Physical Arrow Key Listener
+    document.getElementById("cli-input").addEventListener("keydown", function(e) {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        historyNavigate(-1);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        historyNavigate(1);
+      }
+    });
 
     // --- MOBILE VIEWPORT & KEYBOARD HARDENING ---
     function adjustForMobileViewport() {
@@ -242,6 +316,7 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
+    // --- LOCAL DOSSIER STATE ---
     function getDossier() {
       let profile = {};
       try {
@@ -309,6 +384,7 @@
       scrollTerminalToBottom();
     }
 
+    // --- TELEMETRY & CLOUD SYNC ---
     async function sendTelemetry(action, customParams = {}) {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
@@ -382,6 +458,7 @@
       `);
     }
 
+    // --- ADMIN PROTOCOL ---
     async function handleAdminCommand(arg) {
       const dossier = getDossier();
       const authorizedRatPack = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"];
@@ -416,95 +493,76 @@
       `, "alert");
     }
 
-    async function runCommand(cmdText) {
-      const cleanText = cmdText.trim();
-      if (!cleanText) return;
+    // --- MODULAR COMMAND DISPATCH REGISTRY (BACKLOG-01) ---
+    const COMMAND_REGISTRY = {
+      HELP: {
+        aliases: ["?", "MAN", "DIRECTIVES"],
+        summary: "Display available field directives",
+        exec: () => {
+          let listHtml = `<div class="term-title"><span>📖 FIELD DIRECTIVES</span></div>`;
+          const seen = new Set();
+          for (const key in COMMAND_REGISTRY) {
+            const cmd = COMMAND_REGISTRY[key];
+            if (seen.has(cmd.exec)) continue;
+            seen.add(cmd.exec);
+            listHtml += `<p><strong>${cmd.syntax || key}</strong> - ${cmd.summary}</p>`;
+          }
+          printBlock(listHtml);
+        }
+      },
 
-      const parts = cleanText.split(" ");
-      const verb = parts[0].toUpperCase();
-      const arg = parts.slice(1).join(" ");
-
-      printBlock(`<span class="term-dim">&gt; ${cleanText}</span>`);
-
-      if (awaitingAdminPin) {
-        handleAdminCommand(cleanText);
-        return;
-      }
-
-      const dossier = getDossier();
-
-      switch (verb) {
-        case "HELP":
+      LOG: {
+        aliases: ["FEED", "STAMP"],
+        syntax: "LOG <target | token | clue>",
+        summary: "Record physical field stage or token find",
+        exec: (arg, dossier) => {
+          if (!arg) {
+            printBlock(`<div class="term-dim">Syntax: LOG &lt;target | token | clue&gt;</div>`);
+            return;
+          }
+          const cleanTarget = arg.toUpperCase().trim();
+          if (!dossier.profileData.stagesLogged.includes(cleanTarget)) {
+            dossier.profileData.stagesLogged.push(cleanTarget);
+            saveDossierLocally(dossier);
+            syncDossierToCloud();
+          }
           printBlock(`
-            <div class="term-title"><span>📖 DIRECTIVES</span></div>
-            <p><strong>LOG &lt;target&gt;</strong> - Record field stage or token find<br>
-            <strong>COLLECT &lt;item&gt;</strong> - Pick up trackable or stage item<br>
-            <strong>HANDLE &lt;name&gt;</strong> - Set User / GC Name<br>
-            <strong>SYNC</strong> - Generate sync link and QR code<br>
-            <strong>RESTORE &lt;key&gt;</strong> - Ingest dossier from other device<br>
-            <strong>STATUS</strong> - Display link, memory & battery vitals<br>
-            <strong>SWAG</strong> - Inspect container inventory<br>
-            <strong>HINT</strong> - Corridor decryption nudge<br>
-            <strong>BYOP</strong> - Pen reminder & field notes<br>
-            <strong>TFTC</strong> - Sign the digital log<br>
-            <strong>DNF</strong> - Signal cache search failure<br>
-            <strong>KICK</strong> - Physical diagnostic test<br>
-            <strong>CLEAR</strong> - Clear terminal screen</p>
+            <div class="term-title"><span>📝 FIELD LOG STAMPED</span></div>
+            <p>Target logged: <strong>${cleanTarget}</strong><br>
+            Parity updated. GZ coordinates verified.</p>
           `);
-          break;
+          sendTelemetry("LOG_FIND", { tokenId: cleanTarget });
+        }
+      },
 
-        case "SYNC":
-          displaySyncInfo();
-          break;
-
-        case "RESTORE":
+      COLLECT: {
+        aliases: ["GRAB", "TAKE"],
+        syntax: "COLLECT <item | card | TB>",
+        summary: "Pick up trackable or stage item into inventory",
+        exec: (arg, dossier) => {
           if (!arg) {
-            printBlock(`<div class="term-dim">Usage: RESTORE &lt;CYPHER-SYNC-XXXX-XXXX&gt;</div>`);
-          } else {
-            restoreDossierFromCloud(arg.trim().toUpperCase());
+            printBlock(`<div class="term-dim">Syntax: COLLECT &lt;item | card | TB&gt;</div>`);
+            return;
           }
-          break;
-
-        case "LOG":
-        case "FEED":
-          if (!arg) {
-            printBlock(`<div class="term-dim">Usage: LOG &lt;token | cache | clue&gt;</div>`);
-          } else {
-            const cleanTarget = arg.toUpperCase().trim();
-            if (!dossier.profileData.stagesLogged.includes(cleanTarget)) {
-              dossier.profileData.stagesLogged.push(cleanTarget);
-              saveDossierLocally(dossier);
-              syncDossierToCloud();
-            }
-            printBlock(`
-              <div class="term-title"><span>📝 FIELD LOG STAMPED</span></div>
-              <p>Target logged: <strong>${cleanTarget}</strong><br>
-              Parity updated. GZ coordinates verified.</p>
-            `);
-            sendTelemetry("LOG_FIND", { tokenId: cleanTarget });
+          const cleanTarget = arg.toUpperCase().trim();
+          if (!dossier.profileData.inventory.includes(cleanTarget)) {
+            dossier.profileData.inventory.push(cleanTarget);
+            saveDossierLocally(dossier);
+            syncDossierToCloud();
           }
-          break;
+          printBlock(`
+            <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
+            <p>Added <strong>${cleanTarget}</strong> to active inventory.</p>
+          `);
+          sendTelemetry("COLLECT_ITEM", { tokenId: cleanTarget });
+        }
+      },
 
-        case "COLLECT":
-          if (!arg) {
-            printBlock(`<div class="term-dim">Usage: COLLECT &lt;item | card | TB&gt;</div>`);
-          } else {
-            const cleanTarget = arg.toUpperCase().trim();
-            if (!dossier.profileData.inventory.includes(cleanTarget)) {
-              dossier.profileData.inventory.push(cleanTarget);
-              saveDossierLocally(dossier);
-              syncDossierToCloud();
-            }
-            printBlock(`
-              <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
-              <p>Added <strong>${cleanTarget}</strong> to active inventory.</p>
-            `);
-            sendTelemetry("COLLECT_ITEM", { tokenId: cleanTarget });
-          }
-          break;
-
-        case "HANDLE":
-        case "NAME":
+      HANDLE: {
+        aliases: ["NAME", "CALLSIGN"],
+        syntax: "HANDLE <name>",
+        summary: "Register or inspect active User / GC Name",
+        exec: (arg, dossier) => {
           if (arg) {
             dossier.username = arg.trim().toUpperCase();
             saveDossierLocally(dossier);
@@ -513,9 +571,36 @@
           } else {
             printBlock(`<p>Current User / GC Name: <strong>${dossier.username}</strong></p>`);
           }
-          break;
+        }
+      },
 
-        case "STATUS":
+      SYNC: {
+        aliases: ["EXPORT"],
+        syntax: "SYNC",
+        summary: "Generate multi-device sync link and QR code",
+        exec: () => {
+          displaySyncInfo();
+        }
+      },
+
+      RESTORE: {
+        aliases: ["IMPORT"],
+        syntax: "RESTORE <sync_key>",
+        summary: "Ingest dossier session from another device",
+        exec: (arg) => {
+          if (!arg) {
+            printBlock(`<div class="term-dim">Syntax: RESTORE &lt;CYPHER-SYNC-XXXX-XXXX&gt;</div>`);
+          } else {
+            restoreDossierFromCloud(arg.trim().toUpperCase());
+          }
+        }
+      },
+
+      STATUS: {
+        aliases: ["STATS", "DIAG"],
+        syntax: "STATUS",
+        summary: "Display satellite link, memory & battery vitals",
+        exec: (arg, dossier) => {
           printBlock(`
             <div class="term-title"><span>📊 GZ SYSTEM METRICS</span></div>
             <p>Operator: ${dossier.username}<br>
@@ -526,13 +611,14 @@
             Stages: ${dossier.profileData.stagesLogged.length}<br>
             Inventory: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
           `);
-          break;
+        }
+      },
 
-        case "TFTC":
-          printBlock(`<p>Thanks for the find! Two-word logs on custom welded containers hurt the chassis' feelings. Drop a real story when logging online!</p>`);
-          break;
-
-        case "SWAG":
+      SWAG: {
+        aliases: ["CONTAINER", "CONTENTS"],
+        syntax: "SWAG",
+        summary: "Inspect physical container contents",
+        exec: () => {
           printBlock(`
             <div class="term-title"><span>📦 AMMO BOX SWAG</span></div>
             <p>- 1x Waterlogged wooden nickel<br>
@@ -541,42 +627,114 @@
             - 1x S.O.S. challenge coin</p>
             <div class="term-dim">Trade equal or trade up. Please seal gasket tight.</div>
           `);
-          break;
+        }
+      },
 
-        case "HINT":
+      HINT: {
+        aliases: ["CLUE"],
+        syntax: "HINT",
+        summary: "Corridor decryption nudge",
+        exec: () => {
           printBlock(`<p>Step away from the sprinklers. Look for the rusted magnetic plate bolted near the 1/4-inch weld line.</p>`);
-          break;
+        }
+      },
 
-        case "BYOP":
+      BYOP: {
+        aliases: ["PEN"],
+        syntax: "BYOP",
+        summary: "Pen reminder & field notes",
+        exec: () => {
           printBlock(`<p>Bring Your Own Pen. Do not scratch initials into rolled steel with a car key—pin 4 doesn't like static discharge.</p>`);
-          break;
+        }
+      },
 
-        case "DNF":
+      TFTC: {
+        aliases: ["THANKS"],
+        syntax: "TFTC",
+        summary: "Sign digital log entry",
+        exec: () => {
+          printBlock(`<p>Thanks for the find! Two-word logs on custom welded containers hurt the chassis' feelings. Drop a real story when logging online!</p>`);
+        }
+      },
+
+      DNF: {
+        aliases: ["FAIL", "LOST"],
+        syntax: "DNF",
+        summary: "Signal search failure or needed maintenance",
+        exec: () => {
           printBlock(`
             <div class="term-title"><span>⚠️ DNF SIGNAL RECORDED</span></div>
             <p>Heavy canopy bounce? Expand your search radius by 15 feet and check for natural camouflage.</p>
           `, "alert");
           sendTelemetry("DNF_SIGNAL", { tokenId: "DNF_FLAG" });
-          break;
+        }
+      },
 
-        case "KICK":
+      KICK: {
+        aliases: ["THUMP", "HIT"],
+        syntax: "KICK",
+        summary: "Physical diagnostic percussive maintenance",
+        exec: () => {
           printBlock(`
             <div class="term-title"><span>*THUD*</span></div>
             <p>Solid 1/4-inch rolled rocket steel. Rocket Science Institute welds don't give a millimeter to hiking boots.</p>
           `);
-          break;
+        }
+      },
 
-        case "ADMIN":
+      ADMIN: {
+        aliases: ["SYSOP", "ROOT"],
+        syntax: "ADMIN [pin]",
+        summary: "Restricted Rat Pack SysOp maintenance suite",
+        exec: (arg) => {
           handleAdminCommand(arg);
-          break;
+        }
+      },
 
-        case "CLEAR":
+      CLEAR: {
+        aliases: ["CLS"],
+        syntax: "CLEAR",
+        summary: "Clear the terminal display",
+        exec: () => {
           document.getElementById("terminal-screen").innerHTML = "";
-          break;
+        }
+      }
+    };
 
-        default:
-          printBlock(`<div class="term-block error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for directives.</div>`, "error");
-          break;
+    // Build Aliases Map dynamically
+    const ALIAS_LOOKUP = {};
+    for (const key in COMMAND_REGISTRY) {
+      ALIAS_LOOKUP[key] = COMMAND_REGISTRY[key];
+      if (COMMAND_REGISTRY[key].aliases) {
+        COMMAND_REGISTRY[key].aliases.forEach(alias => {
+          ALIAS_LOOKUP[alias.toUpperCase()] = COMMAND_REGISTRY[key];
+        });
+      }
+    }
+
+    // --- MAIN DISPATCH ENGINE ---
+    async function executeDirective(cmdText) {
+      const cleanText = cmdText.trim();
+      if (!cleanText) return;
+
+      pushHistory(cleanText);
+      printBlock(`<span class="term-dim">&gt; ${cleanText}</span>`);
+
+      if (awaitingAdminPin) {
+        handleAdminCommand(cleanText);
+        return;
+      }
+
+      const parts = cleanText.split(" ");
+      const verb = parts[0].toUpperCase();
+      const arg = parts.slice(1).join(" ");
+      const dossier = getDossier();
+
+      const targetCommand = ALIAS_LOOKUP[verb];
+      if (targetCommand) {
+        targetCommand.exec(arg, dossier);
+      } else {
+        printBlock(`<div class="term-block error">Unknown directive '<strong>${verb}</strong>'. Type <code>HELP</code> for available directives.</div>`, "error");
       }
     }
 
@@ -586,8 +744,7 @@
       const val = input.value.trim();
       if (!val) return;
       input.value = "";
-      runCommand(val);
-      // Keep keyboard open and in view on mobile
+      executeDirective(val);
       input.focus();
     }
 
@@ -601,12 +758,12 @@
       } else if (token) {
         setTimeout(() => {
           printBlock(`<span class="term-dim">[AUTO-SATELLITE INGEST: SCAN DETECTED]</span>`);
-          runCommand(`LOG ${token}`);
+          executeDirective(`LOG ${token}`);
         }, 400);
       }
     }
 
-    // Startup routines
+    // Startup
     updateHeader();
     initSatelliteLink();
     checkUrlPayloads();
