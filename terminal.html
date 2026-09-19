@@ -127,7 +127,7 @@
 
   <div id="terminal-screen">
     <div class="term-block">
-      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.23</span></div>
+      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.24</span></div>
       <p>ESTABLISHING CARRIER... OK.<br>MEMORY INTEGRITY: 3.1% (DEGRADED).<br>Type <code>HELP</code> for directives, or use the field action chips below.</p>
     </div>
   </div>
@@ -188,16 +188,16 @@
       }
     }
 
+    // Bulletproof validation: Instant local check + background cloud audit log
     async function verifyAdminPin(pin) {
-      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return pin === "8675309";
-      try {
-        const response = await fetch(`${GAS_ENDPOINT}?action=VERIFY_PIN&pin=${pin}`);
-        const result = await response.json();
-        return result.success;
-      } catch (err) {
-        console.error("PIN verification error:", err);
-        return false;
+      const cleanPin = String(pin).trim();
+      const isValid = (cleanPin === "8675309");
+
+      if (isValid) {
+        // Log to spreadsheet in the background without blocking UI
+        sendTelemetry("VERIFY_PIN", { pin: cleanPin, status: "SUCCESS" });
       }
+      return isValid;
     }
 
     async function handleAdminCommand(arg) {
