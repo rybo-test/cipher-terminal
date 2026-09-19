@@ -127,8 +127,8 @@
 
   <div id="terminal-screen">
     <div class="term-block">
-      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.22</span></div>
-      <p>ESTABLISHING CARRIER... OK.<br>MEMORY INTEGRITY: 3.1% (DEGRADED).<br>Type <code>HELP</code> for available directives, or use the field action chips below.</p>
+      <div class="term-title"><span>C.I.P.H.E.R. // CORE BOOT v1.23</span></div>
+      <p>ESTABLISHING CARRIER... OK.<br>MEMORY INTEGRITY: 3.1% (DEGRADED).<br>Type <code>HELP</code> for directives, or use the field action chips below.</p>
     </div>
   </div>
 
@@ -175,7 +175,6 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
-    // Bulletproof GET-based Telemetry Dispatcher
     async function sendTelemetry(action, params = {}) {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
@@ -183,8 +182,6 @@
           action: action,
           callsign: getState().handle
         }, params));
-        
-        // Fire and forget GET request
         fetch(`${GAS_ENDPOINT}?${urlParams.toString()}`).catch(() => {});
       } catch (err) {
         console.error("Telemetry error:", err);
@@ -227,7 +224,7 @@
       }
 
       if (awaitingAdminPin) {
-        const pinInput = document.getElementById("cli-input").value;
+        const pinInput = arg;
         awaitingAdminPin = false;
         const isValid = await verifyAdminPin(pinInput);
         if (isValid) {
@@ -253,7 +250,7 @@
       printBlock(`<span class="term-dim">&gt; ${cmdText}</span>`);
 
       if (awaitingAdminPin) {
-        handleAdminCommand(cmdText);
+        handleAdminCommand(cmdText.trim());
         return;
       }
 
@@ -318,7 +315,6 @@
       runCommand(val);
     }
 
-    // Initialize UI state on boot
     updateHeader();
     if (GAS_ENDPOINT && GAS_ENDPOINT.includes("exec")) {
       document.getElementById("sys-status").innerText = "SYSOP RELAY: ONLINE // 56K";
