@@ -210,7 +210,7 @@
         <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
         <p class="term-dim">CACHE TALES TRAIL LOG &amp; RECOVERY SYSTEM // CACHE COUNTY POWER TRAIL</p>
         <p>Container casing: 1/4-inch rolled rocket steel (RSI origin).<br>
-        Trail command table: Online. Rat Lab environment: Staged.<br>
+        Audio &amp; Voice Synthesis: Online.<br>
         Type <code>HELP</code> for trail directives, or tap an action chip below.</p>
       </div>
     </div>
@@ -243,6 +243,122 @@
     let awaitingPinForLab = false;
     let simulatedBattery = 84;
     let simulatedSolarFault = "OK";
+    let audioMuted = false;
+
+    // --- PROCEDURAL AUDIO & SPEECH ENGINE ---
+    let audioCtx = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSound(type) {
+      if (audioMuted) return;
+      try {
+        initAudioContext();
+        const now = audioCtx.currentTime;
+
+        if (type === 'TICK') {
+          // Mechanical relay click
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(1200, now);
+          osc.frequency.exponentialRampToValueAtTime(200, now + 0.015);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.015);
+        } 
+        else if (type === 'KICK') {
+          // Hollow steel thud
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(35, now + 0.15);
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+        else if (type === 'BUZZ') {
+          // Low-voltage error buzz
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc1.type = 'square';
+          osc2.type = 'sawtooth';
+          osc1.frequency.setValueAtTime(90, now);
+          osc2.frequency.setValueAtTime(93, now);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc1.start(now);
+          osc2.start(now);
+          osc1.stop(now + 0.2);
+          osc2.stop(now + 0.2);
+        }
+        else if (type === 'CHIME') {
+          // Ascending find harmonic arpeggio
+          [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + (i * 0.08));
+            gain.gain.setValueAtTime(0.1, now + (i * 0.08));
+            gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.08) + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + (i * 0.08));
+            osc.stop(now + (i * 0.08) + 0.25);
+          });
+        }
+      } catch (err) {}
+    }
+
+    // Energy & Memory Modulated Speech
+    function speakCypher(text) {
+      if (audioMuted || !window.speechSynthesis) return;
+      try {
+        window.speechSynthesis.cancel();
+        
+        let spokenText = text.replace(/<[^>]*>/g, ''); // strip HTML tags
+        const memoryParity = parseFloat(calculateStageRestoration());
+
+        // Low memory stutter / omission simulation
+        if (memoryParity < 20) {
+          spokenText = "Static... memory sector corrupted... " + spokenText.substring(0, 45) + "... transmission lost.";
+        }
+
+        const utterance = new SpeechSynthesisUtterance(spokenText);
+        
+        // Modulate pitch and rate based on battery energy
+        if (simulatedBattery <= 19) {
+          utterance.pitch = 0.6; // low battery drawl
+          utterance.rate = 0.75;
+        } else if (simulatedBattery <= 59) {
+          utterance.pitch = 0.85; // brownout flicker
+          utterance.rate = 0.9;
+        } else {
+          utterance.pitch = 1.0; // stable float
+          utterance.rate = 1.05;
+        }
+
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {}
+    }
 
     // --- COMMAND HISTORY ---
     const TRAIL_HISTORY_MAX = 30;
@@ -264,6 +380,7 @@
     }
 
     function historyCycle(direction) {
+      playSound('TICK');
       const input = document.getElementById("cli-input");
       if (trailCommandHistory.length === 0) return;
 
@@ -295,6 +412,8 @@
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
         historyCycle(1);
+      } else {
+        playSound('TICK');
       }
     });
 
@@ -441,6 +560,7 @@
             Physical stages stamped: ${(data.profileData.stagesLogged || []).length} | Swag &amp; Trackables: ${(data.profileData.inventory || []).length}.<br>
             Rat Brain status: <strong>${data.ratBrainUnlocked ? "MOUNTED" : "DORMANT"}</strong>.</p>
           `);
+          speakCypher("Dossier restored. Welcome back to the trail.");
         } else {
           printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>No cacher dossier found matching key '${syncKey}'.</p>`, "error");
         }
@@ -468,9 +588,10 @@
         </div>
         <div class="term-dim">Scan with another camera to transfer your physical finds, inventory, and Rat Brain tools.</div>
       `);
+      speakCypher("Multi-device sync link generated.");
     }
 
-    // --- RAT LAB WORKBENCH & TEST ENVIRONMENT ---
+    // --- RAT LAB WORKBENCH ---
     function openRatLab() {
       inRatLabMode = true;
       document.getElementById("prompt-symbol").innerText = "RAT_LAB>";
@@ -492,6 +613,7 @@
         All prototypes, cipher tests, and hardware staging remain isolated from the public trail ledger."</p>
         <div class="term-dim">Type <code>LAB HELP</code> or tap the cyan action chips above.</div>
       `, "ratlab");
+      speakCypher("Rat Lab workbench online.");
     }
 
     function exitRatLab() {
@@ -509,6 +631,7 @@
       `;
 
       printBlock(`<p>Exited RAT LAB. Re-engaged standard corridor trail transceiver.</p>`);
+      speakCypher("Exited Rat Lab.");
     }
 
     function executeRatBrainQuery(query) {
@@ -517,6 +640,7 @@
           <div class="term-title" style="color:var(--term-rat);"><span>🧠 RAT BRAIN HEURISTIC COPROCESSOR</span></div>
           <p>"Standing by. Feed me an encrypted string or stage clue using <code>RATBRAIN SOLVE &lt;text&gt;</code>."</p>
         `, "ratlab");
+        speakCypher("Rat Brain standing by.");
         return;
       }
 
@@ -531,6 +655,7 @@
         <strong>ROT-13 Evaluation:</strong> <code>${rot13Decoded}</code><br>
         <strong>Heuristic Comment:</strong> "Examined character distribution. If RSI used a standard alphabet shift, check the ROT-13 buffer above. If it's coordinates, look for standard N 41° / W 111° Cache Valley markers."</p>
       `, "ratlab");
+      speakCypher("Rat Brain analysis complete. ROT 13 decoded.");
     }
 
     function handleRatLabDirectives(verb, argument, dossier) {
@@ -572,6 +697,7 @@
             simulatedBattery = 14;
             updateFieldVitals();
             printBlock(`<p style="color:var(--term-rat);">[SIMULATED FAULT INJECTED]: Secondary battery cell collapsed. Unit forced into Critical Standby.</p>`, "ratlab");
+            playSound('BUZZ');
           }
           break;
 
@@ -580,6 +706,7 @@
           simulatedBattery = targetVolts;
           updateFieldVitals();
           printBlock(`<p style="color:var(--term-rat);">Battery cell drained to <strong>${simulatedBattery}%</strong>. Brownout &amp; lockout rules active.</p>`, "ratlab");
+          if (simulatedBattery <= 19) playSound('BUZZ');
           break;
 
         case "CHARGE":
@@ -587,6 +714,7 @@
           simulatedSolarFault = "OK";
           updateFieldVitals();
           printBlock(`<p style="color:var(--term-rat);">Battery bank restored to <strong>100% [SOLAR FLOAT]</strong>. All faults cleared.</p>`, "ratlab");
+          playSound('CHIME');
           break;
 
         case "FORGE":
@@ -597,6 +725,7 @@
             saveCacherDossier(dossier);
           }
           printBlock(`<p style="color:var(--term-rat);">Forged test salvage component: <strong>${itemTag}</strong> placed in your field pack.</p>`, "ratlab");
+          playSound('CHIME');
           break;
 
         case "PLANS":
@@ -637,6 +766,7 @@
             output += `<p><strong>${cmd.syntax || key}</strong> - ${cmd.description}</p>`;
           }
           printBlock(output);
+          speakCypher("Trail directives listed.");
         }
       },
 
@@ -656,15 +786,16 @@
             syncDossierToCloud();
           }
 
-          // Logging a find provides a +15% solar charge boost
           simulatedBattery = Math.min(100, simulatedBattery + 15);
           updateFieldVitals();
+          playSound('CHIME');
 
           printBlock(`
             <div class="term-title"><span>📝 PHYSICAL STAGE LOGGED</span></div>
             <p>Signed into log for: <strong>${stageToken}</strong><br>
             Vault parity updated. Solar cell boosted (+15%).</p>
           `);
+          speakCypher(`Stage ${stageToken} logged successfully. Solar cell recharged.`);
           transmitFieldLog("LOG_FIND", { tokenId: stageToken });
         }
       },
@@ -684,10 +815,12 @@
             saveCacherDossier(dossier);
             syncDossierToCloud();
           }
+          playSound('CHIME');
           printBlock(`
             <div class="term-title"><span>🎒 SWAG / ITEM COLLECTED</span></div>
             <p>Transferred <strong>${item}</strong> into your active field pack.</p>
           `);
+          speakCypher(`Item ${item} added to field pack.`);
           transmitFieldLog("COLLECT_ITEM", { tokenId: item });
         }
       },
@@ -705,6 +838,8 @@
           const idx = dossier.profileData.inventory.indexOf(comp);
           if (idx === -1) {
             printBlock(`<p class="error">You do not have <strong>${comp}</strong> in your field pack. Retrieve it from its cache first.</p>`, "error");
+            playSound('BUZZ');
+            speakCypher("Component missing from field pack.");
             return;
           }
           dossier.profileData.inventory.splice(idx, 1);
@@ -716,12 +851,14 @@
             simulatedBattery = Math.min(100, simulatedBattery + 25);
           }
           updateFieldVitals();
+          playSound('CHIME');
 
           printBlock(`
             <div class="term-title"><span>🔧 HARDWARE MOUNTED AT GZ</span></div>
             <p>Component <strong>${comp}</strong> successfully mounted to the container.<br>
             Trickle generation increased. Field cell stabilized.</p>
           `);
+          speakCypher(`Hardware component mounted. Field cell stabilized.`);
           transmitFieldLog("MOUNT_HARDWARE", { tokenId: comp });
         }
       },
@@ -736,8 +873,10 @@
             saveCacherDossier(dossier);
             syncDossierToCloud();
             printBlock(`<p>Field callsign updated: <strong>${dossier.username}</strong></p>`);
+            speakCypher(`Field callsign updated.`);
           } else {
             printBlock(`<p>Current Geocaching handle: <strong>${dossier.username}</strong></p>`);
+            speakCypher(`Current handle is ${dossier.username}`);
           }
         }
       },
@@ -779,6 +918,7 @@
             Stages Stamped: ${dossier.profileData.stagesLogged.length}<br>
             Field Pack: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
           `);
+          speakCypher(`Solar battery at ${simulatedBattery} percent. Vault memory at ${calculateStageRestoration()} percent.`);
         }
       },
 
@@ -795,6 +935,8 @@
               <div class="term-title"><span>⛔ CLEARANCE RESTRICTED</span></div>
               <p>Physical junction locked. The Rat Pack hasn't left their workbench key under this rock.</p>
             `, "error");
+            playSound('BUZZ');
+            speakCypher("Clearance restricted.");
             return;
           }
 
@@ -803,6 +945,7 @@
             <div class="term-title" style="color:var(--term-rat);"><span>🔐 RAT LAB ACCESS CHALLENGE</span></div>
             <p>Enter <strong>7-digit SysOp PIN</strong> to unlock the workbench:</p>
           `, "ratlab");
+          speakCypher("Enter SysOp PIN.");
         }
       },
 
@@ -813,6 +956,7 @@
         run: (arg, dossier) => {
           if (!dossier.ratBrainUnlocked && !["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "KIMBAH"].includes(dossier.username)) {
             printBlock(`<p class="error">The Rat Brain is not mounted in your pack. Recover it from its high-difficulty field cache first.</p>`, "error");
+            playSound('BUZZ');
             return;
           }
           executeRatBrainQuery(arg);
@@ -826,6 +970,8 @@
         run: () => {
           if (simulatedBattery <= 19) {
             printBlock(`<div class="term-title"><span>⚠️ LOW VOLTAGE LOCKOUT</span></div><p>Solar capacitor at ${simulatedBattery}%. Auxiliary systems offline to preserve core memory. Stamp a stage find (<code>LOG &lt;code&gt;</code>) to recharge.</p>`, "alert");
+            playSound('BUZZ');
+            speakCypher("Low voltage lockout active.");
             return;
           }
           printBlock(`
@@ -836,6 +982,7 @@
             - 1x S.O.S. challenge token</p>
             <div class="term-dim">Trade equal or trade up. Be sure the rubber gasket is seated tight!</div>
           `);
+          speakCypher("Ammo box swag inspected.");
         }
       },
 
@@ -846,16 +993,21 @@
         run: () => {
           if (simulatedBattery <= 19) {
             printBlock(`<div class="term-title"><span>⚠️ LOW VOLTAGE LOCKOUT</span></div><p>Solar capacitor depleted. Auxiliary decoders unpowered. Stamp a physical find to recharge.</p>`, "alert");
+            playSound('BUZZ');
+            speakCypher("Low voltage lockout.");
             return;
           }
           if (simulatedBattery <= 59) {
             printBlock(`<div class="term-dim">[BROWNOUT DELAY: CAPACITOR CHARGING...]</div>`);
+            speakCypher("Charging capacitor...");
             setTimeout(() => {
               printBlock(`<p>Step back from the sprinkler heads. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
+              speakCypher("Field hint loaded.");
             }, 1200);
             return;
           }
           printBlock(`<p>Step back from the sprinkler heads. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
+          speakCypher("Field hint loaded.");
         }
       },
 
@@ -865,6 +1017,7 @@
         description: "Logbook pen reminder and field tips",
         run: () => {
           printBlock(`<p>Bring Your Own Pen. Do not try scratching your initials into the rolled steel with your truck key—pin 4 does not like static discharge.</p>`);
+          speakCypher("Bring your own pen.");
         }
       },
 
@@ -874,6 +1027,7 @@
         description: "Sign the digital field log",
         run: () => {
           printBlock(`<p>Thanks for the Cache! A two-word log on a custom welded container hurts the chassis' feelings. Drop a real story when you submit your log online!</p>`);
+          speakCypher("Thanks for the cache.");
         }
       },
 
@@ -886,6 +1040,8 @@
             <div class="term-title"><span>⚠️ DNF SIGNAL RECORDED</span></div>
             <p>Heavy tree canopy or high muggle traffic? Take a breather, expand your search radius by 15 feet, and check for natural camouflage.</p>
           `, "alert");
+          playSound('BUZZ');
+          speakCypher("Did not find signal recorded.");
           transmitFieldLog("DNF_SIGNAL", { tokenId: "DNF_FLAG" });
         }
       },
@@ -895,10 +1051,27 @@
         syntax: "KICK",
         description: "Percussive maintenance check against container welds",
         run: () => {
+          playSound('KICK');
           printBlock(`
             <div class="term-title"><span>*THUD*</span></div>
             <p>Solid 1/4-inch rolled rocket steel. Rocket Science Institute welds don't yield a millimeter to hiking boots.</p>
           `);
+          speakCypher("Rocket steel welds hold fast.");
+        }
+      },
+
+      MUTE: {
+        aliases: ["SILENT"],
+        syntax: "MUTE",
+        description: "Toggle procedural audio and speech synthesis",
+        run: () => {
+          audioMuted = !audioMuted;
+          if (audioMuted) {
+            printBlock(`<p>Audio and speech muted.</p>`);
+          } else {
+            printBlock(`<p>Audio and speech active.</p>`);
+            speakCypher("Audio online.");
+          }
         }
       },
 
@@ -933,15 +1106,17 @@
 
       const dossier = getCacherDossier();
 
-      // PIN Challenge handling for RAT LAB
       if (awaitingPinForLab) {
         awaitingPinForLab = false;
         if (cleanText === "8675309") {
           dossier.ratBrainUnlocked = true;
           saveCacherDossier(dossier);
+          playSound('CHIME');
           openRatLab();
         } else {
           printBlock(`<div class="term-title"><span>⛔ ACCESS DENIED</span></div><p>Incorrect SysOp PIN.</p>`, "error");
+          playSound('BUZZ');
+          speakCypher("Access denied. Incorrect PIN.");
         }
         return;
       }
@@ -950,7 +1125,6 @@
       const verb = splitLine[0].toUpperCase();
       const argument = splitLine.slice(1).join(" ");
 
-      // If currently inside RAT LAB, prioritize LAB commands
       if (inRatLabMode) {
         if (verb === "LAB" || verb === "RATLAB") {
           const subVerb = argument.split(" ")[0].toUpperCase() || "HELP";
@@ -970,7 +1144,9 @@
       if (matchedCommand) {
         matchedCommand.run(argument, dossier);
       } else {
+        playSound('BUZZ');
         printBlock(`<div class="term-block error">Unknown trail command '<strong>${verb}</strong>'. Type <code>HELP</code> for directives.</div>`, "error");
+        speakCypher("Unknown trail command.");
       }
     }
 
