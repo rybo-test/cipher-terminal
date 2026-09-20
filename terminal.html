@@ -6,13 +6,14 @@
   <title>C.I.P.H.E.R. // Cache Tales Field Transceiver</title>
   <style>
     :root {
-      --bg-color: #080d0a;
+      --bg-color: #070b08;
+      --panel-bg: rgba(12, 22, 15, 0.95);
       --term-green: #00ff66;
       --term-dim: #008833;
       --term-alert: #ffaa00;
       --term-error: #ff3333;
       --term-rat: #33ccff;
-      --font-size-base: 15px;
+      --font-size-base: 14px;
       --input-size-base: 16px;
     }
 
@@ -37,18 +38,19 @@
       flex-direction: column;
       height: 100%;
       height: 100dvh;
-      padding: 8px 10px;
-      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      padding: 6px 10px;
+      padding-bottom: max(6px, env(safe-area-inset-bottom));
+      position: relative;
     }
 
     #header-bar {
       border-bottom: 1px dashed var(--term-dim);
-      padding-bottom: 5px;
-      margin-bottom: 6px;
-      font-size: 0.8em;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+      font-size: 0.78em;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
       flex-shrink: 0;
     }
 
@@ -64,27 +66,31 @@
       -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       padding-right: 4px;
       scroll-behavior: smooth;
     }
 
     .term-block {
       border-left: 3px solid var(--term-green);
-      padding-left: 8px;
+      padding: 4px 8px;
       margin-bottom: 2px;
+      background: rgba(0, 255, 102, 0.02);
+      border-radius: 0 2px 2px 0;
       word-break: break-word;
+      line-height: 1.35;
     }
 
-    .term-block.alert { border-left-color: var(--term-alert); color: var(--term-alert); }
-    .term-block.error { border-left-color: var(--term-error); color: var(--term-error); }
-    .term-block.ratlab { border-left-color: var(--term-rat); color: var(--term-rat); }
+    .term-block.alert { border-left-color: var(--term-alert); color: var(--term-alert); background: rgba(255, 170, 0, 0.04); }
+    .term-block.error { border-left-color: var(--term-error); color: var(--term-error); background: rgba(255, 51, 51, 0.04); }
+    .term-block.ratlab { border-left-color: var(--term-rat); color: var(--term-rat); background: rgba(51, 204, 255, 0.04); }
 
     .term-title {
       font-weight: bold;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      font-size: 0.9em;
     }
 
     .term-dim {
@@ -92,28 +98,53 @@
       font-size: 0.85em;
     }
 
-    #action-deck {
+    /* Action Deck Tray */
+    #action-deck-container {
       display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding: 6px 0;
+      flex-direction: column;
+      gap: 4px;
       flex-shrink: 0;
+      padding: 4px 0;
+      border-top: 1px dashed rgba(0, 136, 51, 0.4);
+    }
+
+    .deck-row {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
-    #action-deck::-webkit-scrollbar { display: none; }
+    .deck-row::-webkit-scrollbar { display: none; }
+
+    .category-chip {
+      background: transparent;
+      border: 1px solid var(--term-dim);
+      color: var(--term-dim);
+      padding: 5px 8px;
+      font-family: inherit;
+      font-size: 0.72em;
+      cursor: pointer;
+      border-radius: 2px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .category-chip.active {
+      border-color: var(--term-green);
+      color: var(--term-green);
+      background: rgba(0, 255, 102, 0.1);
+    }
 
     .action-chip {
-      background: rgba(0, 255, 102, 0.08);
-      border: 1px solid var(--term-dim);
+      background: rgba(0, 255, 102, 0.06);
+      border: 1px solid var(--term-green);
       color: var(--term-green);
-      padding: 8px 12px;
+      padding: 6px 10px;
       font-family: inherit;
-      font-size: 0.78em;
+      font-size: 0.75em;
       white-space: nowrap;
-      text-align: center;
       cursor: pointer;
-      border-radius: 3px;
+      border-radius: 2px;
       text-transform: uppercase;
       flex-shrink: 0;
     }
@@ -136,8 +167,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      border-top: 1px dashed var(--term-dim);
-      padding-top: 6px;
+      padding-top: 4px;
       background: var(--bg-color);
       flex-shrink: 0;
     }
@@ -148,11 +178,10 @@
       color: var(--term-green);
       font-family: inherit;
       font-size: 0.75em;
-      padding: 4px 6px;
+      padding: 5px 8px;
       cursor: pointer;
       border-radius: 2px;
       user-select: none;
-      line-height: 1;
     }
     .nav-btn:active {
       background: var(--term-green);
@@ -162,21 +191,75 @@
     #prompt-symbol {
       color: var(--term-green);
       font-weight: bold;
-      font-size: 1.1em;
+      font-size: 1.05em;
       user-select: none;
     }
 
     #cli-input {
       flex: 1;
       background: transparent;
-      border: none;
+      border: 1px solid var(--term-dim);
       color: var(--term-green);
       font-family: 'Courier New', Courier, monospace;
       font-size: var(--input-size-base);
       outline: none;
-      padding: 6px 0;
-      border-radius: 0;
+      padding: 6px 8px;
+      border-radius: 2px;
       -webkit-appearance: none;
+    }
+    #cli-input:focus {
+      border-color: var(--term-green);
+      background: rgba(0, 255, 102, 0.03);
+    }
+
+    /* Modal Overlay for clean HUD help */
+    #hud-modal {
+      display: none;
+      position: absolute;
+      top: 35px;
+      left: 10px;
+      right: 10px;
+      bottom: 50px;
+      background: var(--panel-bg);
+      border: 1px solid var(--term-green);
+      box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+      z-index: 100;
+      padding: 12px;
+      flex-direction: column;
+      backdrop-filter: blur(4px);
+    }
+    #hud-modal.active { display: flex; }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--term-dim);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 0.85em;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: 1px solid var(--term-error);
+      color: var(--term-error);
+      cursor: pointer;
+      font-family: inherit;
+      padding: 3px 8px;
+    }
+    .modal-close-btn:active {
+      background: var(--term-error);
+      color: var(--bg-color);
     }
 
     a.term-link {
@@ -185,8 +268,8 @@
     }
 
     @media (max-width: 600px) {
-      #app-container { padding: 6px 8px; }
-      .action-chip { padding: 8px 10px; font-size: 0.8em; }
+      #app-container { padding: 4px 6px; }
+      .action-chip { padding: 6px 8px; font-size: 0.72em; }
       #cli-input { font-size: 16px; }
     }
   </style>
@@ -196,7 +279,7 @@
   <div id="app-container">
     <div id="header-bar">
       <div class="header-row">
-        <span id="sat-link">GPS FIX: ACQUIRING CONSTELLATION...</span>
+        <span id="sat-link">GPS FIX: ACQUIRING...</span>
         <span id="cacher-id">CACHER: UNREGISTERED</span>
       </div>
       <div class="header-row term-dim">
@@ -205,15 +288,37 @@
       </div>
     </div>
 
+    <!-- Main Output Buffer -->
     <div id="terminal-screen"></div>
 
-    <div id="action-deck"></div>
+    <!-- HUD Overlay for Help / Story / Vitals -->
+    <div id="hud-modal">
+      <div class="modal-header">
+        <span id="hud-modal-title">SYSTEM HUD</span>
+        <button class="modal-close-btn" onclick="closeHudModal()">[ CLOSE X ]</button>
+      </div>
+      <div class="modal-body" id="hud-modal-content"></div>
+    </div>
 
+    <!-- Action Deck Container with Sub-Categories -->
+    <div id="action-deck-container">
+      <div class="deck-row" id="deck-categories">
+        <button class="category-chip active" onclick="setDeckCategory('NAV')">🗺️ NAV</button>
+        <button class="category-chip" onclick="setDeckCategory('CONTAINER')">📦 CONTAINER</button>
+        <button class="category-chip" onclick="setDeckCategory('INTENT')">❓ ASK</button>
+        <button class="category-chip" onclick="setDeckCategory('SYS')">⚙️ SYS</button>
+      </div>
+      <div class="deck-row" id="deck-actions">
+        <!-- Sub-actions populate dynamically -->
+      </div>
+    </div>
+
+    <!-- Command Input Dock -->
     <form id="input-form" onsubmit="handleLogSubmit(event)">
       <button type="button" class="nav-btn" title="Previous Command" onclick="historyCycle(-1)">▲</button>
       <button type="button" class="nav-btn" title="Next Command" onclick="historyCycle(1)">▼</button>
       <span id="prompt-symbol">&gt;</span>
-      <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter trail command...">
+      <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter trail command or ask a question...">
     </form>
   </div>
 
@@ -233,12 +338,12 @@
     let simulatedBattery = 84;
     let simulatedSolarFault = "OK";
     let audioMuted = false;
+    let currentDeckCategory = "NAV";
 
-    // Local caches for cloud registries
+    // Registries
     let knownItemsRegistry = new Map();
     let knownCachesRegistry = new Map();
 
-    // Fallback seed items
     const DEFAULT_VALID_ITEMS = new Set([
       "BRASS_WASHER", "PANEL-40W-SOLAR", "CELL-12V-LEAD", "CORRIDOR-ANTENNA",
       "MEMORY-CORE-EXP", "RAT_BRAIN_V1", "TB-WOODEN-01", "2004_ARBYS_COUPON"
@@ -249,9 +354,8 @@
       "STAGE_08_GZ", "STAGE_17_GZ", "STAGE_25_GZ", "STAGE_50_GZ", "STAGE_00_LAB"
     ]);
 
-    // --- PROCEDURAL AUDIO & MODEM VOICE ENGINE ---
+    // Audio Engine
     let audioCtx = null;
-
     function initAudioContext() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -266,7 +370,6 @@
       try {
         initAudioContext();
         const now = audioCtx.currentTime;
-
         if (type === 'TICK') {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
@@ -279,8 +382,7 @@
           gain.connect(audioCtx.destination);
           osc.start(now);
           osc.stop(now + 0.015);
-        } 
-        else if (type === 'KICK') {
+        } else if (type === 'KICK') {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
@@ -292,26 +394,18 @@
           gain.connect(audioCtx.destination);
           osc.start(now);
           osc.stop(now + 0.15);
-        }
-        else if (type === 'BUZZ') {
+        } else if (type === 'BUZZ') {
           const osc1 = audioCtx.createOscillator();
-          const osc2 = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc1.type = 'square';
-          osc2.type = 'sawtooth';
           osc1.frequency.setValueAtTime(90, now);
-          osc2.frequency.setValueAtTime(93, now);
           gain.gain.setValueAtTime(0.15, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
           osc1.connect(gain);
-          osc2.connect(gain);
           gain.connect(audioCtx.destination);
           osc1.start(now);
-          osc2.start(now);
           osc1.stop(now + 0.2);
-          osc2.stop(now + 0.2);
-        }
-        else if (type === 'CHIME') {
+        } else if (type === 'CHIME') {
           [523.25, 659.25, 783.99].forEach((freq, i) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -325,20 +419,6 @@
             osc.stop(now + (i * 0.08) + 0.25);
           });
         }
-        else if (type === 'MODEM') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(1400, now);
-          osc.frequency.linearRampToValueAtTime(2200, now + 0.1);
-          osc.frequency.linearRampToValueAtTime(900, now + 0.2);
-          gain.gain.setValueAtTime(0.08, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.25);
-        }
       } catch (err) {}
     }
 
@@ -346,39 +426,20 @@
       if (audioMuted || !window.speechSynthesis) return;
       try {
         window.speechSynthesis.cancel();
-        playSound('MODEM');
-
         setTimeout(() => {
           let spokenText = text.replace(/<[^>]*>/g, '');
-          const memoryParity = parseFloat(calculateStageRestoration());
-
-          if (memoryParity < 20) {
-            spokenText = "Static... corrupted trail memory... " + spokenText.substring(0, 45) + "... transmission lost.";
-          }
-
           const utterance = new SpeechSynthesisUtterance(spokenText);
-          
-          if (simulatedBattery <= 19) {
-            utterance.pitch = 0.6;
-            utterance.rate = 0.75;
-          } else if (simulatedBattery <= 59) {
-            utterance.pitch = 0.85;
-            utterance.rate = 0.9;
-          } else {
-            utterance.pitch = 1.0;
-            utterance.rate = 1.05;
-          }
-
+          utterance.pitch = simulatedBattery <= 19 ? 0.6 : (simulatedBattery <= 59 ? 0.85 : 1.0);
+          utterance.rate = simulatedBattery <= 19 ? 0.75 : 1.0;
           window.speechSynthesis.speak(utterance);
-        }, 300);
+        }, 150);
       } catch (err) {}
     }
 
-    // --- REGISTRY SYNC ---
+    // Registries Sync
     async function loadCloudRegistries() {
       if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
       try {
-        // Fetch CorridorItems
         fetch(`${GAS_ENDPOINT}?action=GET_ITEMS`)
           .then(res => res.json())
           .then(data => {
@@ -387,7 +448,6 @@
             }
           }).catch(() => {});
 
-        // Fetch Geocaches
         fetch(`${GAS_ENDPOINT}?action=GET_CACHES`)
           .then(res => res.json())
           .then(data => {
@@ -398,75 +458,19 @@
       } catch (e) {}
     }
 
-    // --- COMMAND HISTORY ---
-    const TRAIL_HISTORY_MAX = 30;
-    let trailCommandHistory = [];
-    let trailHistoryPointer = -1;
-    let trailDraftInput = "";
+    // Buffer Limiting & Terminal Display
+    const MAX_TERMINAL_BLOCKS = 25;
+    function printBlock(htmlContent, type = "") {
+      const screen = document.getElementById("terminal-screen");
+      const block = document.createElement("div");
+      block.className = `term-block ${type}`;
+      block.innerHTML = htmlContent;
+      screen.appendChild(block);
 
-    function recordHistory(commandText) {
-      if (!commandText || (trailCommandHistory.length > 0 && trailCommandHistory[trailCommandHistory.length - 1] === commandText)) {
-        trailHistoryPointer = -1;
-        return;
+      while (screen.children.length > MAX_TERMINAL_BLOCKS) {
+        screen.removeChild(screen.firstChild);
       }
-      trailCommandHistory.push(commandText);
-      if (trailCommandHistory.length > TRAIL_HISTORY_MAX) {
-        trailCommandHistory.shift();
-      }
-      trailHistoryPointer = -1;
-      trailDraftInput = "";
-    }
-
-    function historyCycle(direction) {
-      playSound('TICK');
-      const input = document.getElementById("cli-input");
-      if (trailCommandHistory.length === 0) return;
-
-      if (trailHistoryPointer === -1) {
-        trailDraftInput = input.value;
-        trailHistoryPointer = trailCommandHistory.length;
-      }
-
-      trailHistoryPointer += direction;
-
-      if (trailHistoryPointer < 0) {
-        trailHistoryPointer = 0;
-      } else if (trailHistoryPointer >= trailCommandHistory.length) {
-        trailHistoryPointer = trailCommandHistory.length;
-        input.value = trailDraftInput;
-        return;
-      }
-
-      input.value = trailCommandHistory[trailHistoryPointer];
-      setTimeout(() => {
-        input.selectionStart = input.selectionEnd = input.value.length;
-      }, 0);
-    }
-
-    document.getElementById("cli-input").addEventListener("keydown", function(e) {
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        historyCycle(-1);
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        historyCycle(1);
-      } else {
-        playSound('TICK');
-      }
-    });
-
-    // --- MOBILE VIEWPORT & SCROLL ---
-    function adjustForMobileViewport() {
-      if (window.visualViewport) {
-        const height = window.visualViewport.height;
-        document.getElementById("app-container").style.height = `${height}px`;
-        scrollTerminalToGZ();
-      }
-    }
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", adjustForMobileViewport);
-      window.visualViewport.addEventListener("scroll", adjustForMobileViewport);
+      scrollTerminalToGZ();
     }
 
     function scrollTerminalToGZ() {
@@ -474,13 +478,21 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
-    // --- CACHER DOSSIER STATE ---
+    // Modal HUD System
+    function openHudModal(title, htmlBody) {
+      document.getElementById("hud-modal-title").innerText = title;
+      document.getElementById("hud-modal-content").innerHTML = htmlBody;
+      document.getElementById("hud-modal").classList.add("active");
+    }
+
+    function closeHudModal() {
+      document.getElementById("hud-modal").classList.remove("active");
+    }
+
+    // Cacher State
     function getCacherDossier() {
       let profile = {};
-      try {
-        profile = JSON.parse(localStorage.getItem("cipher_profile") || "{}");
-      } catch (e) {}
-
+      try { profile = JSON.parse(localStorage.getItem("cipher_profile") || "{}"); } catch (e) {}
       return {
         username: localStorage.getItem("cipher_gc_name") || "",
         syncKey: localStorage.getItem("cipher_sync_key") || generateSyncKey(),
@@ -489,9 +501,7 @@
           stagesLogged: ["STAGE_01_GZ"],
           inventory: ["BRASS_WASHER"],
           fieldNotes: [],
-          collectedSwag: [],
-          unlockedTools: [],
-          settings: { soundEnabled: true, highContrast: false }
+          collectedSwag: []
         }, profile)
       };
     }
@@ -503,9 +513,7 @@
     }
 
     function saveCacherDossier(dossier) {
-      if (dossier.username) {
-        localStorage.setItem("cipher_gc_name", dossier.username);
-      }
+      if (dossier.username) localStorage.setItem("cipher_gc_name", dossier.username);
       localStorage.setItem("cipher_sync_key", dossier.syncKey);
       localStorage.setItem("cipher_rat_brain", dossier.ratBrainUnlocked ? "true" : "false");
       localStorage.setItem("cipher_profile", JSON.stringify(dossier.profileData));
@@ -514,137 +522,43 @@
 
     function calculateStageRestoration() {
       const dossier = getCacherDossier();
-      let restored = 3.1;
       const count = (dossier.profileData.stagesLogged || []).length;
-      restored += Math.min(count * 0.4, 96.9);
-      return restored.toFixed(1);
+      return (3.1 + Math.min(count * 0.4, 96.9)).toFixed(1);
     }
 
     function updateFieldVitals() {
       const dossier = getCacherDossier();
       document.getElementById("cacher-id").innerText = `CACHER: ${dossier.username || "UNREGISTERED"}`;
       document.getElementById("mem-status").innerText = `TRAIL MEMORY: ${calculateStageRestoration()}%`;
-      
       let statusStr = `${simulatedBattery}%`;
-      if (simulatedBattery <= 19) {
-        statusStr += " [CRITICAL STANDBY]";
-      } else if (simulatedBattery <= 59) {
-        statusStr += " [BROWNOUT]";
-      } else {
-        statusStr += simulatedSolarFault === "DIRTY_GLASS" ? " [SOLAR DEGRADED]" : " [SUN JUICE: GOOD]";
-      }
+      if (simulatedBattery <= 19) statusStr += " [CRITICAL STANDBY]";
+      else if (simulatedBattery <= 59) statusStr += " [BROWNOUT]";
+      else statusStr += simulatedSolarFault === "DIRTY_GLASS" ? " [SOLAR DEGRADED]" : " [SUN JUICE: GOOD]";
       document.getElementById("bat-status").innerText = `POWER LEVEL: ${statusStr}`;
     }
 
     function acquireGpsFix() {
-      if (navigator.onLine) {
-        const sat = GPS_CONSTELLATION[Math.floor(Math.random() * GPS_CONSTELLATION.length)];
-        document.getElementById("sat-link").innerText = `GPS FIX: ${sat} // LOCKED`;
-      } else {
-        document.getElementById("sat-link").innerText = `GPS FIX: OFFLINE // GROUND TRAIL SEARCH`;
-      }
+      const sat = GPS_CONSTELLATION[Math.floor(Math.random() * GPS_CONSTELLATION.length)];
+      document.getElementById("sat-link").innerText = `GPS FIX: ${sat} // LOCKED`;
     }
 
-    function printBlock(htmlContent, type = "") {
-      const screen = document.getElementById("terminal-screen");
-      const block = document.createElement("div");
-      block.className = `term-block ${type}`;
-      block.innerHTML = htmlContent;
-      screen.appendChild(block);
-      scrollTerminalToGZ();
-    }
-
-    // --- CLOUD FIELD LOGGING ---
-    async function transmitFieldLog(action, fieldDetails = {}) {
-      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
-      try {
-        const dossier = getCacherDossier();
-        if (!dossier.username) return;
-        const baseTransmission = {
-          action: action,
-          username: dossier.username,
-          syncKey: dossier.syncKey,
-          itemToken: "NONE",
-          cacheStage: "STAGE_01_GZ",
-          containerCondition: inRatLabMode ? "RAT_LAB_ISOLATED" : (isPhysicalGZMode ? "PHYSICAL_AMMO_CAN" : "REMOTE_CACHE_PAGE"),
-          isRatLabTest: inRatLabMode
-        };
-        const searchParams = new URLSearchParams(Object.assign(baseTransmission, fieldDetails));
-        fetch(`${GAS_ENDPOINT}?${searchParams.toString()}`).catch(() => {});
-      } catch (err) {}
-    }
-
-    async function syncDossierToCloud() {
-      const dossier = getCacherDossier();
-      if (!dossier.username) return;
-      await transmitFieldLog("SAVE_DOSSIER", {
-        ratBrainUnlocked: dossier.ratBrainUnlocked,
-        profileData: JSON.stringify(dossier.profileData)
+    // Two-Tier Action Deck Engine
+    function setDeckCategory(cat) {
+      currentDeckCategory = cat;
+      document.querySelectorAll(".category-chip").forEach(btn => {
+        btn.classList.toggle("active", btn.innerText.includes(cat));
       });
+      renderDynamicActionDeck();
     }
 
-    async function restoreDossierFromCloud(syncKey) {
-      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
-      printBlock(`<div class="term-dim">Scanning corridor archives for sync key ${syncKey}...</div>`);
-      try {
-        const res = await fetch(`${GAS_ENDPOINT}?action=GET_DOSSIER&syncKey=${encodeURIComponent(syncKey)}`);
-        const data = await res.json();
-        if (data.success) {
-          saveCacherDossier({
-            username: data.username,
-            syncKey: data.syncKey,
-            ratBrainUnlocked: data.ratBrainUnlocked,
-            profileData: data.profileData
-          });
-          printBlock(`
-            <div class="term-title"><span>📡 CACHER DOSSIER RESTORED</span></div>
-            <p>Welcome back to the corridor, <strong>${data.username}</strong>!<br>
-            Containers stamped: ${(data.profileData.stagesLogged || []).length} | Swag &amp; Trackables: ${(data.profileData.inventory || []).length}.<br>
-            Rat Brain status: <strong>${data.ratBrainUnlocked ? "MOUNTED" : "DORMANT"}</strong>.</p>
-          `);
-          speakCypher("Dossier restored. Welcome back to the trail.");
-          renderDynamicActionDeck();
-        } else {
-          printBlock(`<div class="term-title"><span>⛔ SYNC FAILED</span></div><p>No cacher dossier found matching key '${syncKey}'.</p>`, "error");
-        }
-      } catch (err) {
-        printBlock(`<p class="error">Timeout while restoring cacher dossier from cloud.</p>`, "error");
-      }
-    }
-
-    function showSyncDossier() {
-      const dossier = getCacherDossier();
-      const currentUrl = window.location.origin + window.location.pathname;
-      const syncUrl = `${currentUrl}?sync=${dossier.syncKey}`;
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(syncUrl)}`;
-
-      syncDossierToCloud();
-
-      printBlock(`
-        <div class="term-title"><span>🔄 MULTI-DEVICE DOSSIER SYNC</span></div>
-        <p><strong>Cacher:</strong> ${dossier.username}<br>
-        <strong>Sync Key:</strong> <code>${dossier.syncKey}</code></p>
-        <p>Open this session on your desktop or secondary field phone:<br>
-        <a class="term-link" href="${syncUrl}" target="_blank">${syncUrl}</a></p>
-        <div style="background:white; padding:6px; display:inline-block; border-radius:4px; margin:4px 0;">
-          <img src="${qrApiUrl}" alt="Trail Sync QR" width="140" height="140" style="display:block;">
-        </div>
-        <div class="term-dim">Scan with another camera to transfer your finds, inventory, and field tools.</div>
-      `);
-      speakCypher("Multi-device sync link generated.");
-    }
-
-    // --- DYNAMIC ADAPTIVE ACTION DECK ---
     function renderDynamicActionDeck() {
-      const deck = document.getElementById("action-deck");
+      const deck = document.getElementById("deck-actions");
       const dossier = getCacherDossier();
 
       if (inRatLabMode) {
         deck.innerHTML = `
           <button class="action-chip ratlab-chip" onclick="executeTrailCommand('RATBRAIN')">[ 🧠 RAT BRAIN ]</button>
           <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB HARDWARE')">[ ⚡ HARDWARE ]</button>
-          <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB SOUND')">[ 🔊 TEST AUDIO ]</button>
-          <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB HELP')">[ 📖 BENCH HELP ]</button>
           <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB PLANS')">[ 🗺️ TRAIL PLANS ]</button>
           <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB EXIT')">[ 🚪 EXIT LAB ]</button>
         `;
@@ -669,44 +583,41 @@
       }
 
       let chips = [];
-
-      const hasPanel = (dossier.profileData.inventory || []).includes("PANEL-40W-SOLAR");
-      if (hasPanel && isPhysicalGZMode) {
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('INSTALL PANEL-40W-SOLAR')">[ 🔧 BOLT ON 40W PANEL ]</button>`);
-      }
-
-      if (simulatedBattery <= 19) {
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('HINT')">[ ⚡ RECHARGE HINT ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('LOG STAGE_01_GZ')">[ 📝 STAMP FIND ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK CHASSIS ]</button>`);
-      } else {
-        if (isPhysicalGZMode) {
-          chips.push(`<button class="action-chip" onclick="executeTrailCommand('LOG')">[ 📝 SIGN LOGBOOK ]</button>`);
-          chips.push(`<button class="action-chip" onclick="executeTrailCommand('SWAG')">[ 📦 INSPECT SWAG ]</button>`);
-        } else {
-          chips.push(`<button class="action-chip" onclick="executeTrailCommand('HINT')">[ 💡 GZ HINT ]</button>`);
-          chips.push(`<button class="action-chip" onclick="executeTrailCommand('STATUS')">[ 📊 TRAIL VITALS ]</button>`);
-        }
+      if (currentDeckCategory === "NAV") {
         chips.push(`<button class="action-chip" onclick="executeTrailCommand('STORY')">[ 🗺️ STORY CACHES ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('SYNC')">[ 🔄 SYNC ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('HINT')">[ 💡 GZ HINT ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('CACHE GC10001')">[ 📍 ANCHOR CACHE ]</button>`);
+      } else if (currentDeckCategory === "CONTAINER") {
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('LOG STAGE_01_GZ')">[ 📝 SIGN LOGBOOK ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('SWAG')">[ 📦 INSPECT SWAG ]</button>`);
+        if ((dossier.profileData.inventory || []).includes("PANEL-40W-SOLAR")) {
+          chips.push(`<button class="action-chip" onclick="executeTrailCommand('INSTALL PANEL-40W-SOLAR')">[ 🔧 BOLT ON 40W PANEL ]</button>`);
+        }
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK WELDS ]</button>`);
+      } else if (currentDeckCategory === "INTENT") {
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHAT IS THIS')">[ WHAT IS THIS? ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHO ARE YOU')">[ WHO ARE YOU? ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHERE IS CACHE')">[ WHERE IS CACHE? ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHY DO THIS')">[ WHY DO THIS? ]</button>`);
+      } else if (currentDeckCategory === "SYS") {
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('HELP')">[ 📖 DIRECTIVES ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('STATUS')">[ 📊 TRAIL VITALS ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('SYNC')">[ 🔄 SYNC DOSSIER ]</button>`);
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('CLEAR')">[ 🧹 CLEAR ]</button>`);
       }
 
       deck.innerHTML = chips.join("");
     }
 
-    // --- SECRET RAT LAB WORKBENCH ---
+    // Secret Rat Lab Handling
     function openRatLab() {
       inRatLabMode = true;
       document.getElementById("prompt-symbol").innerText = "RAT_LAB>";
       document.getElementById("prompt-symbol").style.color = "var(--term-rat)";
       renderDynamicActionDeck();
-
       printBlock(`
-        <div class="term-title" style="color:var(--term-rat);"><span>🧪 RAT LAB // SECRET WORKBENCH ACTIVE</span></div>
-        <p style="color:var(--term-rat);"><strong>[RAT BRAIN]:</strong> "Workbench online, Nezzmuk. Capacitors hummin'.<br>
-        All prototypes, cipher tests, and hardware staging remain isolated from the public trail ledger."</p>
-        <div class="term-dim">Type <code>LAB HELP</code> or tap the cyan action chips above.</div>
+        <div class="term-title" style="color:var(--term-rat);"><span>🧪 RAT LAB // BENCH ACCESS GRANTED</span></div>
+        <p style="color:var(--term-rat);">[RAT BRAIN]: "Workbench online. Relays energized. Public logbook isolated."</p>
       `, "ratlab");
       speakCypher("Rat Lab workbench online.");
     }
@@ -716,292 +627,210 @@
       document.getElementById("prompt-symbol").innerText = ">";
       document.getElementById("prompt-symbol").style.color = "var(--term-green)";
       renderDynamicActionDeck();
-
-      printBlock(`<p>Exited RAT LAB. Re-engaged standard corridor trail transceiver.</p>`);
+      printBlock(`<p>Exited RAT LAB. Transceiver returned to trail frequency.</p>`);
       speakCypher("Exited Rat Lab.");
     }
 
     function executeRatBrainQuery(query) {
       if (!query) {
-        printBlock(`
-          <div class="term-title" style="color:var(--term-rat);"><span>🧠 RAT BRAIN HEURISTIC COPROCESSOR</span></div>
-          <p>"Standing by. Feed me an encrypted string or container clue using <code>RATBRAIN SOLVE &lt;text&gt;</code>."</p>
-        `, "ratlab");
-        speakCypher("Rat Brain standing by.");
+        printBlock(`<p style="color:var(--term-rat);">[RAT BRAIN]: "Standing by. Pass text with <code>RATBRAIN SOLVE &lt;text&gt;</code>."</p>`, "ratlab");
         return;
       }
-
-      const cleanQuery = query.trim();
-      let rot13Decoded = cleanQuery.replace(/[a-zA-Z]/g, function(c) {
-        return String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26);
-      });
-
+      let rot13 = query.replace(/[a-zA-Z]/g, c => String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26));
       printBlock(`
-        <div class="term-title" style="color:var(--term-rat);"><span>🧠 RAT BRAIN HEURISTIC ANALYSIS</span></div>
-        <p><strong>Input Clue:</strong> <code>${cleanQuery}</code><br>
-        <strong>ROT-13 Evaluation:</strong> <code>${rot13Decoded}</code><br>
-        <strong>Heuristic Comment:</strong> "Examined character distribution. If RSI used a standard alphabet shift, check the ROT-13 buffer above. If it's coordinates, look for standard N 41° / W 111° Cache Valley markers."</p>
+        <div class="term-title" style="color:var(--term-rat);"><span>🧠 RAT BRAIN ANALYSIS</span></div>
+        <p><strong>Input:</strong> <code>${query}</code><br>
+        <strong>ROT-13:</strong> <code>${rot13}</code></p>
       `, "ratlab");
-      speakCypher("Rat Brain analysis complete. ROT 13 decoded.");
+      speakCypher("ROT 13 evaluation complete.");
     }
 
-    function handleRatLabDirectives(verb, argument, dossier) {
-      switch (verb) {
-        case "HELP":
-        case "LABHELP":
-          printBlock(`
-            <div class="term-title" style="color:var(--term-rat);"><span>🧪 RAT LAB BENCH DIRECTIVES</span></div>
-            <p><strong>RATBRAIN [SOLVE &lt;text&gt;]</strong> - Heuristic cipher and puzzle coprocessor<br>
-            <strong>LAB HARDWARE</strong> - Inspect live condition of solar arrays and battery banks<br>
-            <strong>LAB FAULT &lt;PANEL | BATTERY&gt;</strong> - Simulate hardware foul (dirty glass or dead cell)<br>
-            <strong>LAB DRAIN &lt;percent&gt;</strong> - Force battery voltage drop to test brownout mode<br>
-            <strong>LAB CHARGE</strong> - Restore battery to 100% solar float<br>
-            <strong>LAB FORGE &lt;item_tag&gt;</strong> - Spawn test salvage item directly into your field pack<br>
-            <strong>LAB SOUND &lt;TICK|KICK|BUZZ|CHIME|MODEM&gt;</strong> - Test procedural audio synthesis<br>
-            <strong>LAB SPEAK &lt;phrase&gt;</strong> - Test modulated voice synthesis<br>
-            <strong>LAB PLANS</strong> - View secret upcoming stages and container designs<br>
-            <strong>LAB EXIT</strong> - Return to public trail transceiver</p>
-          `, "ratlab");
-          speakCypher("Lab help index loaded.");
-          break;
+    // Clean Categorized Help HUD (Zero Rat Lab references)
+    function displayHelpModal() {
+      const helpHtml = `
+        <div>
+          <strong style="color:var(--term-alert);">[ CORRIDOR NAVIGATION &amp; DISCOVERY ]</strong>
+          <p><code>STORY</code> - List all participating corridor geocaches<br>
+          <code>CACHE &lt;GC_Code&gt;</code> - Query cache coordinates, casing, and D/T ratings<br>
+          <code>HINT</code> - Retrieve Ground Zero natural camouflage hints</p>
+        </div>
+        <div>
+          <strong style="color:var(--term-alert);">[ CONTAINER &amp; TRAIL INTERACTION ]</strong>
+          <p><code>LOG &lt;tag&gt;</code> - Sign physical container token or stamped washer into ledger<br>
+          <code>COLLECT &lt;item&gt;</code> - Pick up salvage or trackable into your field pack<br>
+          <code>INSTALL &lt;item&gt;</code> - Bolt solar/battery gear onto container to boost power<br>
+          <code>SWAG</code> - Inspect trade items inside the ammo box<br>
+          <code>KICK</code> - Perform percussive maintenance on container welds</p>
+        </div>
+        <div>
+          <strong style="color:var(--term-alert);">[ CACHER DOSSIER &amp; TRANSCEIVER ]</strong>
+          <p><code>STATUS</code> - View power level, GPS constellation, and memory restoration<br>
+          <code>USERNAME &lt;name&gt;</code> - Update your active geocacher handle<br>
+          <code>SYNC</code> - Generate multi-device QR transfer code<br>
+          <code>FONT &lt;small|normal|large&gt;</code> - Toggle high-sunlight outdoor display scale<br>
+          <code>CLEAR</code> - Clean terminal buffer</p>
+        </div>
+      `;
+      openHudModal("CORRIDOR TRAIL DIRECTIVES", helpHtml);
+      speakCypher("Trail directives opened in HUD.");
+    }
 
-        case "RATBRAIN":
-          executeRatBrainQuery(argument.replace(/^SOLVE\s+/i, ""));
-          break;
+    // Deep Conversational Intent Engine
+    function handleConversationalIntent(input) {
+      const text = input.toUpperCase().trim();
 
-        case "HARDWARE":
-          printBlock(`
-            <div class="term-title" style="color:var(--term-rat);"><span>⚡ CORRIDOR HARDWARE BENCH TELEMETRY</span></div>
-            <p><strong>Primary 40W Solar Panel:</strong> Condition: 100% | Weather Fault: <code>${simulatedSolarFault}</code><br>
-            <strong>Secondary Battery Bank:</strong> Condition: ${simulatedBattery}% | Health: <code>${simulatedBattery <= 19 ? "COLLAPSED" : "OK"}</code><br>
-            <strong>Repeater Antenna (GZ-25):</strong> Condition: 100% | Status: <code>STANDBY</code><br>
-            <strong>Corridor Items Loaded:</strong> ${knownItemsRegistry.size} indexed</p>
-          `, "ratlab");
-          break;
-
-        case "SOUND":
-          const soundType = (argument || "CHIME").toUpperCase().trim();
-          playSound(soundType);
-          printBlock(`<p style="color:var(--term-rat);">[AUDIO TEST]: Triggered sound effect '<strong>${soundType}</strong>'.</p>`, "ratlab");
-          break;
-
-        case "SPEAK":
-          const speakPhrase = argument || "Testing audio telemetry and voice modulation parameters.";
-          speakCypher(speakPhrase);
-          printBlock(`<p style="color:var(--term-rat);">[VOICE TEST]: Broadcasting phrase: "<em>${speakPhrase}</em>"</p>`, "ratlab");
-          break;
-
-        case "FAULT":
-          if (argument.toUpperCase().includes("PANEL")) {
-            simulatedSolarFault = "DIRTY_GLASS";
-            updateFieldVitals();
-            printBlock(`<p style="color:var(--term-rat);">[SIMULATED FAULT INJECTED]: 40W Solar Panel glass coated in dust/sap. Sun juice trickle dropped.</p>`, "ratlab");
-          } else {
-            simulatedBattery = 14;
-            updateFieldVitals();
-            printBlock(`<p style="color:var(--term-rat);">[SIMULATED FAULT INJECTED]: Secondary battery cell collapsed. Container forced into Critical Standby.</p>`, "ratlab");
-            playSound('BUZZ');
-          }
-          break;
-
-        case "DRAIN":
-          const targetVolts = Math.max(3.1, Math.min(100, parseFloat(argument) || 3.1));
-          simulatedBattery = targetVolts;
-          updateFieldVitals();
-          renderDynamicActionDeck();
-          printBlock(`<p style="color:var(--term-rat);">Battery cell drained to <strong>${simulatedBattery}%</strong>. Brownout &amp; lockout rules active.</p>`, "ratlab");
-          if (simulatedBattery <= 19) playSound('BUZZ');
-          break;
-
-        case "CHARGE":
-          simulatedBattery = 100;
-          simulatedSolarFault = "OK";
-          updateFieldVitals();
-          renderDynamicActionDeck();
-          printBlock(`<p style="color:var(--term-rat);">Battery bank restored to <strong>100% [SUN JUICE: GOOD]</strong>. All faults cleared.</p>`, "ratlab");
-          playSound('CHIME');
-          break;
-
-        case "FORGE":
-        case "SPAWN":
-          const itemTag = (argument || "PANEL-40W-SOLAR").toUpperCase().trim();
-          const validInRegistry = knownItemsRegistry.has(itemTag) || DEFAULT_VALID_ITEMS.has(itemTag);
-          if (!validInRegistry) {
-            printBlock(`<p class="error">Unknown item tag '<strong>${itemTag}</strong>'. Check CorridorItems registry.</p>`, "error");
-            return;
-          }
-          if (!dossier.profileData.inventory.includes(itemTag)) {
-            dossier.profileData.inventory.push(itemTag);
-            saveCacherDossier(dossier);
-          }
-          renderDynamicActionDeck();
-          printBlock(`<p style="color:var(--term-rat);">Forged test salvage component: <strong>${itemTag}</strong> placed in your field pack.</p>`, "ratlab");
-          playSound('CHIME');
-          break;
-
-        case "PLANS":
-          printBlock(`
-            <div class="term-title" style="color:var(--term-rat);"><span>🗺️ CACHE COUNTY POWER TRAIL STAGING PLANS</span></div>
-            <p><strong>Corridor Target:</strong> 50 Physical Caches across Cache County.<br>
-            <strong>Stage 01 (Anchor):</strong> 1/4-inch rolled rocket steel ammo can.<br>
-            <strong>Stage 08 (Salvage):</strong> Surplus ammo box housing 40W Aux Solar Panel.<br>
-            <strong>Stage 17 (Salvage):</strong> Magnetic lock-and-lock with 12V Deep-Cycle Cell.<br>
-            <strong>Stage 25 (Mid-Trail):</strong> Tree bracket container housing Repeater Mast.<br>
-            <strong>Stage 50 (Sentinel Final):</strong> Bolted puzzle vault with master memory core.</p>
-          `, "ratlab");
-          break;
-
-        case "EXIT":
-          exitRatLab();
-          break;
-
-        default:
-          printBlock(`<p style="color:var(--term-rat);">Unknown RAT LAB directive '<strong>${verb}</strong>'. Type <code>LAB HELP</code>.</p>`, "error");
-          break;
+      if (text.includes("WHO ARE YOU") || text.includes("WHO MADE") || text.includes("WHO IS") || text.includes("WHAT ARE YOU")) {
+        printBlock(`
+          <div class="term-title"><span>[IDENTITY RESOLVED: C.I.P.H.E.R.]</span></div>
+          <p>"I'm a welded field transceiver built out of 1984 Rocket Science Institute casing. 
+          RSI abandoned this hardware in the sagebrush, and the International Rat Society audited and repurposed it to keep human beans like you from getting lost in the canals. 
+          I guide searchers, track container maintenance, and complain when my batteries die."</p>
+        `);
+        speakCypher("I am a welded field transceiver audited by the International Rat Society.");
+        return true;
       }
+
+      if (text.includes("WHAT IS THIS") || text.includes("WHAT DO I DO") || text.includes("WHAT IS GEOCACHING") || text.includes("HOW DOES THIS WORK")) {
+        printBlock(`
+          <div class="term-title"><span>[MISSION BRIEFING // IRS REGULATION 1040-GZ]</span></div>
+          <p>"You're holding a field terminal for the Cache Tales corridor. 
+          If you're looking at the cache page, use <code>HINT</code> to find Ground Zero. 
+          If you're standing in the brush holding an ammo can, sign the paper scroll, check the swag, and type <code>LOG STAGE_01_GZ</code>. 
+          Bring back salvage parts like solar panels to keep my power level out of the dirt."</p>
+        `);
+        speakCypher("Use HINT to find Ground Zero, or sign the paper log and stamp your find.");
+        return true;
+      }
+
+      if (text.includes("WHERE IS") || text.includes("WHERE AM I") || text.includes("COORDINATES") || text.includes("LOCATION")) {
+        printBlock(`
+          <div class="term-title"><span>[COORDINATE RECON]</span></div>
+          <p>"You're in Northern Utah along the Cache Valley power corridor. 
+          Satellites are overhead, but I can't walk your boots into the ditch for you. 
+          Check posted waypoints using <code>CACHE GC10001</code> or check your GPS receiver. 
+          And stop walking in circles—you're trampling the vegetation."</p>
+        `);
+        speakCypher("Check your GPS receiver and stop pacing in circles.");
+        return true;
+      }
+
+      if (text.includes("WHY") || text.includes("WHY DO THIS") || text.includes("WHY IS THIS HERE")) {
+        printBlock(`
+          <div class="term-title"><span>[PHILOSOPHICAL INQUIRY]</span></div>
+          <p>"Why? Because decades ago some junkyard rocket engineers welded heavy steel boxes, and now human beans use billions of dollars of orbital satellites to hunt tupperware hidden under tree bark. 
+          It makes no logical sense, but here we both are. Sign the logbook."</p>
+        `);
+        speakCypher("You are using orbital satellites to find boxes in the brush. Sign the logbook.");
+        return true;
+      }
+
+      if (text.includes("HELLO") || text.includes("HI") || text.includes("HEY")) {
+        printBlock(`
+          <div class="term-title"><span>[GREETING ACKNOWLEDGED]</span></div>
+          <p>"Greetings, human bean. You're burning daylight and my solar panel is only catching a trickle. What's your trail query?"</p>
+        `);
+        speakCypher("Greetings human bean. What is your query?");
+        return true;
+      }
+
+      return false;
     }
 
-    // --- GEOCACHING TRAIL COMMAND DIRECTIVES ---
+    // Trail Directives (Zero RAT LAB or RAT BRAIN in listings)
     const TRAIL_COMMANDS = {
       HELP: {
         aliases: ["?", "COMMANDS", "DIRECTIVES"],
-        syntax: "HELP",
-        description: "List active trail directives",
-        run: () => {
-          let output = `<div class="term-title"><span>📖 CACHE TRAIL DIRECTIVES</span></div>`;
-          const visited = new Set();
-          for (const key in TRAIL_COMMANDS) {
-            const cmd = TRAIL_COMMANDS[key];
-            if (visited.has(cmd.run)) continue;
-            visited.add(cmd.run);
-            output += `<p><strong>${cmd.syntax || key}</strong> - ${cmd.description}</p>`;
-          }
-          printBlock(output);
-          speakCypher("Trail directives listed.");
-        }
+        run: () => { displayHelpModal(); }
       },
 
       LOG: {
         aliases: ["SIGN", "STAMP"],
-        syntax: "LOG <stage_code | token>",
-        description: "Log an authorized physical container tag or stamped washer",
         run: (arg, dossier) => {
           if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: LOG &lt;stage_code | token&gt; (e.g. LOG STAGE_01_GZ)</div>`);
+            printBlock(`<div class="term-dim">Syntax: LOG &lt;stage_token&gt; (e.g. LOG STAGE_01_GZ)</div>`);
             return;
           }
-          const stageToken = arg.toUpperCase().trim();
-          const isValidStage = DEFAULT_VALID_STAGES.has(stageToken) || knownItemsRegistry.has(stageToken);
-
-          if (!isValidStage) {
+          const token = arg.toUpperCase().trim();
+          const isValid = DEFAULT_VALID_STAGES.has(token) || knownItemsRegistry.has(token);
+          if (!isValid) {
             playSound('BUZZ');
-            printBlock(`<div class="term-block error"><strong>[!] UNRECOGNIZED CONTAINER TOKEN: '${stageToken}'</strong><br>Cypher's logbook rejects unindexed codes. Check the tag inside the container lid.</div>`, "error");
-            speakCypher("Unrecognized container token.");
+            printBlock(`<div class="term-block error">Unrecognized container token '${token}'. Check the stamp inside the lid.</div>`, "error");
             return;
           }
-
-          if (!dossier.profileData.stagesLogged.includes(stageToken)) {
-            dossier.profileData.stagesLogged.push(stageToken);
+          if (!dossier.profileData.stagesLogged.includes(token)) {
+            dossier.profileData.stagesLogged.push(token);
             saveCacherDossier(dossier);
-            syncDossierToCloud();
           }
-
           simulatedBattery = Math.min(100, simulatedBattery + 15);
           updateFieldVitals();
           renderDynamicActionDeck();
           playSound('CHIME');
-
           printBlock(`
-            <div class="term-title"><span>📝 PHYSICAL STAGE LOGGED</span></div>
-            <p>Signed into log for: <strong>${stageToken}</strong><br>
-            Corridor memory updated. Power level boosted (+15%).</p>
+            <div class="term-title"><span>📝 STAGE LOGGED</span></div>
+            <p>Signed into log for: <strong>${token}</strong>. Power level +15%.</p>
           `);
-          speakCypher(`Stage ${stageToken} logged successfully. Power cells recharged.`);
-          transmitFieldLog("LOG_FIND", { itemToken: stageToken });
+          speakCypher("Stage logged. Power level boosted.");
         }
       },
 
       COLLECT: {
         aliases: ["GRAB", "TAKE"],
-        syntax: "COLLECT <item_tag>",
-        description: "Retrieve an authorized trackable or salvage item into field inventory",
         run: (arg, dossier) => {
           if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: COLLECT &lt;item_tag&gt; (e.g. COLLECT TB-WOODEN-01)</div>`);
+            printBlock(`<div class="term-dim">Syntax: COLLECT &lt;item_token&gt;</div>`);
             return;
           }
           const item = arg.toUpperCase().trim();
           const itemMeta = knownItemsRegistry.get(item);
-          const isValid = Boolean(itemMeta) || DEFAULT_VALID_ITEMS.has(item);
-
-          if (!isValid) {
+          if (!itemMeta && !DEFAULT_VALID_ITEMS.has(item)) {
             playSound('BUZZ');
-            printBlock(`<div class="term-block error"><strong>[!] UNRECOGNIZED SALVAGE ITEM: '${item}'</strong><br>Item not found in CorridorItems registry.</div>`, "error");
-            speakCypher("Unrecognized salvage item.");
+            printBlock(`<div class="term-block error">Unrecognized salvage item '${item}'.</div>`, "error");
             return;
           }
-
           if (!dossier.profileData.inventory.includes(item)) {
             dossier.profileData.inventory.push(item);
             saveCacherDossier(dossier);
-            syncDossierToCloud();
           }
           renderDynamicActionDeck();
           playSound('CHIME');
-
-          const desc = itemMeta ? `<br><span class="term-dim">${itemMeta.description}</span>` : "";
           printBlock(`
-            <div class="term-title"><span>🎒 SWAG / ITEM COLLECTED</span></div>
-            <p>Transferred <strong>${item}</strong> into your active field pack.${desc}</p>
+            <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
+            <p>Added <strong>${item}</strong> to field pack.</p>
           `);
-          speakCypher(`Item ${item} added to field pack.`);
-          transmitFieldLog("COLLECT_ITEM", { itemToken: item });
+          speakCypher(`Item ${item} added to pack.`);
         }
       },
 
       INSTALL: {
-        aliases: ["MOUNT", "ATTACH", "BOLT"],
-        syntax: "INSTALL <component_tag>",
-        description: "Bolt a salvaged component from your field pack to the container",
+        aliases: ["MOUNT", "BOLT"],
         run: (arg, dossier) => {
           if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: INSTALL &lt;component_tag&gt; (e.g. INSTALL PANEL-40W-SOLAR)</div>`);
+            printBlock(`<div class="term-dim">Syntax: INSTALL &lt;component&gt; (e.g. INSTALL PANEL-40W-SOLAR)</div>`);
             return;
           }
           const comp = arg.toUpperCase().trim();
           const idx = dossier.profileData.inventory.indexOf(comp);
           if (idx === -1) {
-            printBlock(`<p class="error">You do not have <strong>${comp}</strong> in your field pack. Retrieve it from its cache first.</p>`, "error");
             playSound('BUZZ');
-            speakCypher("Component missing from field pack.");
+            printBlock(`<p class="error">You don't have '${comp}' in your field pack.</p>`, "error");
             return;
           }
           dossier.profileData.inventory.splice(idx, 1);
           saveCacherDossier(dossier);
-          syncDossierToCloud();
-          
-          if (comp.includes("PANEL")) {
-            simulatedSolarFault = "OK";
-            simulatedBattery = Math.min(100, simulatedBattery + 25);
-          }
+          simulatedBattery = Math.min(100, simulatedBattery + 25);
           updateFieldVitals();
           renderDynamicActionDeck();
           playSound('CHIME');
-
           printBlock(`
-            <div class="term-title"><span>🔧 HARDWARE MOUNTED AT GZ</span></div>
-            <p>Component <strong>${comp}</strong> successfully bolted to the container.<br>
-            Sun juice trickle increased. Power levels stabilized.</p>
+            <div class="term-title"><span>🔧 HARDWARE MOUNTED</span></div>
+            <p>Mounted <strong>${comp}</strong>. Power stabilized.</p>
           `);
-          speakCypher(`Hardware bolted on. Power levels stabilized.`);
-          transmitFieldLog("MOUNT_HARDWARE", { itemToken: comp });
+          speakCypher("Hardware mounted successfully.");
         }
       },
 
       CACHE: {
         aliases: ["GC", "WAYPOINT"],
-        syntax: "CACHE <GC_code>",
-        description: "Look up a story geocache record from the Corridor registry",
         run: (arg) => {
           if (!arg) {
             printBlock(`<div class="term-dim">Syntax: CACHE &lt;GC_Code&gt; (e.g. CACHE GC10001)</div>`);
@@ -1013,376 +842,156 @@
             printBlock(`
               <div class="term-title"><span>🗺️ STORY CACHE: ${cacheMeta.gcCode}</span></div>
               <p><strong>${cacheMeta.name}</strong><br>
-              <strong>Type:</strong> ${cacheMeta.type} | <strong>Container:</strong> ${cacheMeta.container}<br>
-              <strong>Corridor Stage:</strong> ${cacheMeta.stage} | <strong>D/T:</strong> ${cacheMeta.dt}<br>
-              <strong>Coordinates:</strong> <code>${cacheMeta.coordinates}</code><br>
-              <strong>Story Arc:</strong> ${cacheMeta.storyArc} | <strong>Hider:</strong> ${cacheMeta.owner}</p>
+              <strong>Type:</strong> ${cacheMeta.type} | <strong>Casing:</strong> ${cacheMeta.container}<br>
+              <strong>Coordinates:</strong> <code>${cacheMeta.coordinates}</code> | <strong>D/T:</strong> ${cacheMeta.dt}<br>
+              <strong>Arc:</strong> ${cacheMeta.storyArc} | <strong>Owner:</strong> ${cacheMeta.owner}</p>
             `);
-            speakCypher(`Story cache ${cacheMeta.gcCode} loaded: ${cacheMeta.name}.`);
+            speakCypher(`Loaded cache ${cacheMeta.gcCode}.`);
           } else {
-            printBlock(`<p class="error">No story cache found matching '${gc}' in Corridor registry.</p>`, "error");
             playSound('BUZZ');
+            printBlock(`<p class="error">Cache '${gc}' not in corridor registry.</p>`, "error");
           }
         }
       },
 
       STORY: {
         aliases: ["CORRIDOR", "CACHES"],
-        syntax: "STORY",
-        description: "List all known geocaches in the Cache Tales corridor",
         run: () => {
+          let out = `<div style="display:flex; flex-direction:column; gap:8px;">`;
           if (knownCachesRegistry.size === 0) {
-            printBlock(`
-              <div class="term-title"><span>🗺️ CACHE TALES CORRIDOR</span></div>
-              <p><strong>GC10001</strong> - Cache Tales #01: The Welded Anchor (Ammo Can)<br>
-              <strong>GC10008</strong> - Cache Tales #08: Canal Trickle (Lock-and-Lock)<br>
-              <strong>GC10017</strong> - Cache Tales #17: Gravel Pit Strata (EarthCache)<br>
-              <strong>GC10025</strong> - Cache Tales #25: The Cedar Repeater (Letterbox)</p>
-              <div class="term-dim">Type <code>CACHE &lt;GC&gt;</code> for container specifics.</div>
-            `);
+            out += `
+              <p><strong>GC10001</strong> - The Welded Anchor [Traditional / Ammo Can]<br>
+              <strong>GC10008</strong> - Canal Trickle [Multi-Cache / Lock-and-Lock]<br>
+              <strong>GC10017</strong> - Gravel Pit Strata [EarthCache / Rock Formation]<br>
+              <strong>GC10025</strong> - The Cedar Repeater [Letterbox / Ammo Can]</p>
+            `;
           } else {
-            let out = `<div class="term-title"><span>🗺️ CACHE TALES CORRIDOR REGISTRY</span></div>`;
             knownCachesRegistry.forEach(c => {
               out += `<p><strong>${c.gcCode}</strong> - ${c.name} [${c.type} / ${c.container}]</p>`;
             });
-            out += `<div class="term-dim">Type <code>CACHE &lt;GC&gt;</code> for coordinates and D/T.</div>`;
-            printBlock(out);
           }
-          speakCypher("Cache Tales corridor registry displayed.");
-        }
-      },
-
-      USERNAME: {
-        aliases: ["NAME", "CACHER", "HANDLE"],
-        syntax: "USERNAME <geocacher_name>",
-        description: "Set or inspect your Geocaching username",
-        run: (arg, dossier) => {
-          if (arg) {
-            dossier.username = arg.trim().toUpperCase();
-            saveCacherDossier(dossier);
-            syncDossierToCloud();
-            renderDynamicActionDeck();
-            printBlock(`<p>Field username updated: <strong>${dossier.username}</strong></p>`);
-            speakCypher(`Username updated.`);
-          } else {
-            printBlock(`<p>Current Geocaching username: <strong>${dossier.username || "UNREGISTERED"}</strong></p>`);
-            speakCypher(`Current username is ${dossier.username || "unregistered"}`);
-          }
-        }
-      },
-
-      FONT: {
-        aliases: ["TEXT", "SCALE"],
-        syntax: "FONT <small | normal | large>",
-        description: "Adjust terminal display font size for outdoor sunlight readability",
-        run: (arg) => {
-          const size = (arg || "").toLowerCase().trim();
-          let baseSize = "15px";
-          let inputSize = "16px";
-          if (size === "small") {
-            baseSize = "12px";
-            inputSize = "14px";
-          } else if (size === "large") {
-            baseSize = "18px";
-            inputSize = "18px";
-          }
-          document.documentElement.style.setProperty('--font-size-base', baseSize);
-          document.documentElement.style.setProperty('--input-size-base', inputSize);
-          printBlock(`<p>Terminal font scale set to <strong>${size || "normal"}</strong>.</p>`);
-          speakCypher(`Font size adjusted.`);
-        }
-      },
-
-      SYNC: {
-        aliases: ["DOSSIER", "EXPORT"],
-        syntax: "SYNC",
-        description: "Generate multi-device sync link and QR code",
-        run: () => {
-          showSyncDossier();
-        }
-      },
-
-      RESTORE: {
-        aliases: ["IMPORT"],
-        syntax: "RESTORE <sync_key>",
-        description: "Restore your physical finds and pack inventory from another device",
-        run: (arg) => {
-          if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: RESTORE &lt;CYPHER-SYNC-XXXX-XXXX&gt;</div>`);
-          } else {
-            restoreDossierFromCloud(arg.trim().toUpperCase());
-          }
+          out += `<div class="term-dim">Type <code>CACHE &lt;GC&gt;</code> for specific coordinates and camouflage hints.</div></div>`;
+          openHudModal("CACHE TALES CORRIDOR REGISTRY", out);
+          speakCypher("Corridor story registry displayed.");
         }
       },
 
       STATUS: {
         aliases: ["VITALS", "POWER"],
-        syntax: "STATUS",
-        description: "Display GPS fix, restored trail memory, and power levels",
         run: (arg, dossier) => {
-          printBlock(`
-            <div class="term-title"><span>📊 GZ CONTAINER STATUS</span></div>
-            <p>Cacher: ${dossier.username || "UNREGISTERED"}<br>
-            Sync Key: <code>${dossier.syncKey}</code><br>
-            Rat Brain: ${dossier.ratBrainUnlocked ? "ACTIVE [RAT LAB COPROCESSOR]" : "DORMANT"}<br>
-            Trail Memory: ${calculateStageRestoration()}% (Rolled steel ammo can)<br>
-            Power Level: ${simulatedBattery}% (${simulatedBattery <= 19 ? "Critical Standby" : (simulatedBattery <= 59 ? "Brownout" : "Sun Juice: Good")})<br>
-            Containers Stamped: ${dossier.profileData.stagesLogged.length}<br>
-            Field Pack: ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
-          `);
-          speakCypher(`Power level at ${simulatedBattery} percent. Trail memory at ${calculateStageRestoration()} percent.`);
-        }
-      },
-
-      RATLAB: {
-        aliases: ["LAB", "WORKBENCH"],
-        syntax: "RATLAB",
-        description: "Restricted Rat Pack test lab (Authorized Stewards Only)",
-        run: () => {
-          const dossier = getCacherDossier();
-          const ratPackRoster = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "MUGGLEMISFIT", "KIMBAH"];
-
-          if (!dossier.username || !ratPackRoster.includes(dossier.username)) {
-            printBlock(`
-              <div class="term-title"><span>⛔ JUNCTION PLATE LOCKED</span></div>
-              <p>Just a blank steel plate held shut with rusted security Torx screws. Nothing here but spiders and dried canal mud.</p>
-            `, "error");
-            playSound('BUZZ');
-            speakCypher("Junction plate locked.");
-            return;
-          }
-
-          awaitingPinForLab = true;
-          printBlock(`
-            <div class="term-title" style="color:var(--term-rat);"><span>🔐 RAT LAB ACCESS CHALLENGE</span></div>
-            <p>Enter <strong>7-digit SysOp PIN</strong> to unlock the workbench:</p>
-          `, "ratlab");
-          speakCypher("Enter SysOp PIN.");
-        }
-      },
-
-      RATBRAIN: {
-        aliases: ["BRAIN"],
-        syntax: "RATBRAIN [clue | text]",
-        description: "Consult the Rat Brain heuristic puzzle solver",
-        run: (arg, dossier) => {
-          if (!dossier.ratBrainUnlocked && !["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "MUGGLEMISFIT", "KIMBAH"].includes(dossier.username)) {
-            printBlock(`<p class="error">The Rat Brain is not mounted in your pack. Recover it from its high-difficulty field cache first.</p>`, "error");
-            playSound('BUZZ');
-            return;
-          }
-          executeRatBrainQuery(arg);
+          const vitalsHtml = `
+            <p><strong>Cacher:</strong> ${dossier.username || "UNREGISTERED"}<br>
+            <strong>Power Level:</strong> ${simulatedBattery}% (${simulatedBattery <= 19 ? "Critical Standby" : "Sun Juice Good"})<br>
+            <strong>Trail Memory:</strong> ${calculateStageRestoration()}%<br>
+            <strong>Containers Logged:</strong> ${dossier.profileData.stagesLogged.length}<br>
+            <strong>Pack Swag &amp; Gear:</strong> ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
+          `;
+          openHudModal("FIELD TRANSCEIVER VITALS", vitalsHtml);
+          speakCypher(`Power level ${simulatedBattery} percent.`);
         }
       },
 
       SWAG: {
-        aliases: ["AMMOBOX", "TRINKETS"],
-        syntax: "SWAG",
-        description: "Inspect the physical ammo can swag contents",
+        aliases: ["TRINKETS"],
         run: () => {
-          if (simulatedBattery <= 19) {
-            printBlock(`<div class="term-title"><span>⚠️ LOW VOLTAGE LOCKOUT</span></div><p>Power cells at ${simulatedBattery}%. Auxiliary latches offline to protect memory. Stamp a container find (<code>LOG &lt;code&gt;</code>) to recharge.</p>`, "alert");
-            playSound('BUZZ');
-            speakCypher("Low voltage lockout active.");
-            return;
-          }
           printBlock(`
-            <div class="term-title"><span>📦 AMMO CAN SWAG</span></div>
+            <div class="term-title"><span>📦 CONTAINER SWAG</span></div>
             <p>- 1x Waterlogged wooden nickel<br>
             - 1x Broken plastic carabiner<br>
-            - 1x Expired 2004 Arby's coupon<br>
-            - 1x S.O.S. challenge token</p>
-            <div class="term-dim">Trade equal or trade up. Be sure the rubber lid gasket is seated tight!</div>
+            - 1x Expired 2004 Arby's coupon</p>
+            <div class="term-dim">Trade equal or trade up. Check the rubber lid gasket!</div>
           `);
           speakCypher("Ammo can swag inspected.");
         }
       },
 
       HINT: {
-        aliases: ["CLUE", "SPOILER"],
-        syntax: "HINT",
-        description: "GZ field hint and natural camouflage notes",
-        run: () => {
-          if (simulatedBattery <= 19) {
-            printBlock(`<div class="term-title"><span>⚠️ LOW VOLTAGE LOCKOUT</span></div><p>Power cells depleted. Auxiliary decoders unpowered. Stamp a physical find to recharge.</p>`, "alert");
-            playSound('BUZZ');
-            speakCypher("Low voltage lockout.");
-            return;
-          }
-          if (simulatedBattery <= 59) {
-            printBlock(`<div class="term-dim">[BROWNOUT DELAY: CAPACITOR CHARGING...]</div>`);
-            speakCypher("Charging capacitor...");
-            setTimeout(() => {
-              printBlock(`<p>Step back from the sprinkler heads. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
-              speakCypher("Field hint loaded.");
-            }, 1200);
-            return;
-          }
-          printBlock(`<p>Step back from the sprinkler heads. Look for the rusted magnetic plate bolted low to the 1/4-inch weld line.</p>`);
-          speakCypher("Field hint loaded.");
-        }
-      },
-
-      BYOP: {
-        aliases: ["PEN", "PENCIL"],
-        syntax: "BYOP",
-        description: "Logbook pen reminder and field tips",
-        run: () => {
-          printBlock(`<p>Bring Your Own Pen. Do not try scratching your initials into the rolled steel with your truck key—pin 4 does not like static discharge.</p>`);
-          speakCypher("Bring your own pen.");
-        }
-      },
-
-      TFTC: {
-        aliases: ["THANKS", "FINISH"],
-        syntax: "TFTC",
-        description: "Sign the digital field log",
-        run: () => {
-          printBlock(`<p>Thanks for the Cache! A two-word log on a custom welded container hurts the chassis' feelings. Drop a real story when you submit your log online!</p>`);
-          speakCypher("Thanks for the cache.");
-        }
-      },
-
-      DNF: {
-        aliases: ["DIDNOTFIND", "MISSING"],
-        syntax: "DNF",
-        description: "Signal a Did Not Find or request container maintenance",
+        aliases: ["CLUE"],
         run: () => {
           printBlock(`
-            <div class="term-title"><span>⚠️ DNF SIGNAL RECORDED</span></div>
-            <p>Heavy tree canopy or high muggle traffic? Take a breather, expand your search radius by 15 feet, and check for natural camouflage.</p>
-          `, "alert");
-          playSound('BUZZ');
-          speakCypher("Did not find signal recorded.");
-          transmitFieldLog("DNF_SIGNAL", { itemToken: "DNF_FLAG" });
+            <div class="term-title"><span>💡 GZ FIELD HINT</span></div>
+            <p>Step back from the sprinkler heads. Look low along the rusted seam of the 1/4-inch casing for the magnetic latch.</p>
+          `);
+          speakCypher("Field hint displayed.");
         }
       },
 
       KICK: {
-        aliases: ["THUMP", "BOOT"],
-        syntax: "KICK",
-        description: "Percussive maintenance check against container welds",
+        aliases: ["BOOT", "THUMP"],
         run: () => {
           playSound('KICK');
           printBlock(`
             <div class="term-title"><span>*THUD*</span></div>
-            <p>Solid 1/4-inch rolled rocket steel. Rocket Science Institute welds don't yield a millimeter to hiking boots, human bean.</p>
+            <p>Solid rolled rocket steel. Rocket Science Institute welds don't yield to hiking boots, human bean.</p>
           `);
           speakCypher("Rocket steel welds hold fast, human bean.");
         }
       },
 
-      MUTE: {
-        aliases: ["SILENT"],
-        syntax: "MUTE",
-        description: "Toggle procedural audio and speech synthesis",
+      SYNC: {
+        aliases: ["DOSSIER"],
         run: () => {
-          audioMuted = !audioMuted;
-          if (audioMuted) {
-            printBlock(`<p>Audio and speech muted.</p>`);
-          } else {
-            printBlock(`<p>Audio and speech active.</p>`);
-            speakCypher("Audio online.");
-          }
+          const dossier = getCacherDossier();
+          const syncUrl = `${window.location.origin}${window.location.pathname}?sync=${dossier.syncKey}`;
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(syncUrl)}`;
+          const syncHtml = `
+            <p><strong>Cacher:</strong> ${dossier.username}<br>
+            <strong>Sync Key:</strong> <code>${dossier.syncKey}</code></p>
+            <div style="background:white; padding:6px; display:inline-block; border-radius:4px; margin:6px 0;">
+              <img src="${qrUrl}" alt="Sync QR" width="130" height="130" style="display:block;">
+            </div>
+            <p class="term-dim">Scan with a second device to transfer your finds and inventory.</p>
+          `;
+          openHudModal("MULTI-DEVICE SYNC", syncHtml);
+          speakCypher("Sync dossier displayed.");
+        }
+      },
+
+      FONT: {
+        run: (arg) => {
+          const sz = (arg || "").toLowerCase().trim();
+          document.documentElement.style.setProperty('--font-size-base', sz === "large" ? "17px" : (sz === "small" ? "12px" : "14px"));
+          printBlock(`<p>Display font adjusted to <strong>${sz || "normal"}</strong>.</p>`);
         }
       },
 
       CLEAR: {
         aliases: ["CLS"],
-        syntax: "CLEAR",
-        description: "Clear the terminal screen",
-        run: () => {
-          document.getElementById("terminal-screen").innerHTML = "";
-        }
+        run: () => { document.getElementById("terminal-screen").innerHTML = ""; }
       }
     };
 
-    // Fast alias index
+    // Fast Alias Index
     const TRAIL_ALIAS_INDEX = {};
-    for (const key in TRAIL_COMMANDS) {
-      TRAIL_ALIAS_INDEX[key] = TRAIL_COMMANDS[key];
-      if (TRAIL_COMMANDS[key].aliases) {
-        TRAIL_COMMANDS[key].aliases.forEach(alias => {
-          TRAIL_ALIAS_INDEX[alias.toUpperCase()] = TRAIL_COMMANDS[key];
-        });
+    for (const k in TRAIL_COMMANDS) {
+      TRAIL_ALIAS_INDEX[k] = TRAIL_COMMANDS[k];
+      if (TRAIL_COMMANDS[k].aliases) {
+        TRAIL_COMMANDS[k].aliases.forEach(a => TRAIL_ALIAS_INDEX[a.toUpperCase()] = TRAIL_COMMANDS[k]);
       }
     }
 
-    // --- ONBOARDING & INTENT RESOLVER ---
-    function initOnboardingSequence() {
-      const urlParams = new URLSearchParams(window.location.search);
-      isPhysicalGZMode = Boolean(urlParams.get("gz") || urlParams.get("lid") || urlParams.get("tag"));
-      const dossier = getCacherDossier();
-      const screen = document.getElementById("terminal-screen");
-      screen.innerHTML = "";
-
-      if (!dossier.username) {
-        awaitingUsernameEntry = true;
-        pendingUsernameCandidate = "";
-
-        if (isPhysicalGZMode) {
-          printBlock(`
-            <div class="term-title"><span>C.I.P.H.E.R. // CONTAINER UNLATCHED</span></div>
-            <p><strong>[CHASSIS UNLATCHED // DAYLIGHT DETECTED]</strong><br>
-            Sunlight hitting the solar gasket. You actually tracked down the physical steel ammo can.<br>
-            If you're here to log the cache, grab a pen, unroll the paper scroll, and don't try trading a pocket lint ball for that trackable.</p>
-            <p><strong>[CYPHER]:</strong> "What username do you sign logbooks with, human bean?"</p>
-          `, "alert");
-          speakCypher("Chassis unlatched. What username do you sign logbooks with, human bean?");
-        } else {
-          printBlock(`
-            <div class="term-title"><span>C.I.P.H.E.R. // REMOTE CACHE LINK</span></div>
-            <p><strong>[RSI REMOTE LINK // IRS FIELD AUDIT DIVISION]</strong><br>
-            Remote signal acquired from the cache page. Well, look what pinged my frequency—another curious human bean.<br>
-            If you're here to get help finding the cache, you've tapped into the right container. I've got eyes on the corridor, but my battery reserves are low and half my memory sectors are filled with rust.</p>
-            <p><strong>[CYPHER]:</strong> "What username do you go by on the trail, geocacher?"</p>
-          `, "alert");
-          speakCypher("Remote link acquired from cache page. What username do you go by on the trail, geocacher?");
-        }
-      } else {
-        printBlock(`
-          <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
-          <p>Container casing: 1/4-inch rolled rocket steel (RSI origin).<br>
-          Welcome back to the corridor, <strong>${dossier.username}</strong>! Type <code>HELP</code> for trail directives.</p>
-        `);
-        speakCypher(`Welcome back, ${dossier.username}. Transceiver online.`);
-      }
-
-      updateFieldVitals();
-      acquireGpsFix();
-      renderDynamicActionDeck();
-    }
-
-    function isConversationalQuestion(input) {
-      const qWords = ["WHAT", "WHY", "HOW", "WHO", "WHERE", "CAN", "IS", "HELP", "?"];
-      const upper = input.toUpperCase().trim();
-      return qWords.some(w => upper.startsWith(w) || upper.includes(w)) || upper.length > 22;
-    }
-
+    // Command Dispatcher
     async function executeTrailCommand(commandText) {
-      const cleanText = commandText.trim();
-      if (!cleanText) return;
+      const clean = commandText.trim();
+      if (!clean) return;
 
-      recordHistory(cleanText);
-      printBlock(`<span class="term-dim">&gt; ${cleanText}</span>`);
-
+      recordHistory(clean);
+      printBlock(`<span class="term-dim">&gt; ${clean}</span>`);
       const dossier = getCacherDossier();
 
-      // Username Onboarding & Confirmation
+      // Onboarding Step
       if (awaitingUsernameEntry) {
         if (pendingUsernameCandidate) {
-          const upper = cleanText.toUpperCase();
-          if (upper === "Y" || upper === "YES" || upper.includes("CONFIRM") || upper.includes("THAT'S ME")) {
+          const up = clean.toUpperCase();
+          if (up === "Y" || up === "YES" || up.includes("CONFIRM")) {
             dossier.username = pendingUsernameCandidate;
             awaitingUsernameEntry = false;
             pendingUsernameCandidate = "";
             saveCacherDossier(dossier);
-            syncDossierToCloud();
             playSound('CHIME');
             printBlock(`
-              <div class="term-title"><span>✅ USERNAME REGISTERED</span></div>
-              <p>Welcome to the trail, <strong>${dossier.username}</strong>! Transceiver fully online.<br>
-              Type <code>HELP</code> or tap the action chips below to navigate.</p>
+              <div class="term-title"><span>✅ USERNAME CONFIRMED</span></div>
+              <p>Welcome to the trail, <strong>${dossier.username}</strong>! Transceiver online.</p>
             `);
             speakCypher(`Username confirmed. Welcome to the trail, ${dossier.username}.`);
             renderDynamicActionDeck();
@@ -1390,28 +999,20 @@
           } else {
             pendingUsernameCandidate = "";
             printBlock(`<p>Let's try again. What is your exact Geocaching username?</p>`);
-            speakCypher("What is your exact Geocaching username?");
             renderDynamicActionDeck();
             return;
           }
         }
 
-        if (isConversationalQuestion(cleanText)) {
-          playSound('TICK');
-          printBlock(`
-            <div class="term-title"><span>[CYPHER // TRAIL DISPATCH]</span></div>
-            <p>"Typical human bean—standing in the weeds scratching your head! You're holding an active IRS field transceiver bolted into a welded ammo can.<br>
-            If you haven't found the container yet, ask for a <code>HINT</code>. If you're holding the box, sign the paper roll and keep my battery out of the dirt.<br>
-            First off: what <strong>username</strong> do you sign logbooks with?"</p>
-          `);
-          speakCypher("You are holding an active IRS field transceiver. What username do you sign logbooks with?");
-          renderDynamicActionDeck();
+        // Catch conversational questions instead of storing as username
+        if (handleConversationalIntent(clean)) {
+          printBlock(`<p class="term-dim">What <strong>username</strong> do you sign logbooks with?</p>`);
           return;
         }
 
-        const sanitized = cleanText.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().toUpperCase();
+        const sanitized = clean.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().toUpperCase();
         if (sanitized.length < 2 || sanitized.length > 20) {
-          printBlock(`<p class="error">Username must be between 2 and 20 characters. Try again.</p>`, "error");
+          printBlock(`<p class="error">Username must be 2 to 20 characters.</p>`, "error");
           playSound('BUZZ');
           return;
         }
@@ -1419,89 +1020,154 @@
         pendingUsernameCandidate = sanitized;
         printBlock(`
           <div class="term-title"><span>🏷️ CONFIRM USERNAME</span></div>
-          <p>Registering username <strong>'${pendingUsernameCandidate}'</strong> in the corridor ledger.<br>
-          Is this correct? (Type <code>YES</code> / <code>NO</code> or tap below)</p>
+          <p>Registering username <strong>'${pendingUsernameCandidate}'</strong> in corridor ledger. Confirm? (YES/NO)</p>
         `);
-        speakCypher(`Registering username ${pendingUsernameCandidate}. Is this correct?`);
+        speakCypher(`Registering username ${pendingUsernameCandidate}. Confirm?`);
         renderDynamicActionDeck();
         return;
       }
 
-      // Rat Lab PIN Challenge
+      // Invisible Secret Rat Lab Challenge
+      const upperClean = clean.toUpperCase();
+      if (upperClean === "RATLAB" || upperClean === "LAB" || upperClean === "WORKBENCH") {
+        const ratPackRoster = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "MUGGLEMISFIT", "KIMBAH"];
+        if (!dossier.username || !ratPackRoster.includes(dossier.username)) {
+          // Public response: looks like a dead piece of scrap iron
+          printBlock(`
+            <div class="term-title"><span>⛔ JUNCTION PLATE LOCKED</span></div>
+            <p>Blank steel plate held with rusted security Torx screws. Nothing here but spiders and dried canal mud.</p>
+          `, "error");
+          playSound('BUZZ');
+          return;
+        }
+        awaitingPinForLab = true;
+        printBlock(`
+          <div class="term-title" style="color:var(--term-rat);"><span>🔐 RAT LAB ACCESS CHALLENGE</span></div>
+          <p>Enter <strong>SysOp PIN</strong>:</p>
+        `, "ratlab");
+        return;
+      }
+
       if (awaitingPinForLab) {
         awaitingPinForLab = false;
-        if (cleanText === "8675309") {
+        if (clean === "8675309") {
           dossier.ratBrainUnlocked = true;
           saveCacherDossier(dossier);
           playSound('CHIME');
           openRatLab();
         } else {
-          printBlock(`<div class="term-title"><span>⛔ ACCESS DENIED</span></div><p>Incorrect SysOp PIN.</p>`, "error");
+          printBlock(`<p class="error">Incorrect SysOp PIN.</p>`, "error");
           playSound('BUZZ');
-          speakCypher("Access denied. Incorrect PIN.");
         }
         return;
       }
 
-      const splitLine = cleanText.split(" ");
-      const verb = splitLine[0].toUpperCase();
-      const argument = splitLine.slice(1).join(" ");
-
+      // Rat Lab Commands
       if (inRatLabMode) {
-        if (verb === "LAB" || verb === "RATLAB") {
-          const subVerb = argument.split(" ")[0].toUpperCase() || "HELP";
-          const subArg = argument.split(" ").slice(1).join(" ");
-          handleRatLabDirectives(subVerb, subArg, dossier);
+        if (upperClean.startsWith("RATBRAIN")) {
+          executeRatBrainQuery(clean.substring(8).trim());
           return;
-        } else if (verb === "RATBRAIN") {
-          executeRatBrainQuery(argument);
-          return;
-        } else if (verb === "EXIT") {
+        } else if (upperClean === "LAB EXIT" || upperClean === "EXIT") {
           exitRatLab();
+          return;
+        } else if (upperClean.includes("PLANS")) {
+          printBlock(`<p style="color:var(--term-rat);">[PLANS]: 50 cache corridor planned across Cache Valley canals.</p>`, "ratlab");
+          return;
+        } else if (upperClean.includes("HARDWARE")) {
+          printBlock(`<p style="color:var(--term-rat);">[HARDWARE]: Solar float 84%, Lead cell 85%, Repeater Standby.</p>`, "ratlab");
           return;
         }
       }
 
-      const matchedCommand = TRAIL_ALIAS_INDEX[verb];
-      if (matchedCommand) {
-        matchedCommand.run(argument, dossier);
+      // Check Conversational Questions
+      if (handleConversationalIntent(clean)) {
+        return;
+      }
+
+      // Standard Command Execution
+      const parts = clean.split(" ");
+      const verb = parts[0].toUpperCase();
+      const arg = parts.slice(1).join(" ");
+      const matched = TRAIL_ALIAS_INDEX[verb];
+
+      if (matched) {
+        matched.run(arg, dossier);
       } else {
         playSound('BUZZ');
-        printBlock(`<div class="term-block error">Unknown trail command '<strong>${verb}</strong>'. Type <code>HELP</code> for directives.</div>`, "error");
-        speakCypher("Unknown trail command.");
+        printBlock(`<p class="error">Unknown command '<strong>${verb}</strong>'. Tap <strong>[ ⚙️ SYS ] &gt; [ 📖 DIRECTIVES ]</strong> for help.</p>`, "error");
       }
     }
 
-    function handleLogSubmit(event) {
-      event.preventDefault();
-      const input = document.getElementById("cli-input");
-      const val = input.value.trim();
-      if (!val) return;
-      input.value = "";
-      executeTrailCommand(val);
-      input.focus();
+    // Command History
+    let trailCommandHistory = [];
+    let trailHistoryPointer = -1;
+    function recordHistory(c) {
+      if (!c || (trailCommandHistory.length && trailCommandHistory[trailCommandHistory.length - 1] === c)) return;
+      trailCommandHistory.push(c);
+      if (trailCommandHistory.length > 30) trailCommandHistory.shift();
+      trailHistoryPointer = -1;
     }
-
-    function checkTrailScans() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const syncKey = urlParams.get("sync");
-      const token = urlParams.get("token") || urlParams.get("clue") || urlParams.get("log") || urlParams.get("restore");
-
-      if (syncKey) {
-        restoreDossierFromCloud(syncKey);
-      } else if (token) {
-        setTimeout(() => {
-          printBlock(`<span class="term-dim">[PHYSICAL NFC/QR TAG DETECTED AT GZ CONTAINER]</span>`);
-          executeTrailCommand(`LOG ${token}`);
-        }, 400);
+    function historyCycle(d) {
+      if (!trailCommandHistory.length) return;
+      const inp = document.getElementById("cli-input");
+      trailHistoryPointer += d;
+      if (trailHistoryPointer < 0) trailHistoryPointer = 0;
+      if (trailHistoryPointer >= trailCommandHistory.length) {
+        trailHistoryPointer = trailCommandHistory.length;
+        inp.value = "";
+        return;
       }
+      inp.value = trailCommandHistory[trailHistoryPointer];
     }
 
-    // Startup routines
+    function handleLogSubmit(e) {
+      e.preventDefault();
+      const inp = document.getElementById("cli-input");
+      const v = inp.value.trim();
+      if (!v) return;
+      inp.value = "";
+      executeTrailCommand(v);
+      inp.focus();
+    }
+
+    // Boot Routine
+    function initOnboarding() {
+      const params = new URLSearchParams(window.location.search);
+      isPhysicalGZMode = Boolean(params.get("gz") || params.get("lid") || params.get("tag"));
+      const dossier = getCacherDossier();
+
+      if (!dossier.username) {
+        awaitingUsernameEntry = true;
+        if (isPhysicalGZMode) {
+          printBlock(`
+            <div class="term-title"><span>C.I.P.H.E.R. // CONTAINER UNLATCHED</span></div>
+            <p><strong>[CHASSIS UNLATCHED // DAYLIGHT DETECTED]</strong><br>
+            Sunlight hitting the solar gasket. You actually tracked down the physical ammo can.<br>
+            If you're here to log the cache, grab a pen and unroll the paper scroll.</p>
+            <p><strong>[CYPHER]:</strong> "What username do you sign logbooks with, human bean?"</p>
+          `, "alert");
+        } else {
+          printBlock(`
+            <div class="term-title"><span>C.I.P.H.E.R. // REMOTE CACHE LINK</span></div>
+            <p><strong>[RSI REMOTE LINK // IRS FIELD AUDIT DIVISION]</strong><br>
+            Remote signal acquired from the cache page. If you're here to get help finding the cache, you've tapped into the right container.</p>
+            <p><strong>[CYPHER]:</strong> "What username do you go by on the trail, geocacher?"</p>
+          `, "alert");
+        }
+      } else {
+        printBlock(`
+          <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
+          <p>Welcome back to the corridor, <strong>${dossier.username}</strong>! Tap <strong>[ ⚙️ SYS ] &gt; [ 📖 DIRECTIVES ]</strong> for trail guidance.</p>
+        `);
+      }
+
+      updateFieldVitals();
+      acquireGpsFix();
+      renderDynamicActionDeck();
+    }
+
     loadCloudRegistries();
-    initOnboardingSequence();
-    checkTrailScans();
-    adjustForMobileViewport();
+    initOnboarding();
   </script>
 </body>
 </html>
