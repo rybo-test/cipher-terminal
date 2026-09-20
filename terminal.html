@@ -205,13 +205,9 @@
       </div>
     </div>
 
-    <div id="terminal-screen">
-      <!-- Dynamic onboarding blocks appear here -->
-    </div>
+    <div id="terminal-screen"></div>
 
-    <div id="action-deck">
-      <!-- Contextual Action Chips populated dynamically -->
-    </div>
+    <div id="action-deck"></div>
 
     <form id="input-form" onsubmit="handleLogSubmit(event)">
       <button type="button" class="nav-btn" title="Previous Command" onclick="historyCycle(-1)">▲</button>
@@ -238,15 +234,19 @@
     let simulatedSolarFault = "OK";
     let audioMuted = false;
 
-    // Authorized corridor physical stage tokens & items
-    const VALID_STAGES = new Set([
-      "STAGE_01_GZ", "STAGE_02_GZ", "STAGE_03_GZ", "STAGE_04_GZ", "STAGE_05_GZ",
-      "STAGE_08_GZ", "STAGE_17_GZ", "STAGE_25_GZ", "STAGE_50_GZ", "STAGE_00_LAB"
-    ]);
+    // Local caches for cloud registries
+    let knownItemsRegistry = new Map();
+    let knownCachesRegistry = new Map();
 
-    const VALID_ITEMS = new Set([
+    // Fallback seed items
+    const DEFAULT_VALID_ITEMS = new Set([
       "BRASS_WASHER", "PANEL-40W-SOLAR", "CELL-12V-LEAD", "CORRIDOR-ANTENNA",
       "MEMORY-CORE-EXP", "RAT_BRAIN_V1", "TB-WOODEN-01", "2004_ARBYS_COUPON"
+    ]);
+
+    const DEFAULT_VALID_STAGES = new Set([
+      "STAGE_01_GZ", "STAGE_02_GZ", "STAGE_03_GZ", "STAGE_04_GZ", "STAGE_05_GZ",
+      "STAGE_08_GZ", "STAGE_17_GZ", "STAGE_25_GZ", "STAGE_50_GZ", "STAGE_00_LAB"
     ]);
 
     // --- PROCEDURAL AUDIO & MODEM VOICE ENGINE ---
@@ -372,6 +372,30 @@
           window.speechSynthesis.speak(utterance);
         }, 300);
       } catch (err) {}
+    }
+
+    // --- REGISTRY SYNC ---
+    async function loadCloudRegistries() {
+      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
+      try {
+        // Fetch CorridorItems
+        fetch(`${GAS_ENDPOINT}?action=GET_ITEMS`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.items) {
+              data.items.forEach(it => knownItemsRegistry.set(it.itemToken.toUpperCase(), it));
+            }
+          }).catch(() => {});
+
+        // Fetch Geocaches
+        fetch(`${GAS_ENDPOINT}?action=GET_CACHES`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.caches) {
+              data.caches.forEach(c => knownCachesRegistry.set(c.gcCode.toUpperCase(), c));
+            }
+          }).catch(() => {});
+      } catch (e) {}
     }
 
     // --- COMMAND HISTORY ---
@@ -540,7 +564,7 @@
           action: action,
           username: dossier.username,
           syncKey: dossier.syncKey,
-          containerToken: "NONE",
+          itemToken: "NONE",
           cacheStage: "STAGE_01_GZ",
           containerCondition: inRatLabMode ? "RAT_LAB_ISOLATED" : (isPhysicalGZMode ? "PHYSICAL_AMMO_CAN" : "REMOTE_CACHE_PAGE"),
           isRatLabTest: inRatLabMode
@@ -646,19 +670,16 @@
 
       let chips = [];
 
-      // Context 1: Has salvage hardware in pack to mount
       const hasPanel = (dossier.profileData.inventory || []).includes("PANEL-40W-SOLAR");
       if (hasPanel && isPhysicalGZMode) {
         chips.push(`<button class="action-chip" onclick="executeTrailCommand('INSTALL PANEL-40W-SOLAR')">[ 🔧 BOLT ON 40W PANEL ]</button>`);
       }
 
-      // Context 2: Critical standby power
       if (simulatedBattery <= 19) {
         chips.push(`<button class="action-chip" onclick="executeTrailCommand('HINT')">[ ⚡ RECHARGE HINT ]</button>`);
         chips.push(`<button class="action-chip" onclick="executeTrailCommand('LOG STAGE_01_GZ')">[ 📝 STAMP FIND ]</button>`);
         chips.push(`<button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK CHASSIS ]</button>`);
       } else {
-        // Standard field chips
         if (isPhysicalGZMode) {
           chips.push(`<button class="action-chip" onclick="executeTrailCommand('LOG')">[ 📝 SIGN LOGBOOK ]</button>`);
           chips.push(`<button class="action-chip" onclick="executeTrailCommand('SWAG')">[ 📦 INSPECT SWAG ]</button>`);
@@ -666,7 +687,7 @@
           chips.push(`<button class="action-chip" onclick="executeTrailCommand('HINT')">[ 💡 GZ HINT ]</button>`);
           chips.push(`<button class="action-chip" onclick="executeTrailCommand('STATUS')">[ 📊 TRAIL VITALS ]</button>`);
         }
-
+        chips.push(`<button class="action-chip" onclick="executeTrailCommand('STORY')">[ 🗺️ STORY CACHES ]</button>`);
         chips.push(`<button class="action-chip" onclick="executeTrailCommand('SYNC')">[ 🔄 SYNC ]</button>`);
         chips.push(`<button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK ]</button>`);
       }
@@ -674,7 +695,7 @@
       deck.innerHTML = chips.join("");
     }
 
-    // --- SECRET RAT LAB WORKBENCH (Hidden from regular trail finders) ---
+    // --- SECRET RAT LAB WORKBENCH ---
     function openRatLab() {
       inRatLabMode = true;
       document.getElementById("prompt-symbol").innerText = "RAT_LAB>";
@@ -754,7 +775,7 @@
             <p><strong>Primary 40W Solar Panel:</strong> Condition: 100% | Weather Fault: <code>${simulatedSolarFault}</code><br>
             <strong>Secondary Battery Bank:</strong> Condition: ${simulatedBattery}% | Health: <code>${simulatedBattery <= 19 ? "COLLAPSED" : "OK"}</code><br>
             <strong>Repeater Antenna (GZ-25):</strong> Condition: 100% | Status: <code>STANDBY</code><br>
-            <strong>Trap Token Countermeasure:</strong> Active (2.5% glitch probability on unverified strings)</p>
+            <strong>Corridor Items Loaded:</strong> ${knownItemsRegistry.size} indexed</p>
           `, "ratlab");
           break;
 
@@ -804,8 +825,9 @@
         case "FORGE":
         case "SPAWN":
           const itemTag = (argument || "PANEL-40W-SOLAR").toUpperCase().trim();
-          if (!VALID_ITEMS.has(itemTag)) {
-            printBlock(`<p class="error">Unknown item tag '<strong>${itemTag}</strong>'. Check corridor manifesto.</p>`, "error");
+          const validInRegistry = knownItemsRegistry.has(itemTag) || DEFAULT_VALID_ITEMS.has(itemTag);
+          if (!validInRegistry) {
+            printBlock(`<p class="error">Unknown item tag '<strong>${itemTag}</strong>'. Check CorridorItems registry.</p>`, "error");
             return;
           }
           if (!dossier.profileData.inventory.includes(itemTag)) {
@@ -869,7 +891,9 @@
             return;
           }
           const stageToken = arg.toUpperCase().trim();
-          if (!VALID_STAGES.has(stageToken)) {
+          const isValidStage = DEFAULT_VALID_STAGES.has(stageToken) || knownItemsRegistry.has(stageToken);
+
+          if (!isValidStage) {
             playSound('BUZZ');
             printBlock(`<div class="term-block error"><strong>[!] UNRECOGNIZED CONTAINER TOKEN: '${stageToken}'</strong><br>Cypher's logbook rejects unindexed codes. Check the tag inside the container lid.</div>`, "error");
             speakCypher("Unrecognized container token.");
@@ -893,7 +917,7 @@
             Corridor memory updated. Power level boosted (+15%).</p>
           `);
           speakCypher(`Stage ${stageToken} logged successfully. Power cells recharged.`);
-          transmitFieldLog("LOG_FIND", { containerToken: stageToken });
+          transmitFieldLog("LOG_FIND", { itemToken: stageToken });
         }
       },
 
@@ -903,13 +927,16 @@
         description: "Retrieve an authorized trackable or salvage item into field inventory",
         run: (arg, dossier) => {
           if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: COLLECT &lt;item_tag&gt;</div>`);
+            printBlock(`<div class="term-dim">Syntax: COLLECT &lt;item_tag&gt; (e.g. COLLECT TB-WOODEN-01)</div>`);
             return;
           }
           const item = arg.toUpperCase().trim();
-          if (!VALID_ITEMS.has(item)) {
+          const itemMeta = knownItemsRegistry.get(item);
+          const isValid = Boolean(itemMeta) || DEFAULT_VALID_ITEMS.has(item);
+
+          if (!isValid) {
             playSound('BUZZ');
-            printBlock(`<div class="term-block error"><strong>[!] UNRECOGNIZED SALVAGE ITEM: '${item}'</strong><br>Item not listed in corridor manifest.</div>`, "error");
+            printBlock(`<div class="term-block error"><strong>[!] UNRECOGNIZED SALVAGE ITEM: '${item}'</strong><br>Item not found in CorridorItems registry.</div>`, "error");
             speakCypher("Unrecognized salvage item.");
             return;
           }
@@ -921,12 +948,14 @@
           }
           renderDynamicActionDeck();
           playSound('CHIME');
+
+          const desc = itemMeta ? `<br><span class="term-dim">${itemMeta.description}</span>` : "";
           printBlock(`
             <div class="term-title"><span>🎒 SWAG / ITEM COLLECTED</span></div>
-            <p>Transferred <strong>${item}</strong> into your active field pack.</p>
+            <p>Transferred <strong>${item}</strong> into your active field pack.${desc}</p>
           `);
           speakCypher(`Item ${item} added to field pack.`);
-          transmitFieldLog("COLLECT_ITEM", { containerToken: item });
+          transmitFieldLog("COLLECT_ITEM", { itemToken: item });
         }
       },
 
@@ -936,7 +965,7 @@
         description: "Bolt a salvaged component from your field pack to the container",
         run: (arg, dossier) => {
           if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: INSTALL &lt;component_tag&gt; (e.g. PANEL-40W-SOLAR)</div>`);
+            printBlock(`<div class="term-dim">Syntax: INSTALL &lt;component_tag&gt; (e.g. INSTALL PANEL-40W-SOLAR)</div>`);
             return;
           }
           const comp = arg.toUpperCase().trim();
@@ -965,7 +994,61 @@
             Sun juice trickle increased. Power levels stabilized.</p>
           `);
           speakCypher(`Hardware bolted on. Power levels stabilized.`);
-          transmitFieldLog("MOUNT_HARDWARE", { containerToken: comp });
+          transmitFieldLog("MOUNT_HARDWARE", { itemToken: comp });
+        }
+      },
+
+      CACHE: {
+        aliases: ["GC", "WAYPOINT"],
+        syntax: "CACHE <GC_code>",
+        description: "Look up a story geocache record from the Corridor registry",
+        run: (arg) => {
+          if (!arg) {
+            printBlock(`<div class="term-dim">Syntax: CACHE &lt;GC_Code&gt; (e.g. CACHE GC10001)</div>`);
+            return;
+          }
+          const gc = arg.toUpperCase().trim();
+          const cacheMeta = knownCachesRegistry.get(gc);
+          if (cacheMeta) {
+            printBlock(`
+              <div class="term-title"><span>🗺️ STORY CACHE: ${cacheMeta.gcCode}</span></div>
+              <p><strong>${cacheMeta.name}</strong><br>
+              <strong>Type:</strong> ${cacheMeta.type} | <strong>Container:</strong> ${cacheMeta.container}<br>
+              <strong>Corridor Stage:</strong> ${cacheMeta.stage} | <strong>D/T:</strong> ${cacheMeta.dt}<br>
+              <strong>Coordinates:</strong> <code>${cacheMeta.coordinates}</code><br>
+              <strong>Story Arc:</strong> ${cacheMeta.storyArc} | <strong>Hider:</strong> ${cacheMeta.owner}</p>
+            `);
+            speakCypher(`Story cache ${cacheMeta.gcCode} loaded: ${cacheMeta.name}.`);
+          } else {
+            printBlock(`<p class="error">No story cache found matching '${gc}' in Corridor registry.</p>`, "error");
+            playSound('BUZZ');
+          }
+        }
+      },
+
+      STORY: {
+        aliases: ["CORRIDOR", "CACHES"],
+        syntax: "STORY",
+        description: "List all known geocaches in the Cache Tales corridor",
+        run: () => {
+          if (knownCachesRegistry.size === 0) {
+            printBlock(`
+              <div class="term-title"><span>🗺️ CACHE TALES CORRIDOR</span></div>
+              <p><strong>GC10001</strong> - Cache Tales #01: The Welded Anchor (Ammo Can)<br>
+              <strong>GC10008</strong> - Cache Tales #08: Canal Trickle (Lock-and-Lock)<br>
+              <strong>GC10017</strong> - Cache Tales #17: Gravel Pit Strata (EarthCache)<br>
+              <strong>GC10025</strong> - Cache Tales #25: The Cedar Repeater (Letterbox)</p>
+              <div class="term-dim">Type <code>CACHE &lt;GC&gt;</code> for container specifics.</div>
+            `);
+          } else {
+            let out = `<div class="term-title"><span>🗺️ CACHE TALES CORRIDOR REGISTRY</span></div>`;
+            knownCachesRegistry.forEach(c => {
+              out += `<p><strong>${c.gcCode}</strong> - ${c.name} [${c.type} / ${c.container}]</p>`;
+            });
+            out += `<div class="term-dim">Type <code>CACHE &lt;GC&gt;</code> for coordinates and D/T.</div>`;
+            printBlock(out);
+          }
+          speakCypher("Cache Tales corridor registry displayed.");
         }
       },
 
@@ -1171,7 +1254,7 @@
           `, "alert");
           playSound('BUZZ');
           speakCypher("Did not find signal recorded.");
-          transmitFieldLog("DNF_SIGNAL", { containerToken: "DNF_FLAG" });
+          transmitFieldLog("DNF_SIGNAL", { itemToken: "DNF_FLAG" });
         }
       },
 
@@ -1238,7 +1321,6 @@
         pendingUsernameCandidate = "";
 
         if (isPhysicalGZMode) {
-          // At Physical GZ container
           printBlock(`
             <div class="term-title"><span>C.I.P.H.E.R. // CONTAINER UNLATCHED</span></div>
             <p><strong>[CHASSIS UNLATCHED // DAYLIGHT DETECTED]</strong><br>
@@ -1248,7 +1330,6 @@
           `, "alert");
           speakCypher("Chassis unlatched. What username do you sign logbooks with, human bean?");
         } else {
-          // Coming remotely from cache page
           printBlock(`
             <div class="term-title"><span>C.I.P.H.E.R. // REMOTE CACHE LINK</span></div>
             <p><strong>[RSI REMOTE LINK // IRS FIELD AUDIT DIVISION]</strong><br>
@@ -1259,7 +1340,6 @@
           speakCypher("Remote link acquired from cache page. What username do you go by on the trail, geocacher?");
         }
       } else {
-        // Returning Cacher
         printBlock(`
           <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
           <p>Container casing: 1/4-inch rolled rocket steel (RSI origin).<br>
@@ -1288,10 +1368,9 @@
 
       const dossier = getCacherDossier();
 
-      // Onboarding step: Resolving Username entry and confirmation
+      // Username Onboarding & Confirmation
       if (awaitingUsernameEntry) {
         if (pendingUsernameCandidate) {
-          // Confirmation sub-step
           const upper = cleanText.toUpperCase();
           if (upper === "Y" || upper === "YES" || upper.includes("CONFIRM") || upper.includes("THAT'S ME")) {
             dossier.username = pendingUsernameCandidate;
@@ -1317,7 +1396,6 @@
           }
         }
 
-        // Catch conversational questions instead of setting it as a name!
         if (isConversationalQuestion(cleanText)) {
           playSound('TICK');
           printBlock(`
@@ -1331,7 +1409,6 @@
           return;
         }
 
-        // Validate Candidate Username
         const sanitized = cleanText.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().toUpperCase();
         if (sanitized.length < 2 || sanitized.length > 20) {
           printBlock(`<p class="error">Username must be between 2 and 20 characters. Try again.</p>`, "error");
@@ -1370,7 +1447,6 @@
       const verb = splitLine[0].toUpperCase();
       const argument = splitLine.slice(1).join(" ");
 
-      // Rat Lab Internal Commands
       if (inRatLabMode) {
         if (verb === "LAB" || verb === "RATLAB") {
           const subVerb = argument.split(" ")[0].toUpperCase() || "HELP";
@@ -1386,7 +1462,6 @@
         }
       }
 
-      // Standard Trail Command Lookup
       const matchedCommand = TRAIL_ALIAS_INDEX[verb];
       if (matchedCommand) {
         matchedCommand.run(argument, dossier);
@@ -1423,6 +1498,7 @@
     }
 
     // Startup routines
+    loadCloudRegistries();
     initOnboardingSequence();
     checkTrailScans();
     adjustForMobileViewport();
