@@ -249,8 +249,12 @@
       border-radius: 4px;
       cursor: pointer;
       min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .btn-submit:active { background: #27ae60; }
+    .btn-submit:disabled { background: #2a4a35; color: #6e8c78; cursor: not-allowed; }
 
     .feedback-line {
       font-family: var(--font-mono);
@@ -260,6 +264,7 @@
     }
     .feedback-error { color: var(--red); }
     .feedback-success { color: var(--text-green); font-weight: bold; }
+    .feedback-info { color: var(--amber); }
 
     /* Modal / Pack */
     .modal-overlay {
@@ -356,7 +361,7 @@
       </div>
 
       <div class="card-tools" id="cardTools">
-        <!-- Injected dynamically -->
+        <!-- Contextual tools injected here -->
       </div>
     </div>
 
@@ -385,6 +390,11 @@
 
   <script>
     // =======================================================
+    // 0. LIVE GOOGLE APPS SCRIPT BACKEND ENDPOINT
+    // =======================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
+
+    // =======================================================
     // 1. BOOT SEQUENCE STEPS (Learning to Swim)
     // =======================================================
     const BOOT_STEPS = [
@@ -393,7 +403,7 @@
         meta: "INITIALIZATION // STEP 1",
         title: "Trailhead Operator Sign-In",
         speech: "Power online. Optics scanning the road... Who is standing out there on the shoulder?",
-        body: "Enter your official geocaching handle so Cypher can track your progress along the Cache Tales Corridor Trail.",
+        body: "Enter your official geocaching handle so Cypher can register your trail ledger and track your finds across the corridor.",
         label: "Enter Geocaching Username:",
         placeholder: "e.g., Nezzmuk",
         buttonText: "REGISTER",
@@ -426,7 +436,7 @@
     ];
 
     // =======================================================
-    // 2. CORRIDOR TRAIL CACHES (Simple Sequential Caches)
+    // 2. CLIENT-SIDE CORRIDOR STAGES (Answers live in Google Sheet)
     // =======================================================
     const TRAIL_CACHES = [
       {
@@ -434,12 +444,6 @@
         title: "Cache 1: Trailhead Pulloff",
         speech: "Calibration verified! You are cleared for the trail. Cache 1 is hidden at the start of the corridor. Pop the latch, sign the log, and enter the verification stamp inside the lid.",
         body: "Navigate to Cache 1. Find the container, sign the paper log scroll, and enter the 3-letter stamp found inside.",
-        hint: "The stamp on Cache 1 is 'TOW'.",
-        solution: "TOW",
-        awardItem: {
-          name: "Corridor Trail Permit #01",
-          desc: "Permit slip stamped with 'TOW-CORRIDOR-01'. Unlocks Cache 2."
-        },
         toolsHtml: `
           <button class="btn-tool" onclick="alert('Cache 1 Coords: N 41° 44.100 W 111° 50.400\\nTerrain: 1.5 // Size: Regular Ammo Can')">🧭 Cache 1 Coordinates</button>
           <button class="btn-tool" onclick="alert('Container Hint: Attached to the ditch culvert guard.')">💡 Container Hint</button>
@@ -449,13 +453,7 @@
         cacheNum: 2,
         title: "Cache 2: The Irrigation Crossing",
         speech: "Good log on Cache 1. Keep moving down the road to Cache 2. This one has an inner lockbox. Check your permit for the combination.",
-        body: "Navigate to Cache 2. The inner chamber has a 3-digit combination. Use the number stamped on your Trail Permit from Cache 1 (format: 001).",
-        hint: "Look at your Permit in your [PACK]. The 3-digit number is '001'.",
-        solution: "001",
-        awardItem: {
-          name: "Brass Washer #02",
-          desc: "Heavy stamped washer from Cache 2. Shows keyword: 'VALLEY'."
-        },
+        body: "Navigate to Cache 2. The inner chamber has a 3-digit combination. Use the number stamped on your Trail Permit from Cache 1.",
         toolsHtml: `
           <button class="btn-tool" onclick="alert('Cache 2 Coords: N 41° 44.450 W 111° 50.150\\nTerrain: 2.0 // Size: Lockbox')">🧭 Cache 2 Coordinates</button>
           <button class="btn-tool" onclick="alert('Lock Hint: 3-digit number on your permit.')">💡 Lock Hint</button>
@@ -466,12 +464,6 @@
         title: "Cache 3: The Milepost Marker",
         speech: "You're getting into the groove now, {USER}. Cache 3 is nestled under a cedar fence post. Ratwaffles left a word stamped on the washer.",
         body: "Look inside your [PACK] at Brass Washer #02 from the last stop, or retrieve the codeword stamped on the lid of Cache 3.",
-        hint: "The codeword on Washer #02 is 'VALLEY'.",
-        solution: "VALLEY",
-        awardItem: {
-          name: "Corridor Mile 3 Checkpoint Pin",
-          desc: "Brass checkpoint pin marking 3 sequential corridor finds."
-        },
         toolsHtml: `
           <button class="btn-tool" onclick="alert('Cache 3 Coords: N 41° 44.820 W 111° 49.900\\nTerrain: 1.5 // Size: Ammo Can')">🧭 Cache 3 Coordinates</button>
           <button class="btn-tool" onclick="alert('Container Hint: Base of cedar corner post.')">💡 Container Hint</button>
@@ -480,7 +472,7 @@
     ];
 
     // =======================================================
-    // 3. ENGINE STATE & STORAGE
+    // 3. ENGINE STATE & LOCAL STORAGE
     // =======================================================
     let userHandle = localStorage.getItem('ct_cacher_name') || '';
     let bootDone = localStorage.getItem('ct_boot_done') === 'true';
@@ -492,6 +484,7 @@
       const feedback = document.getElementById('feedbackLine');
       feedback.innerText = '';
       document.getElementById('mainInput').value = '';
+      setButtonLoading(false);
 
       if (!bootDone) {
         // RENDER BOOT STEP
@@ -508,7 +501,6 @@
         document.getElementById('btnSubmit').innerText = b.buttonText;
         document.getElementById('cardTools').innerHTML = b.toolsHtml;
 
-        // If step 1, input is disabled (just click continue)
         if (currentBootStep === 1) {
           document.getElementById('mainInput').style.display = 'none';
         } else {
@@ -534,12 +526,40 @@
       }
     }
 
-    function handleInputSubmit() {
+    // =======================================================
+    // 4. SERVER API CALLS (Google Apps Script Backend)
+    // =======================================================
+    async function callBackend(payload) {
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        return await response.json();
+      } catch (err) {
+        console.warn("Backend offline or unreachable:", err);
+        return null;
+      }
+    }
+
+    function setButtonLoading(loading) {
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = loading;
+      if (loading) {
+        btn.dataset.prevText = btn.innerText;
+        btn.innerText = "WAIT...";
+      } else if (btn.dataset.prevText) {
+        btn.innerText = btn.dataset.prevText;
+      }
+    }
+
+    async function handleInputSubmit() {
       const val = document.getElementById('mainInput').value.trim();
       const feedback = document.getElementById('feedbackLine');
 
       if (!bootDone) {
-        // BOOT STEP LOGIC
+        // BOOT SEQUENCE HANDLER
         if (currentBootStep === 0) {
           if (!val) {
             feedback.innerText = "Cypher: You need to give me a name, human bean.";
@@ -548,6 +568,30 @@
           }
           userHandle = val;
           localStorage.setItem('ct_cacher_name', userHandle);
+
+          // Register with Google Sheet in background
+          setButtonLoading(true);
+          feedback.innerText = "Connecting to corridor ledger...";
+          feedback.className = "feedback-line feedback-info";
+
+          const res = await callBackend({ action: "registerUser", username: userHandle });
+          setButtonLoading(false);
+
+          if (res && res.status === "SUCCESS") {
+            if (!res.isNew && res.currentStage > 1) {
+              feedback.innerText = `Welcome back, ${res.username}! Restoring Stage ${res.currentStage}...`;
+              feedback.className = "feedback-line feedback-success";
+              setTimeout(() => {
+                currentCacheIndex = Math.min(res.currentStage - 1, TRAIL_CACHES.length - 1);
+                localStorage.setItem('ct_cache_index', currentCacheIndex);
+                bootDone = true;
+                localStorage.setItem('ct_boot_done', 'true');
+                updateView();
+              }, 1200);
+              return;
+            }
+          }
+
           currentBootStep++;
           updateView();
 
@@ -571,7 +615,7 @@
         }
 
       } else {
-        // TRAIL CACHE LOGIC
+        // TRAIL CACHE PROGRESSION (Validated by Google Sheet)
         if (!val) {
           feedback.innerText = "Cypher: Did you find the container or not? Enter the code.";
           feedback.className = "feedback-line feedback-error";
@@ -579,15 +623,33 @@
         }
 
         const cache = TRAIL_CACHES[currentCacheIndex];
-        if (val.toUpperCase() === cache.solution) {
-          // Award item
-          if (!playerPack.some(i => i.name === cache.awardItem.name)) {
-            playerPack.push(cache.awardItem);
+        setButtonLoading(true);
+        feedback.innerText = "Checking code against Corridor Vault...";
+        feedback.className = "feedback-line feedback-info";
+
+        // Call Google Apps Script backend
+        const serverResult = await callBackend({
+          action: "verifyStage",
+          username: userHandle,
+          cacheNum: cache.cacheNum,
+          submittedCode: val
+        });
+
+        setButtonLoading(false);
+
+        if (serverResult && serverResult.status === "CORRECT") {
+          // Add awarded item to player's pack
+          if (serverResult.awardItem && !playerPack.some(i => i.name === serverResult.awardItem.name)) {
+            playerPack.push(serverResult.awardItem);
             localStorage.setItem('ct_pack', JSON.stringify(playerPack));
           }
 
           feedback.innerText = `CACHE ${cache.cacheNum} VERIFIED! [PACK] updated.`;
           feedback.className = "feedback-line feedback-success";
+
+          if (serverResult.cypherDialogue) {
+            document.getElementById('cypherSpeech').innerText = `"${serverResult.cypherDialogue}"`;
+          }
 
           setTimeout(() => {
             if (currentCacheIndex < TRAIL_CACHES.length - 1) {
@@ -597,10 +659,15 @@
             } else {
               alert("You completed the test corridor run!");
             }
-          }, 1100);
+          }, 1200);
+
+        } else if (serverResult && serverResult.status === "DENIED") {
+          feedback.innerText = serverResult.roast || `CODE REJECTED: "${val}" does not match Cache ${cache.cacheNum}.`;
+          feedback.className = "feedback-line feedback-error";
 
         } else {
-          feedback.innerText = `CODE REJECTED: "${val}" does not match Cache ${cache.cacheNum}.`;
+          // Offline Fallback for field testing when cell signal is missing
+          feedback.innerText = "Offline mode: Unable to reach Google Sheet. Check connection or verify script deployment.";
           feedback.className = "feedback-line feedback-error";
         }
       }
@@ -637,12 +704,12 @@
       document.getElementById('packModal').classList.remove('active');
     }
 
-    // Enter Key
+    // Enter Key Listener
     document.getElementById('mainInput').addEventListener('keyup', function(e) {
       if (e.key === 'Enter') handleInputSubmit();
     });
 
-    // Run
+    // Boot Up
     updateView();
   </script>
 </body>
