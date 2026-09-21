@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>C.I.P.H.E.R. // Toolbar Prototype</title>
+  <style>
+    :root {
+      --bg-dark: #0a0f0d;
+      --panel-bg: #121a15;
+      --border-green: #2a5a3a;
+      --text-green: #38ef7d;
+      --text-dim: #7da88d;
+      --text-bright: #ffffff;
+      --amber: #f7b731;
+      --red: #eb3b5a;
+      --font-mono: 'Courier New', Courier, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-green);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 650px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    /* =======================================================
+       UNIVERSAL TOP TOOLBAR COMPONENT
+       ======================================================= */
+    .cipher-toolbar {
+      background: #080d0a;
+      border: 2px solid var(--border-green);
+      border-radius: 8px;
+      overflow: visible;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Row 1: Hardware Status & Global Controls */
+    .tb-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-green);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: #040805;
+    }
+
+    .tb-status-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-stage {
+      background: var(--border-green);
+      color: var(--text-bright);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 11px;
+    }
+
+    .tb-status-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-tb-micro {
+      background: #101c14;
+      color: var(--text-dim);
+      border: 1px solid var(--border-green);
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .btn-tb-micro.active {
+      color: var(--text-green);
+      border-color: var(--text-green);
+    }
+
+    /* Row 2: 3 Core Pillars + Menu Dropdown */
+    .tb-nav-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.1fr 0.9fr;
+      gap: 4px;
+      padding: 6px;
+      background: #0b130e;
+    }
+
+    .tb-btn {
+      background: #142018;
+      border: 1px solid var(--border-green);
+      color: var(--text-dim);
+      padding: 8px 4px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .tb-btn:active {
+      background: #1f3526;
+    }
+
+    .tb-btn.active {
+      background: var(--text-green);
+      color: #030604;
+      border-color: var(--text-green);
+    }
+
+    /* Row 3: Dynamic Contextual Layer Actions */
+    .tb-context-row {
+      padding: 6px 8px;
+      background: #080d0a;
+      border-top: 1px dashed var(--border-green);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow-x: auto;
+    }
+
+    .tb-context-label {
+      color: var(--amber);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .tb-context-actions {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .btn-context {
+      background: #142018;
+      color: var(--text-bright);
+      border: 1px solid var(--border-green);
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .btn-context:active {
+      border-color: var(--text-green);
+      color: var(--text-green);
+    }
+
+    /* Dropdown Drawer (Retro Green Screen Menu) */
+    .tb-menu-drawer {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 6px;
+      width: 250px;
+      background: #080d0a;
+      border: 2px solid var(--text-green);
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+      z-index: 100;
+      padding: 6px 0;
+      font-family: var(--font-mono);
+    }
+
+    .tb-menu-drawer.open {
+      display: block;
+    }
+
+    .tb-menu-header {
+      padding: 4px 10px;
+      font-size: 10px;
+      color: var(--amber);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #1c2b21;
+    }
+
+    .tb-menu-item {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-bright);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .tb-menu-item:active {
+      background: #14241a;
+      color: var(--text-green);
+    }
+
+    .tb-menu-divider {
+      height: 1px;
+      background: var(--border-green);
+      margin: 4px 0;
+    }
+
+    /* =======================================================
+       SIMULATOR CARD (For testing states on phone)
+       ======================================================= */
+    .test-card {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-green);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .test-card-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .test-card-body {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #cadbd0;
+    }
+
+    .sim-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #080d0a;
+      border: 1px solid var(--border-green);
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .sim-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--amber);
+      font-weight: bold;
+    }
+
+    .sim-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn-sim {
+      background: #18281e;
+      border: 1px solid var(--border-green);
+      color: var(--text-bright);
+      padding: 8px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-sim:active {
+      border-color: var(--text-green);
+      color: var(--text-green);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell" onclick="closeMenuIfOpen(event)">
+
+    <!-- =======================================================
+         THE UNIVERSAL CIPHER TOOLBAR (To be shared across all pages)
+         ======================================================= -->
+    <div class="cipher-toolbar" id="cipherToolbar">
+      
+      <!-- Row 1: Hardware Status & Global Switches -->
+      <div class="tb-status-row">
+        <div class="tb-status-left">
+          <span style="color: var(--text-dim);">C.I.P.H.E.R. //</span>
+          <span class="badge-stage" id="tbStageBadge">CACHE 03/50</span>
+        </div>
+        <div class="tb-status-right">
+          <span style="color: var(--text-green);" id="tbVoltBadge">🔋 12.6V</span>
+          <button class="btn-tb-micro active" id="btnAudioToggle" onclick="toggleAudio(event)">🔊 ON</button>
+        </div>
+      </div>
+
+      <!-- Row 2: 3 Core Pillars + Consolidated Menu Dropdown -->
+      <div class="tb-nav-row">
+        <button class="tb-btn active" id="btnNavTrail" onclick="simulateLayer('stages')">
+          🧭 TRAIL
+        </button>
+        <button class="tb-btn" id="btnNavCache" onclick="simulateLayer('gc')">
+          🗺️ CACHE
+        </button>
+        <button class="tb-btn" id="btnNavPack" onclick="simulateLayer('pack')">
+          🎒 PACK (<span id="tbPackCount">2</span>)
+        </button>
+        <button class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
+          ≡ MENU ▾
+        </button>
+      </div>
+
+      <!-- Row 3: Dynamic Contextual Action Bar -->
+      <div class="tb-context-row">
+        <span class="tb-context-label" id="contextLabel">> ACTION:</span>
+        <div class="tb-context-actions" id="contextActionsSlot">
+          <!-- Dynamically filled based on active layer -->
+        </div>
+      </div>
+
+      <!-- Dropdown Drawer -->
+      <div class="tb-menu-drawer" id="menuDrawer">
+        <div class="tb-menu-header">FIELD INTEL & PROGRESS</div>
+        <div class="tb-menu-item" onclick="simulateLayer('stats')">📊 Stats & Ledger</div>
+        <div class="tb-menu-item" onclick="simulateLayer('lore')">📜 Trail Lore & Audio</div>
+        <div class="tb-menu-item" onclick="simulateLayer('missions')">🎯 Corridor Challenges</div>
+        
+        <div class="tb-menu-divider"></div>
+        
+        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
+        <div class="tb-menu-item" onclick="simulateLayer('profile')">👤 Cacher Profile</div>
+        <div class="tb-menu-item" onclick="simulateLayer('help')">📖 Trail Manual (BYOP)</div>
+        <div class="tb-menu-item" onclick="alert('Simulated Log Off: local cacher session cleared.')" style="color: var(--red);">🚪 Log Off</div>
+      </div>
+
+    </div>
+
+    <!-- =======================================================
+         INTERACTIVE LAYER SIMULATOR (Test Screen on Mobile)
+         ======================================================= -->
+    <div class="test-card">
+      <div class="test-card-title">
+        <span id="activeLayerTitle">LAYER: STAGES.HTML</span>
+        <span style="color: var(--amber); font-size: 11px;">PROTOTYPE</span>
+      </div>
+
+      <div class="test-card-body" id="activeLayerDescription">
+        This is the active trail runner layer (<code>stages.html</code>). Notice how the top toolbar shows <strong>🧭 TRAIL</strong> active, and the dynamic action row displays quick jump buttons for container verification.
+      </div>
+
+      <!-- Testing Deck Switcher -->
+      <div class="sim-controls">
+        <div class="sim-label">SIMULATE NAVIGATION TO OTHER LAYERS:</div>
+        <div class="sim-buttons">
+          <button class="btn-sim" onclick="simulateLayer('stages')">Simulate stages.html</button>
+          <button class="btn-sim" onclick="simulateLayer('gc')">Simulate gc.html</button>
+          <button class="btn-sim" onclick="simulateLayer('pack')">Simulate pack.html</button>
+          <button class="btn-sim" onclick="simulateLayer('stats')">Simulate stats.html</button>
+          <button class="btn-sim" onclick="simulateLayer('lore')">Simulate lore.html</button>
+          <button class="btn-sim" onclick="simulateLayer('profile')">Simulate profile.html</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // =======================================================
+    // 1. WEB AUDIO RELAY CLICKS
+    // =======================================================
+    let audioCtx = null;
+    let soundOn = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playRelayClick() {
+      if (!soundOn) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.04);
+    }
+
+    function toggleAudio(e) {
+      if (e) e.stopPropagation();
+      soundOn = !soundOn;
+      const btn = document.getElementById('btnAudioToggle');
+      if (soundOn) {
+        btn.innerText = "🔊 ON";
+        btn.classList.add('active');
+        playRelayClick();
+      } else {
+        btn.innerText = "🔇 OFF";
+        btn.classList.remove('active');
+      }
+    }
+
+    // =======================================================
+    // 2. DROPDOWN DRAWER CONTROLS
+    // =======================================================
+    function toggleMenu(e) {
+      if (e) e.stopPropagation();
+      playRelayClick();
+      const drawer = document.getElementById('menuDrawer');
+      drawer.classList.toggle('open');
+    }
+
+    function closeMenuIfOpen(e) {
+      const drawer = document.getElementById('menuDrawer');
+      if (drawer.classList.contains('open')) {
+        drawer.classList.remove('open');
+        playRelayClick();
+      }
+    }
+
+    // =======================================================
+    // 3. DYNAMIC LAYER SIMULATOR
+    // =======================================================
+    const LAYER_CONFIGS = {
+      stages: {
+        name: "stages.html",
+        title: "ACTIVE STAGE RUNNER",
+        btnId: "btnNavTrail",
+        desc: "Active corridor trail runner. Handles cache coordinates, lid sensor alert, and codeword unlock input.",
+        actionsHtml: `
+          <button class="btn-context" onclick="playRelayClick(); alert('Jump to Lid Unlock Code Input')">🔓 Jump to Input</button>
+          <button class="btn-context" onclick="playRelayClick(); alert('Opening Container Hint')">💡 Container Hint</button>
+        `
+      },
+      gc: {
+        name: "gc.html",
+        title: "DETAILED GEOCACHE LISTING",
+        btnId: "btnNavCache",
+        desc: "Full GC listing dossier: WGS84 coordinates, container specs, terrain, and spoiler hint decrypter.",
+        actionsHtml: `
+          <button class="btn-context" onclick="playRelayClick(); alert('ROT-13 Decrypted: Attached to ditch culvert guard.')">💡 Decrypt Hint</button>
+          <button class="btn-context" onclick="playRelayClick(); alert('Field Bearing Projector Opened')">📐 Bearing Tool</button>
+        `
+      },
+      pack: {
+        name: "pack.html",
+        title: "FIELD PACK & SWAG INVENTORY",
+        btnId: "btnNavPack",
+        desc: "Virtual pack ledger. Inspect collected stamped Wasatch washers, corridor permits, and perform swag trades.",
+        actionsHtml: `
+          <button class="btn-context" onclick="playRelayClick(); alert('Swag Trade: Drop item / Take item')">🎁 Trade Swag</button>
+          <button class="btn-context" onclick="playRelayClick(); alert('Inspecting Stamped Washer #01')">🔍 Inspect Washer</button>
+        `
+      },
+      stats: {
+        name: "stats.html",
+        title: "CORRIDOR DOSSIER & TOTALS",
+        btnId: "btnNavMenu",
+        desc: "Progress checklist across all 50 corridor caches, personal find records, and live sheet totals.",
+        actionsHtml: `
+          <button class="btn-context" onclick="playRelayClick(); alert('Syncing telemetry with Google Sheet...')">🔄 Sync Ledger</button>
+        `
+      },
+      lore: {
+        name: "lore.html",
+        title: "TRAIL LORE & DISPATCHES",
+        btnId: "btnNavMenu",
+        desc: "Unlocked archives: Rat Pack workshop notes and historical 1984 RSI engineering test logs.",
+        actionsHtml: `
+          <button class="btn-context" onclick="playRelayClick(); alert('Playing audio bark: Episode 101...')">📻 Play Dispatch</button>
+        `
+      },
+      profile: {
+        name: "profile.html",
+        title: "CACHER SETTINGS & ID",
+        btnId: "btnNavMenu",
+        desc: "Registered handle configuration, custom signature item selector, and session controls.",
+        actionsHtml: `
+          <button class="btn-context" onclick="playRelayClick(); alert('Signature Item Saved')">💾 Save Sig Item</button>
+        `
+      }
+    };
+
+    function simulateLayer(layerKey) {
+      playRelayClick();
+      const config = LAYER_CONFIGS[layerKey];
+      if (!config) return;
+
+      // Close menu drawer if open
+      document.getElementById('menuDrawer').classList.remove('open');
+
+      // Update Nav Buttons Highlight
+      ['btnNavTrail', 'btnNavCache', 'btnNavPack'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      if (document.getElementById(config.btnId)) {
+        document.getElementById(config.btnId).classList.add('active');
+      }
+
+      // Update Context Action Row
+      document.getElementById('contextActionsSlot').innerHTML = config.actionsHtml;
+
+      // Update Test Screen Text
+      document.getElementById('activeLayerTitle').innerText = `LAYER: ${config.name.toUpperCase()}`;
+      document.getElementById('activeLayerDescription').innerHTML = `
+        <strong>Simulated: ${config.title}</strong><br />
+        ${config.desc}
+      `;
+    }
+
+    // Initialize with stages.html
+    simulateLayer('stages');
+  </script>
+</body>
+</html>
