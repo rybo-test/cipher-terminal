@@ -50,16 +50,25 @@
       margin-bottom: 30px;
     }
 
-    /* Top HUD Header */
+    /* Top HUD Header - Mobile-Responsive Layout */
     header {
       background: #080d0a;
       border-bottom: 2px solid var(--border-green);
-      padding: 12px 16px;
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
       font-family: var(--font-mono);
       font-size: 13px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .badge-stage {
@@ -68,23 +77,26 @@
       padding: 3px 8px;
       border-radius: 4px;
       font-weight: bold;
+      white-space: nowrap;
     }
 
     .header-actions {
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .btn-small {
       background: #1c2b21;
       color: var(--text-dim);
       border: 1px solid var(--border-green);
-      padding: 4px 8px;
+      padding: 5px 8px;
       border-radius: 4px;
       font-family: var(--font-mono);
       font-size: 11px;
       cursor: pointer;
+      white-space: nowrap;
     }
     .btn-small:hover { color: var(--text-bright); border-color: var(--text-green); }
 
@@ -92,7 +104,7 @@
       background: #1c2b21;
       color: var(--text-green);
       border: 1px solid var(--text-green);
-      padding: 6px 12px;
+      padding: 5px 10px;
       border-radius: 4px;
       font-family: var(--font-mono);
       font-weight: bold;
@@ -100,7 +112,8 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
+      font-size: 12px;
+      white-space: nowrap;
     }
     .btn-pack:active {
       background: var(--text-green);
@@ -328,7 +341,7 @@
     
     <!-- Top Header -->
     <header>
-      <div>
+      <div class="header-left">
         <span style="color: var(--text-dim);">C.I.P.H.E.R. //</span>
         <span class="badge-stage" id="hudStage">BOOT SEQUENCE</span>
       </div>
@@ -527,18 +540,27 @@
     }
 
     // =======================================================
-    // 4. SERVER API CALLS (Google Apps Script Backend)
+    // 4. ROBUST SERVER API CALLS (CORS & Redirect Aware)
     // =======================================================
     async function callBackend(payload) {
       try {
         const response = await fetch(SCRIPT_URL, {
           method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          mode: "cors",
+          redirect: "follow",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
           body: JSON.stringify(payload)
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
         return await response.json();
       } catch (err) {
-        console.warn("Backend offline or unreachable:", err);
+        console.warn("Backend communication issue:", err);
         return null;
       }
     }
@@ -569,7 +591,6 @@
           userHandle = val;
           localStorage.setItem('ct_cacher_name', userHandle);
 
-          // Register with Google Sheet in background
           setButtonLoading(true);
           feedback.innerText = "Connecting to corridor ledger...";
           feedback.className = "feedback-line feedback-info";
@@ -627,7 +648,6 @@
         feedback.innerText = "Checking code against Corridor Vault...";
         feedback.className = "feedback-line feedback-info";
 
-        // Call Google Apps Script backend
         const serverResult = await callBackend({
           action: "verifyStage",
           username: userHandle,
@@ -666,7 +686,6 @@
           feedback.className = "feedback-line feedback-error";
 
         } else {
-          // Offline Fallback for field testing when cell signal is missing
           feedback.innerText = "Offline mode: Unable to reach Google Sheet. Check connection or verify script deployment.";
           feedback.className = "feedback-line feedback-error";
         }
