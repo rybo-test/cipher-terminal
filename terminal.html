@@ -127,6 +127,7 @@
       border-bottom: 1px solid var(--border-green);
       display: flex;
       gap: 12px;
+      cursor: pointer;
     }
 
     .cypher-avatar {
@@ -156,6 +157,8 @@
       letter-spacing: 1px;
       margin-bottom: 4px;
       font-family: var(--font-mono);
+      display: flex;
+      justify-content: space-between;
     }
 
     /* Main Stage Card */
@@ -346,6 +349,7 @@
         <span class="badge-stage" id="hudStage">BOOT SEQUENCE</span>
       </div>
       <div class="header-actions">
+        <button class="btn-small" id="btnAudioToggle" onclick="toggleAudio()" title="Mute/Unmute Cypher">🔊 VOICE: ON</button>
         <button class="btn-pack" id="btnPack" onclick="openPack()" style="display:none;">
           🎒 PACK (<span id="packCount">0</span>)
         </button>
@@ -354,10 +358,13 @@
     </header>
 
     <!-- Cypher Dialogue Area -->
-    <div class="cypher-dossier">
+    <div class="cypher-dossier" onclick="speakCurrentDialogue()" title="Tap to replay speech">
       <div class="cypher-avatar">📟</div>
-      <div>
-        <div class="cypher-name" id="cypherLabel">CYPHER // 1984 TERMINAL</div>
+      <div style="flex: 1;">
+        <div class="cypher-name">
+          <span id="cypherLabel">CYPHER // 1984 TERMINAL</span>
+          <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">[TAP TO HEAR]</span>
+        </div>
         <div class="cypher-speech" id="cypherSpeech">
           "Power online. Optics scanning the road... Who is standing out there on the shoulder?"
         </div>
@@ -373,9 +380,7 @@
         To link with the 50 caches along the Cache Tales Corridor Trail, enter the exact geocaching username you use to sign physical logbooks.
       </div>
 
-      <div class="card-tools" id="cardTools">
-        <!-- Contextual tools injected here -->
-      </div>
+      <div class="card-tools" id="cardTools"></div>
     </div>
 
     <!-- Input Dock -->
@@ -408,7 +413,129 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
 
     // =======================================================
-    // 1. BOOT SEQUENCE STEPS (Learning to Swim)
+    // 1. SOUND & SYNTHESIS AUDIO ENGINE (Web Audio API)
+    // =======================================================
+    let audioCtx = null;
+    let soundEnabled = localStorage.getItem('ct_sound_enabled') !== 'false';
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem('ct_sound_enabled', soundEnabled);
+      const btn = document.getElementById('btnAudioToggle');
+      if (soundEnabled) {
+        btn.innerText = "🔊 VOICE: ON";
+        playRelayClick();
+        speakText("Audio system active.");
+      } else {
+        btn.innerText = "🔇 VOICE: OFF";
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
+    }
+
+    // Mechanical Relay Click
+    function playRelayClick() {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.04);
+    }
+
+    // Success Chime (Verification Accepted)
+    function playSuccessChime() {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const freqs = [440, 659.25]; // A4, E5
+      freqs.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.08));
+
+        gain.gain.setValueAtTime(0, audioCtx.currentTime + (idx * 0.08));
+        gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + (idx * 0.08) + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (idx * 0.08) + 0.45);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + (idx * 0.08));
+        osc.stop(audioCtx.currentTime + (idx * 0.08) + 0.5);
+      });
+    }
+
+    // Key Rejection Buzzer
+    function playBuzzer() {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(65, audioCtx.currentTime + 0.18);
+
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.18);
+    }
+
+    // Speech Synthesis: Deadpan 1984 Drawl
+    function speakText(text) {
+      if (!soundEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel(); // Stop any pending barks
+
+      const cleanText = text.replace(/[{}"*#]/g, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+
+      // Deadpan, unhurried, lower tone
+      utterance.pitch = 0.75;
+      utterance.rate = 0.92;
+
+      // Select system voice (prefer deep/robotic English voice if found)
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Daniel') || v.name.includes('Google US English')));
+      if (preferred) utterance.voice = preferred;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakCurrentDialogue() {
+      const speech = document.getElementById('cypherSpeech').innerText;
+      playRelayClick();
+      speakText(speech);
+    }
+
+    // =======================================================
+    // 2. BOOT SEQUENCE DATA
     // =======================================================
     const BOOT_STEPS = [
       {
@@ -426,7 +553,7 @@
         step: 1,
         meta: "ORIENTATION // STEP 2",
         title: "The Corridor Trail Rules",
-        speech: "Alright, {USER}. Here is how this works: The Cache Tales Corridor Trail has 50 sequential caches hidden along this road. Each cache gives you a keyword or stamp to unlock the next one.",
+        speech: "Alright, {USER}. The Cache Tales Corridor Trail has 50 sequential caches hidden along this road. Each cache gives you a keyword or stamp to unlock the next one.",
         body: "You won't get coordinates to the next cache until you verify the current one. Before we let you out on the trail, let's run a quick field calibration check.",
         label: "Click 'CONTINUE' to begin calibration:",
         placeholder: "Press continue...",
@@ -449,13 +576,13 @@
     ];
 
     // =======================================================
-    // 2. CLIENT-SIDE CORRIDOR STAGES (Answers live in Google Sheet)
+    // 3. CORRIDOR STAGES (Metadata only)
     // =======================================================
     const TRAIL_CACHES = [
       {
         cacheNum: 1,
         title: "Cache 1: Trailhead Pulloff",
-        speech: "Calibration verified! You are cleared for the trail. Cache 1 is hidden at the start of the corridor. Pop the latch, sign the log, and enter the verification stamp inside the lid.",
+        speech: "Calibration verified! Cache 1 is hidden at the start of the corridor. Pop the latch, sign the log, and enter the verification stamp inside the lid.",
         body: "Navigate to Cache 1. Find the container, sign the paper log scroll, and enter the 3-letter stamp found inside.",
         toolsHtml: `
           <button class="btn-tool" onclick="alert('Cache 1 Coords: N 41° 44.100 W 111° 50.400\\nTerrain: 1.5 // Size: Regular Ammo Can')">🧭 Cache 1 Coordinates</button>
@@ -465,7 +592,7 @@
       {
         cacheNum: 2,
         title: "Cache 2: The Irrigation Crossing",
-        speech: "Good log on Cache 1. Keep moving down the road to Cache 2. This one has an inner lockbox. Check your permit for the combination.",
+        speech: "Good log on Cache 1. Move down the road to Cache 2. This one has an inner lockbox. Check your permit for the combination.",
         body: "Navigate to Cache 2. The inner chamber has a 3-digit combination. Use the number stamped on your Trail Permit from Cache 1.",
         toolsHtml: `
           <button class="btn-tool" onclick="alert('Cache 2 Coords: N 41° 44.450 W 111° 50.150\\nTerrain: 2.0 // Size: Lockbox')">🧭 Cache 2 Coordinates</button>
@@ -485,7 +612,7 @@
     ];
 
     // =======================================================
-    // 3. ENGINE STATE & LOCAL STORAGE
+    // 4. ENGINE STATE & STORAGE
     // =======================================================
     let userHandle = localStorage.getItem('ct_cacher_name') || '';
     let bootDone = localStorage.getItem('ct_boot_done') === 'true';
@@ -493,21 +620,23 @@
     let currentCacheIndex = parseInt(localStorage.getItem('ct_cache_index') || '0');
     let playerPack = JSON.parse(localStorage.getItem('ct_pack') || '[]');
 
-    function updateView() {
+    function updateView(shouldSpeak = false) {
       const feedback = document.getElementById('feedbackLine');
       feedback.innerText = '';
       document.getElementById('mainInput').value = '';
       setButtonLoading(false);
 
+      let dialogueToSpeak = "";
+
       if (!bootDone) {
-        // RENDER BOOT STEP
         const b = BOOT_STEPS[currentBootStep];
         document.getElementById('hudStage').innerText = `BOOT [${currentBootStep + 1}/3]`;
         document.getElementById('btnPack').style.display = 'none';
 
         document.getElementById('cardMeta').innerText = b.meta;
         document.getElementById('cardTitle').innerText = b.title;
-        document.getElementById('cypherSpeech').innerText = `"${b.speech.replace('{USER}', userHandle || 'human bean')}"`;
+        dialogueToSpeak = b.speech.replace('{USER}', userHandle || 'human bean');
+        document.getElementById('cypherSpeech').innerText = `"${dialogueToSpeak}"`;
         document.getElementById('cardBody').innerText = b.body;
         document.getElementById('inputLabel').innerText = b.label;
         document.getElementById('mainInput').placeholder = b.placeholder;
@@ -521,7 +650,6 @@
         }
 
       } else {
-        // RENDER TRAIL CACHE
         const c = TRAIL_CACHES[currentCacheIndex];
         document.getElementById('hudStage').innerText = `CACHE ${c.cacheNum} / 50`;
         document.getElementById('btnPack').style.display = 'flex';
@@ -529,7 +657,8 @@
 
         document.getElementById('cardMeta').innerText = `CACHE TALES CORRIDOR TRAIL // STOP #${c.cacheNum}`;
         document.getElementById('cardTitle').innerText = c.title;
-        document.getElementById('cypherSpeech').innerText = `"${c.speech.replace('{USER}', userHandle)}"`;
+        dialogueToSpeak = c.speech.replace('{USER}', userHandle);
+        document.getElementById('cypherSpeech').innerText = `"${dialogueToSpeak}"`;
         document.getElementById('cardBody').innerText = c.body;
         document.getElementById('inputLabel').innerText = `Enter Stamp / Codeword for Cache ${c.cacheNum}:`;
         document.getElementById('mainInput').placeholder = "Enter solution...";
@@ -537,27 +666,26 @@
         document.getElementById('btnSubmit').innerText = "UNLOCK";
         document.getElementById('cardTools').innerHTML = c.toolsHtml;
       }
+
+      if (shouldSpeak) {
+        speakText(dialogueToSpeak);
+      }
     }
 
     // =======================================================
-    // 4. ROBUST SERVER API CALLS (CORS & Redirect Aware)
+    // 5. BACKEND API CALLS (GET-Query encoded to bypass mobile CORS redirects)
     // =======================================================
-    async function callBackend(payload) {
+    async function callBackend(params) {
       try {
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          mode: "cors",
-          redirect: "follow",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(payload)
+        const queryString = new URLSearchParams(params).toString();
+        const fullUrl = `${SCRIPT_URL}?${queryString}`;
+        
+        const response = await fetch(fullUrl, {
+          method: "GET",
+          headers: { "Accept": "application/json" }
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP Error: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         return await response.json();
       } catch (err) {
         console.warn("Backend communication issue:", err);
@@ -577,15 +705,17 @@
     }
 
     async function handleInputSubmit() {
+      playRelayClick();
       const val = document.getElementById('mainInput').value.trim();
       const feedback = document.getElementById('feedbackLine');
 
       if (!bootDone) {
-        // BOOT SEQUENCE HANDLER
         if (currentBootStep === 0) {
           if (!val) {
+            playBuzzer();
             feedback.innerText = "Cypher: You need to give me a name, human bean.";
             feedback.className = "feedback-line feedback-error";
+            speakText("You need to give me a name, human bean.");
             return;
           }
           userHandle = val;
@@ -600,46 +730,53 @@
 
           if (res && res.status === "SUCCESS") {
             if (!res.isNew && res.currentStage > 1) {
+              playSuccessChime();
               feedback.innerText = `Welcome back, ${res.username}! Restoring Stage ${res.currentStage}...`;
               feedback.className = "feedback-line feedback-success";
+              speakText(`Welcome back, ${res.username}. Resuming corridor trail.`);
               setTimeout(() => {
                 currentCacheIndex = Math.min(res.currentStage - 1, TRAIL_CACHES.length - 1);
                 localStorage.setItem('ct_cache_index', currentCacheIndex);
                 bootDone = true;
                 localStorage.setItem('ct_boot_done', 'true');
-                updateView();
+                updateView(true);
               }, 1200);
               return;
             }
           }
 
           currentBootStep++;
-          updateView();
+          updateView(true);
 
         } else if (currentBootStep === 1) {
           currentBootStep++;
-          updateView();
+          updateView(true);
 
         } else if (currentBootStep === 2) {
           if (val.toUpperCase() === BOOT_STEPS[2].solution) {
+            playSuccessChime();
             feedback.innerText = "CALIBRATION PASSED! Loading Cache Tales Corridor Trail...";
             feedback.className = "feedback-line feedback-success";
+            speakText("Calibration verified. Clearing for the trail.");
             setTimeout(() => {
               bootDone = true;
               localStorage.setItem('ct_boot_done', 'true');
-              updateView();
-            }, 1000);
+              updateView(true);
+            }, 1100);
           } else {
+            playBuzzer();
             feedback.innerText = "INCORRECT. Hint: Bring Your Own Pen (PEN).";
             feedback.className = "feedback-line feedback-error";
+            speakText("Rule number one: Bring your own pen.");
           }
         }
 
       } else {
-        // TRAIL CACHE PROGRESSION (Validated by Google Sheet)
         if (!val) {
+          playBuzzer();
           feedback.innerText = "Cypher: Did you find the container or not? Enter the code.";
           feedback.className = "feedback-line feedback-error";
+          speakText("Did you find the container or not?");
           return;
         }
 
@@ -658,7 +795,8 @@
         setButtonLoading(false);
 
         if (serverResult && serverResult.status === "CORRECT") {
-          // Add awarded item to player's pack
+          playSuccessChime();
+
           if (serverResult.awardItem && !playerPack.some(i => i.name === serverResult.awardItem.name)) {
             playerPack.push(serverResult.awardItem);
             localStorage.setItem('ct_pack', JSON.stringify(playerPack));
@@ -667,32 +805,37 @@
           feedback.innerText = `CACHE ${cache.cacheNum} VERIFIED! [PACK] updated.`;
           feedback.className = "feedback-line feedback-success";
 
-          if (serverResult.cypherDialogue) {
-            document.getElementById('cypherSpeech').innerText = `"${serverResult.cypherDialogue}"`;
-          }
+          const bark = serverResult.cypherDialogue || "Stage cleared. Proceed down the road.";
+          document.getElementById('cypherSpeech').innerText = `"${bark}"`;
+          speakText(bark);
 
           setTimeout(() => {
             if (currentCacheIndex < TRAIL_CACHES.length - 1) {
               currentCacheIndex++;
               localStorage.setItem('ct_cache_index', currentCacheIndex);
-              updateView();
+              updateView(true);
             } else {
               alert("You completed the test corridor run!");
             }
-          }, 1200);
+          }, 1400);
 
         } else if (serverResult && serverResult.status === "DENIED") {
-          feedback.innerText = serverResult.roast || `CODE REJECTED: "${val}" does not match Cache ${cache.cacheNum}.`;
+          playBuzzer();
+          const roast = serverResult.roast || `Code rejected for Cache ${cache.cacheNum}.`;
+          feedback.innerText = roast;
           feedback.className = "feedback-line feedback-error";
+          speakText(roast);
 
         } else {
-          feedback.innerText = "Offline mode: Unable to reach Google Sheet. Check connection or verify script deployment.";
+          playBuzzer();
+          feedback.innerText = "Offline mode: Unable to reach Google Sheet.";
           feedback.className = "feedback-line feedback-error";
         }
       }
     }
 
     function rebootSystem() {
+      playRelayClick();
       if (!confirm("Reboot Cypher and restart the orientation sequence?")) return;
       localStorage.clear();
       userHandle = '';
@@ -703,8 +846,8 @@
       updateView();
     }
 
-    // Modal Pack Controls
     function openPack() {
+      playRelayClick();
       const packList = document.getElementById('packList');
       if (playerPack.length === 0) {
         packList.innerHTML = `<div style="font-family: var(--font-mono); font-size:12px; color:var(--text-dim); text-align:center; padding: 20px 0;">Pack is empty. Find corridor caches to collect items.</div>`;
@@ -720,15 +863,17 @@
     }
 
     function closePack() {
+      playRelayClick();
       document.getElementById('packModal').classList.remove('active');
     }
 
-    // Enter Key Listener
     document.getElementById('mainInput').addEventListener('keyup', function(e) {
       if (e.key === 'Enter') handleInputSubmit();
     });
 
-    // Boot Up
+    // Initialize UI
+    const audioBtn = document.getElementById('btnAudioToggle');
+    if (!soundEnabled) audioBtn.innerText = "🔇 VOICE: OFF";
     updateView();
   </script>
 </body>
