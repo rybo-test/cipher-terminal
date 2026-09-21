@@ -27,7 +27,9 @@
       --warning: #f7b731;
       --danger: #eb3b5a;
       --map-canal: #102636;
+      --map-rail: #1f3d28;
       --map-trail: #1b3824;
+      --map-topo: #122417;
       --map-node-bg: #0c1810;
     }
 
@@ -45,8 +47,10 @@
       --text-dim: #1f3626;
       --warning: #874b00;
       --danger: #a81320;
-      --map-canal: #4f738c;
-      --map-trail: #41634c;
+      --map-canal: #5b829e;
+      --map-rail: #476650;
+      --map-trail: #3d5e46;
+      --map-topo: #b8c7ba;
       --map-node-bg: #c9d6cb;
     }
 
@@ -65,7 +69,9 @@
       --warning: #ffcf66;
       --danger: #ff4d4d;
       --map-canal: #3b2808;
+      --map-rail: #4d360c;
       --map-trail: #4a330b;
+      --map-topo: #2a1d06;
       --map-node-bg: #1c1303;
     }
 
@@ -84,12 +90,14 @@
       --warning: #ffd13b;
       --danger: #ff5252;
       --map-canal: #1c2b42;
+      --map-rail: #2a4163;
       --map-trail: #273e5e;
+      --map-topo: #142033;
       --map-node-bg: #151f30;
     }
 
     /* --------------------------------------------------------
-       FONT SIZE TIERS (Scales reading content dynamically)
+       FONT SIZE TIERS
        -------------------------------------------------------- */
     body.font-regular { --content-scale: 1; }
     body.font-large { --content-scale: 1.18; }
@@ -125,7 +133,7 @@
     }
 
     /* =======================================================
-       UNIVERSAL TOP TOOLBAR (STABLE CHROME - NEVER WRAPS)
+       UNIVERSAL TOP TOOLBAR (STABLE CHROME)
        ======================================================= */
     .cipher-toolbar {
       background: var(--panel-inner);
@@ -137,7 +145,6 @@
       flex-direction: column;
     }
 
-    /* Row 1: Fixed dimensions so XL text never breaks it */
     .tb-status-row {
       display: flex;
       justify-content: space-between;
@@ -162,7 +169,6 @@
       flex-shrink: 0;
     }
 
-    /* Row 2: 4 Primary Anchors */
     .tb-nav-row {
       display: grid;
       grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
@@ -195,7 +201,6 @@
       border-color: var(--accent);
     }
 
-    /* Row 3: Dynamic Action Bar */
     .tb-context-row {
       padding: 6px 8px;
       background: var(--panel-inner);
@@ -243,7 +248,7 @@
       border-style: dashed;
     }
 
-    /* Dropdown Drawer */
+    /* Menu Drawer */
     .tb-menu-drawer {
       display: none;
       position: absolute;
@@ -329,7 +334,7 @@
     }
 
     /* =======================================================
-       DECKS (READING CONTENT SCALED BY FONT SIZE TIERS)
+       DECKS
        ======================================================= */
     .deck-container {
       background: var(--panel-bg);
@@ -340,7 +345,7 @@
       flex-direction: column;
     }
 
-    /* Dialogue Bubble */
+    /* Dialogue Card */
     .dialogue-card {
       padding: 14px;
       background: var(--panel-inner);
@@ -438,7 +443,7 @@
     }
 
     /* --------------------------------------------------------
-       TRAIL DECK & SVG MAP
+       TRAIL DECK & RICH SVG TERRAIN MAP
        -------------------------------------------------------- */
     .trail-sub-nav {
       display: flex;
@@ -530,6 +535,22 @@
     }
 
     /* SVG Map Vector Styles */
+    .map-topo-line {
+      stroke: var(--map-topo);
+      stroke-width: 1.5;
+      fill: none;
+      stroke-dasharray: 2 3;
+    }
+    .map-rail-line {
+      stroke: var(--map-rail);
+      stroke-width: 3;
+      stroke-linecap: square;
+    }
+    .map-rail-ties {
+      stroke: var(--map-rail);
+      stroke-width: 1.5;
+      stroke-dasharray: 2 4;
+    }
     .map-trail-line {
       stroke: var(--map-trail);
       stroke-width: 4;
@@ -544,10 +565,16 @@
     }
     .map-canal-line {
       stroke: var(--map-canal);
-      stroke-width: 8;
+      stroke-width: 9;
       stroke-linecap: round;
     }
+    .map-fence-line {
+      stroke: var(--border-main);
+      stroke-width: 1;
+      stroke-dasharray: 8 2 2 2;
+    }
 
+    /* Nodes & Landmarks */
     .map-node-target { cursor: pointer; }
     .map-node-circle {
       fill: var(--map-node-bg);
@@ -558,6 +585,14 @@
     .map-node-circle.found { stroke: var(--accent); stroke-width: 2.5; }
     .map-node-circle.active-target { stroke: var(--accent); stroke-width: 3.5; }
     .map-node-circle.locked { stroke: var(--border-main); opacity: 0.6; }
+
+    .map-landmark-icon {
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .map-landmark-icon:active {
+      transform: scale(1.15);
+    }
 
     .map-pulse {
       animation: pulse-ring 2s infinite ease-out;
@@ -603,6 +638,7 @@
     .status-found { background: var(--panel-bg); color: var(--accent); border: 1px solid var(--border-main); }
     .status-current { background: var(--accent); color: var(--bg-dark); }
     .status-locked { background: var(--panel-bg); color: var(--text-dim); border: 1px dashed var(--border-main); }
+    .status-landmark { background: var(--panel-bg); color: var(--warning); border: 1px solid var(--warning); }
 
     .inspector-comment {
       font-size: calc(13px * var(--content-scale));
@@ -687,7 +723,7 @@
   <div class="app-shell">
 
     <!-- =======================================================
-         UNIVERSAL TOP TOOLBAR (NEVER BREAKS OR WRAPS)
+         UNIVERSAL TOP TOOLBAR (STABLE CHROME)
          ======================================================= -->
     <div class="cipher-toolbar" id="cipherToolbar">
       
@@ -793,7 +829,7 @@
     </div>
 
     <!-- =======================================================
-         DECK 2: TRAIL (SVG Map with Zoom & Cache Specs)
+         DECK 2: TRAIL (Enriched Hand-Drawn SVG Map & Specs)
          ======================================================= -->
     <div class="deck-container" id="deckTrail" style="display: none;">
       
@@ -803,7 +839,7 @@
         <button type="button" class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
       </div>
 
-      <!-- Sub-View A: SVG Corridor Map -->
+      <!-- Sub-View A: Enriched SVG Corridor Map -->
       <div class="map-canvas-container" id="trailMapView">
         
         <div class="svg-map-wrapper">
@@ -815,55 +851,111 @@
           </div>
 
           <svg id="corridorSvg" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
-            <!-- Background canal ditch -->
-            <path d="M 20,40 Q 150,30 240,70 T 480,90" fill="none" class="map-canal-line" />
-            <text x="25" y="32" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold">LOGAN IRRIGATION CANAL</text>
+            <defs>
+              <!-- Small Cedar/Cottonwood Tree Stamp -->
+              <g id="treeSymbol">
+                <circle cx="0" cy="-4" r="5" fill="none" stroke="currentColor" stroke-width="1.2" />
+                <path d="M 0,1 L 0,5" stroke="currentColor" stroke-width="1.2" />
+              </g>
+              <!-- Barbed Wire Post -->
+              <g id="fencePost">
+                <circle cx="0" cy="0" r="1.5" fill="currentColor" />
+                <line x1="-3" y1="0" x2="3" y2="0" stroke="currentColor" stroke-width="0.8" />
+              </g>
+            </defs>
 
-            <!-- Corridor Trail Path -->
-            <path d="M 50,190 L 140,150 L 250,170 L 360,110 L 450,130" fill="none" class="map-trail-line" />
-            <path d="M 50,190 L 140,150 L 250,170" fill="none" class="map-trail-active-line" />
+            <!-- 1. Topographic Elevation Curves (Wellsville Foothills) -->
+            <path d="M 0,25 Q 120,10 260,20 T 500,10" class="map-topo-line" />
+            <path d="M 0,50 Q 150,30 300,45 T 500,28" class="map-topo-line" />
+            <text x="8" y="16" fill="var(--map-topo)" font-family="monospace" font-size="8" font-weight="bold">▲ WELLSVILLE RANGE BENCH (4,900 FT)</text>
+
+            <!-- 2. Old Sugar Beet Railway Spur Line -->
+            <path d="M 10,215 L 490,175" class="map-rail-line" />
+            <path d="M 10,215 L 490,175" class="map-rail-ties" />
+            <text x="380" y="196" fill="var(--map-rail)" font-family="monospace" font-size="8" font-weight="bold">UPRR SPUR</text>
+
+            <!-- 3. Logan Irrigation Canal Trunk -->
+            <path d="M 10,65 Q 150,45 250,85 T 490,95" fill="none" class="map-canal-line" />
+            <text x="20" y="58" fill="var(--accent-dim)" font-family="monospace" font-size="8" font-weight="bold">LOGAN IRRIGATION CANAL (EAST TRUNK)</text>
+
+            <!-- 4. Barbed Wire Fence Line Bordering Alfalfa Fields -->
+            <path d="M 40,165 L 460,115" class="map-fence-line" />
+
+            <!-- 5. Corridor Trail Path -->
+            <path d="M 50,185 L 140,145 L 250,165 L 360,110 L 450,130" fill="none" class="map-trail-line" />
+            <path d="M 50,185 L 140,145 L 250,165" fill="none" class="map-trail-active-line" />
+
+            <!-- 6. Terrain Landmarks (Interactive) -->
+            <!-- Landmark: Headgate #03 -->
+            <g class="map-landmark-icon" onclick="inspectLandmark('headgate3')" fill="var(--warning)" stroke="var(--warning)">
+              <rect x="238" y="78" width="12" height="10" fill="none" stroke-width="1.5" />
+              <line x1="244" y1="74" x2="244" y2="88" stroke-width="1.5" />
+              <circle cx="244" cy="74" r="2.5" fill="none" />
+              <text x="244" y="98" fill="var(--warning)" font-family="monospace" font-size="7" font-weight="bold" text-anchor="middle">GATE #3</text>
+            </g>
+
+            <!-- Landmark: Canal Bridge -->
+            <g class="map-landmark-icon" onclick="inspectLandmark('footbridge')" fill="var(--text-dim)" stroke="var(--text-dim)">
+              <line x1="134" y1="48" x2="146" y2="58" stroke-width="3" stroke-linecap="square" />
+              <text x="140" y="42" fill="var(--text-dim)" font-family="monospace" font-size="7" text-anchor="middle">BRIDGE</text>
+            </g>
+
+            <!-- Landmark: Railroad Culvert Cross -->
+            <g class="map-landmark-icon" onclick="inspectLandmark('culvert')" fill="var(--text-dim)">
+              <rect x="340" y="180" width="14" height="8" fill="none" stroke="currentColor" stroke-width="1" />
+              <text x="347" y="174" fill="var(--text-dim)" font-family="monospace" font-size="7" text-anchor="middle">CULVERT</text>
+            </g>
+
+            <!-- Trees / Shrub Clusters -->
+            <g color="var(--border-main)">
+              <use href="#treeSymbol" x="70" y="175" />
+              <use href="#treeSymbol" x="80" y="172" />
+              <use href="#treeSymbol" x="225" y="155" />
+              <use href="#treeSymbol" x="235" y="152" />
+              <use href="#treeSymbol" x="420" y="118" />
+            </g>
 
             <!-- Active Target Pulsing Ring -->
-            <circle cx="250" cy="170" r="14" fill="none" stroke="var(--accent)" stroke-width="2" class="map-pulse" />
+            <circle cx="250" cy="165" r="14" fill="none" stroke="var(--accent)" stroke-width="2" class="map-pulse" />
 
             <!-- Stage 01 (Completed) -->
             <g class="map-node-target" onclick="inspectMapCache(1)">
-              <circle cx="50" cy="190" r="11" class="map-node-circle found" />
-              <text x="50" y="193" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
-              <text x="50" y="212" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">01</text>
+              <circle cx="50" cy="185" r="11" class="map-node-circle found" />
+              <text x="50" y="188" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
+              <text x="50" y="206" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">01</text>
             </g>
 
             <!-- Stage 02 (Completed) -->
             <g class="map-node-target" onclick="inspectMapCache(2)">
-              <circle cx="140" cy="150" r="11" class="map-node-circle found" />
-              <text x="140" y="153" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
-              <text x="140" y="132" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">02</text>
+              <circle cx="140" cy="145" r="11" class="map-node-circle found" />
+              <text x="140" y="148" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
+              <text x="140" y="128" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">02</text>
             </g>
 
             <!-- Stage 03 (Current Active GZ) -->
             <g class="map-node-target" onclick="inspectMapCache(3)">
-              <circle cx="250" cy="170" r="13" class="map-node-circle active-target" />
-              <text x="250" y="174" fill="var(--text-bright)" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">03</text>
-              <text x="250" y="196" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">GZ</text>
+              <circle cx="250" cy="165" r="13" class="map-node-circle active-target" />
+              <text x="250" y="169" fill="var(--text-bright)" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">03</text>
+              <text x="250" y="190" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">GZ</text>
             </g>
 
             <!-- Stage 04 (Locked) -->
             <g class="map-node-target" onclick="inspectMapCache(4)">
               <circle cx="360" cy="110" r="11" class="map-node-circle locked" />
               <text x="360" y="113" fill="var(--text-dim)" font-family="monospace" font-size="8" font-weight="bold" text-anchor="middle">🔒</text>
-              <text x="360" y="92" fill="var(--text-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">04</text>
+              <text x="360" y="94" fill="var(--text-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">04</text>
             </g>
 
             <!-- Stage 05 (Locked) -->
             <g class="map-node-target" onclick="inspectMapCache(5)">
               <circle cx="450" cy="130" r="11" class="map-node-circle locked" />
-              <text x="450" y="133" fill="var(--text-dim)" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
-              <text x="450" y="152" fill="var(--text-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">05</text>
+              <text x="450" y="133" fill="var(--text-dim)" font-family="monospace" font-size="8" font-weight="bold" text-anchor="middle">🔒</text>
+              <text x="450" y="150" fill="var(--text-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">05</text>
             </g>
           </svg>
         </div>
 
-        <!-- Interactive Map Cache Drawer -->
+        <!-- Interactive Map Cache/Landmark Drawer -->
         <div class="map-inspector" id="mapInspector">
           <div class="inspector-header">
             <span class="inspector-name" id="inspTitle">Cache 03: The Milepost Marker</span>
@@ -1122,7 +1214,7 @@
       const cache = MAP_CACHES[activeInspectedCache] || MAP_CACHES[3];
 
       if (isMapView) {
-        if (cache.locked) {
+        if (cache && cache.locked) {
           actionSlot.innerHTML = `
             <button type="button" class="btn-context" disabled>🔒 Locked</button>
           `;
@@ -1142,8 +1234,8 @@
     let currentZoomTier = 0;
     const ZOOM_TIERS = [
       { label: "1×", viewBox: "0 0 500 240" },
-      { label: "2×", viewBox: "100 80 300 144" },
-      { label: "4×", viewBox: "175 115 150 72" }
+      { label: "2×", viewBox: "80 60 340 150" },
+      { label: "4×", viewBox: "180 110 160 85" }
     ];
 
     function zoomMap(delta) {
@@ -1154,7 +1246,7 @@
       document.getElementById('zoomBadge').innerText = tier.label;
     }
 
-    // 5. MAP NODE INSPECTION
+    // 5. MAP NODE & LANDMARK INSPECTION
     const MAP_CACHES = {
       1: {
         title: "Cache 01: Trailhead Pulloff",
@@ -1213,6 +1305,30 @@
       }
     };
 
+    const MAP_LANDMARKS = {
+      headgate3: {
+        title: "Landmark: Canal Headgate #03",
+        status: "INFRASTRUCTURE",
+        comment: "\"RSI installed that hand-wheel gate in '84 to irrigate the south alfalfa flat. Heavily rusted, do not attempt to turn.\"",
+        meta1: "Structure: Welded Steel & Sluice Concrete",
+        meta2: "Danger: Deep ditch mud & slick footing"
+      },
+      footbridge: {
+        title: "Landmark: Irrigation Footbridge",
+        status: "WAYPOINT",
+        comment: "\"Steel plank bridge spanning the primary ditch. Stage 02 is magnetically anchored directly beneath the cross-beam.\"",
+        meta1: "Structure: Corrugated Steel Deck",
+        meta2: "Elevation: 4,530 FT"
+      },
+      culvert: {
+        title: "Landmark: Railway Drainage Culvert",
+        status: "WAYPOINT",
+        comment: "\"Heavy 36-inch corrugated drainage pipe passing under the rail bed. Watch for spiders if inspecting the opening.\"",
+        meta1: "Structure: CMP Corrugated Pipe",
+        meta2: "Hazard: Standing water during runoff"
+      }
+    };
+
     let activeInspectedCache = 3;
 
     function inspectMapCache(stopNum) {
@@ -1241,6 +1357,28 @@
       }
 
       updateTrailActionSlot();
+    }
+
+    function inspectLandmark(key) {
+      playClick();
+      const landmark = MAP_LANDMARKS[key];
+      if (!landmark) return;
+
+      document.getElementById('inspTitle').innerText = landmark.title;
+      const statusEl = document.getElementById('inspStatus');
+      statusEl.innerText = landmark.status;
+      statusEl.className = 'inspector-status status-landmark';
+
+      document.getElementById('inspComment').innerText = landmark.comment;
+      document.getElementById('inspGc').innerText = landmark.meta1;
+      document.getElementById('inspDt').innerText = landmark.meta2;
+
+      const gpsBtn = document.getElementById('inspGpsBtn');
+      gpsBtn.disabled = true;
+      gpsBtn.innerText = "LANDMARK // NOT A CACHE";
+
+      const actionSlot = document.getElementById('contextActionsSlot');
+      actionSlot.innerHTML = `<button type="button" class="btn-context" disabled>Terrain Note</button>`;
     }
 
     function launchPhoneGps() {
