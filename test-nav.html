@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Toolbar Prototype</title>
+  <title>C.I.P.H.E.R. // Trail & Terminal Prototype</title>
   <style>
     :root {
       --bg-dark: #0a0f0d;
@@ -46,20 +46,19 @@
     }
 
     /* =======================================================
-       UNIVERSAL TOP TOOLBAR COMPONENT
+       UNIVERSAL TOP TOOLBAR
        ======================================================= */
     .cipher-toolbar {
       background: #080d0a;
       border: 2px solid var(--border-green);
       border-radius: 8px;
-      overflow: visible;
       position: relative;
       box-shadow: 0 4px 16px rgba(0,0,0,0.6);
       display: flex;
       flex-direction: column;
     }
 
-    /* Row 1: Hardware Status & Global Controls */
+    /* Row 1: Telemetry & Status Placeholder */
     .tb-status-row {
       display: flex;
       justify-content: space-between;
@@ -71,46 +70,21 @@
       background: #040805;
     }
 
-    .tb-status-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .badge-stage {
-      background: var(--border-green);
-      color: var(--text-bright);
-      padding: 2px 6px;
+    .tb-status-badge {
+      background: #14281b;
+      color: var(--text-green);
+      border: 1px solid var(--border-green);
+      padding: 2px 8px;
       border-radius: 3px;
       font-weight: bold;
       font-size: 11px;
+      letter-spacing: 0.5px;
     }
 
-    .tb-status-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-tb-micro {
-      background: #101c14;
-      color: var(--text-dim);
-      border: 1px solid var(--border-green);
-      padding: 3px 6px;
-      border-radius: 3px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      cursor: pointer;
-    }
-    .btn-tb-micro.active {
-      color: var(--text-green);
-      border-color: var(--text-green);
-    }
-
-    /* Row 2: 3 Core Pillars + Menu Dropdown */
+    /* Row 2: 4 Primary Anchors */
     .tb-nav-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1.1fr 0.9fr;
+      grid-template-columns: 1fr 1fr 1fr 0.9fr;
       gap: 4px;
       padding: 6px;
       background: #0b130e;
@@ -120,7 +94,7 @@
       background: #142018;
       border: 1px solid var(--border-green);
       color: var(--text-dim);
-      padding: 8px 4px;
+      padding: 9px 4px;
       border-radius: 4px;
       font-family: var(--font-mono);
       font-size: 12px;
@@ -144,7 +118,7 @@
       border-color: var(--text-green);
     }
 
-    /* Row 3: Dynamic Contextual Layer Actions */
+    /* Row 3: Dynamic Action Bar */
     .tb-context-row {
       padding: 6px 8px;
       background: #080d0a;
@@ -185,7 +159,7 @@
       color: var(--text-green);
     }
 
-    /* Dropdown Drawer (Retro Green Screen Menu) */
+    /* Dropdown Drawer */
     .tb-menu-drawer {
       display: none;
       position: absolute;
@@ -236,69 +210,222 @@
     }
 
     /* =======================================================
-       SIMULATOR CARD (For testing states on phone)
+       DISPLAY DECKS (CYPHER VS TRAIL VS PACK)
        ======================================================= */
-    .test-card {
+    .deck-container {
       background: var(--panel-bg);
       border: 2px solid var(--border-green);
       border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Cypher Terminal Deck */
+    .cypher-dossier {
+      padding: 14px;
+      background: #0c140f;
+      border-bottom: 1px solid var(--border-green);
+      display: flex;
+      gap: 12px;
+    }
+
+    .cypher-avatar {
+      width: 44px;
+      height: 44px;
+      background: #1c2b21;
+      border: 1px solid var(--border-green);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .cypher-speech {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-bright);
+    }
+
+    .stage-card {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .stage-title {
+      font-size: 17px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .stage-desc {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #cadbd0;
+    }
+
+    .unlock-dock {
+      background: #080d0a;
+      border-top: 1px solid var(--border-green);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .key-input {
+      flex: 1;
+      background: #030604;
+      border: 1px solid var(--border-green);
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .btn-submit {
+      background: var(--text-green);
+      color: #030604;
+      border: none;
+      font-weight: bold;
+      font-size: 14px;
+      padding: 0 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Trail Deck (Map & Cache Listing) */
+    .trail-sub-nav {
+      display: flex;
+      background: #080d0a;
+      border-bottom: 1px solid var(--border-green);
+    }
+
+    .btn-sub-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .btn-sub-tab.active {
+      color: var(--text-green);
+      border-bottom-color: var(--text-green);
+      background: #0e1a12;
+    }
+
+    /* Corridor Map Visual */
+    .map-canvas-mock {
+      background: #050a07;
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    .test-card-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: var(--text-bright);
-      font-family: var(--font-mono);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .test-card-body {
-      font-size: 14px;
-      line-height: 1.5;
-      color: #cadbd0;
-    }
-
-    .sim-controls {
+    .corridor-path {
+      border: 1px dashed var(--border-green);
+      border-radius: 6px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      background: #080d0a;
+      gap: 10px;
+      font-family: var(--font-mono);
+    }
+
+    .map-node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: #0a140d;
       border: 1px solid var(--border-green);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .map-node.current {
+      border-color: var(--text-green);
+      background: #12281a;
+      box-shadow: 0 0 10px rgba(56, 239, 125, 0.2);
+    }
+
+    .btn-gps-handoff {
+      background: #182b1f;
+      color: var(--text-bright);
+      border: 1px solid var(--text-green);
       padding: 12px;
       border-radius: 6px;
-    }
-
-    .sim-label {
       font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--amber);
+      font-size: 13px;
       font-weight: bold;
-    }
-
-    .sim-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       gap: 6px;
     }
-
-    .btn-sim {
-      background: #18281e;
-      border: 1px solid var(--border-green);
-      color: var(--text-bright);
-      padding: 8px;
-      font-size: 12px;
-      font-family: var(--font-mono);
-      border-radius: 4px;
-      cursor: pointer;
+    .btn-gps-handoff:active {
+      background: var(--text-green);
+      color: #030604;
     }
-    .btn-sim:active {
-      border-color: var(--text-green);
-      color: var(--text-green);
+
+    /* Cache Listing Specs */
+    .gc-dossier {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .gc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .gc-box {
+      background: #080d0a;
+      border: 1px solid var(--border-green);
+      padding: 8px 10px;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .gc-box-lbl { font-size: 10px; color: var(--text-dim); }
+    .gc-box-val { font-size: 13px; color: var(--text-bright); font-weight: bold; }
+
+    .hint-box {
+      background: #060c08;
+      border: 1px dashed var(--amber);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #f7d794;
     }
   </style>
 </head>
@@ -307,86 +434,179 @@
   <div class="app-shell" onclick="closeMenuIfOpen(event)">
 
     <!-- =======================================================
-         THE UNIVERSAL CIPHER TOOLBAR (To be shared across all pages)
+         UNIVERSAL TOP TOOLBAR
          ======================================================= -->
-    <div class="cipher-toolbar" id="cipherToolbar">
+    <div class="cipher-toolbar">
       
-      <!-- Row 1: Hardware Status & Global Switches -->
+      <!-- Row 1: Telemetry & Status Placeholder -->
       <div class="tb-status-row">
-        <div class="tb-status-left">
-          <span style="color: var(--text-dim);">C.I.P.H.E.R. //</span>
-          <span class="badge-stage" id="tbStageBadge">CACHE 03/50</span>
-        </div>
-        <div class="tb-status-right">
-          <span style="color: var(--text-green);" id="tbVoltBadge">🔋 12.6V</span>
-          <button class="btn-tb-micro active" id="btnAudioToggle" onclick="toggleAudio(event)">🔊 ON</button>
-        </div>
+        <span style="color: var(--text-dim);">C.I.P.H.E.R. //</span>
+        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
+        <span style="color: var(--text-bright);">NEZZMUK 👤</span>
       </div>
 
-      <!-- Row 2: 3 Core Pillars + Consolidated Menu Dropdown -->
+      <!-- Row 2: 4 Primary Anchors -->
       <div class="tb-nav-row">
-        <button class="tb-btn active" id="btnNavTrail" onclick="simulateLayer('stages')">
-          🧭 TRAIL
+        <button class="tb-btn active" id="btnNavCypher" onclick="switchDeck('cypher')">
+          📟 CYPHER
         </button>
-        <button class="tb-btn" id="btnNavCache" onclick="simulateLayer('gc')">
-          🗺️ CACHE
+        <button class="tb-btn" id="btnNavTrail" onclick="switchDeck('trail')">
+          🗺️ TRAIL
         </button>
-        <button class="tb-btn" id="btnNavPack" onclick="simulateLayer('pack')">
-          🎒 PACK (<span id="tbPackCount">2</span>)
+        <button class="tb-btn" id="btnNavPack" onclick="switchDeck('pack')">
+          🎒 PACK (2)
         </button>
         <button class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
           ≡ MENU ▾
         </button>
       </div>
 
-      <!-- Row 3: Dynamic Contextual Action Bar -->
+      <!-- Row 3: Dynamic Action Bar -->
       <div class="tb-context-row">
-        <span class="tb-context-label" id="contextLabel">> ACTION:</span>
+        <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
-          <!-- Dynamically filled based on active layer -->
+          <button class="btn-context" onclick="playClick(); jumpToUnlock()">🔓 Unlock Stage</button>
+          <button class="btn-context" onclick="playClick(); alert('Container Hint: Base of cedar post.')">💡 Lid Hint</button>
         </div>
       </div>
 
       <!-- Dropdown Drawer -->
       <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">FIELD INTEL & PROGRESS</div>
-        <div class="tb-menu-item" onclick="simulateLayer('stats')">📊 Stats & Ledger</div>
-        <div class="tb-menu-item" onclick="simulateLayer('lore')">📜 Trail Lore & Audio</div>
-        <div class="tb-menu-item" onclick="simulateLayer('missions')">🎯 Corridor Challenges</div>
+        <div class="tb-menu-header">FIELD PROGRESS</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Ledger')">📊 Stats & Finds</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Corridor Challenges')">🎯 Corridor Challenges</div>
         
         <div class="tb-menu-divider"></div>
         
         <div class="tb-menu-header">OPERATOR & HARDWARE</div>
-        <div class="tb-menu-item" onclick="simulateLayer('profile')">👤 Cacher Profile</div>
-        <div class="tb-menu-item" onclick="simulateLayer('help')">📖 Trail Manual (BYOP)</div>
-        <div class="tb-menu-item" onclick="alert('Simulated Log Off: local cacher session cleared.')" style="color: var(--red);">🚪 Log Off</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Cacher Profile')">👤 Cacher Profile</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 Trail Manual (BYOP)</div>
+        <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound Effects: ON</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Session Cleared.')" style="color: var(--red);">🚪 Log Off</div>
       </div>
 
     </div>
 
     <!-- =======================================================
-         INTERACTIVE LAYER SIMULATOR (Test Screen on Mobile)
+         DECK 1: CYPHER (The 1984 AI & Unlock Dock)
          ======================================================= -->
-    <div class="test-card">
-      <div class="test-card-title">
-        <span id="activeLayerTitle">LAYER: STAGES.HTML</span>
-        <span style="color: var(--amber); font-size: 11px;">PROTOTYPE</span>
+    <div class="deck-container" id="deckCypher">
+      
+      <div class="cypher-dossier">
+        <div class="cypher-avatar">📟</div>
+        <div>
+          <div style="font-size: 11px; color: var(--amber); font-family: var(--font-mono); font-weight: bold;">CYPHER // RSI-1984</div>
+          <div class="cypher-speech">
+            "Daylight detected. 12.6 volts on the bus. Stop 3 is tucked under the corner post. Check the brass washer Ratwaffles stamped."
+          </div>
+        </div>
       </div>
 
-      <div class="test-card-body" id="activeLayerDescription">
-        This is the active trail runner layer (<code>stages.html</code>). Notice how the top toolbar shows <strong>🧭 TRAIL</strong> active, and the dynamic action row displays quick jump buttons for container verification.
+      <div class="stage-card">
+        <div style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">STAGE 03 OF 50</div>
+        <div class="stage-title">Stop 3: The Milepost Marker</div>
+        <div class="stage-desc">
+          Inspect the cedar corner post at Ground Zero. Retrieve the codeword stamped on the ammo can lid, or check Brass Washer #02 inside your pack.
+        </div>
       </div>
 
-      <!-- Testing Deck Switcher -->
-      <div class="sim-controls">
-        <div class="sim-label">SIMULATE NAVIGATION TO OTHER LAYERS:</div>
-        <div class="sim-buttons">
-          <button class="btn-sim" onclick="simulateLayer('stages')">Simulate stages.html</button>
-          <button class="btn-sim" onclick="simulateLayer('gc')">Simulate gc.html</button>
-          <button class="btn-sim" onclick="simulateLayer('pack')">Simulate pack.html</button>
-          <button class="btn-sim" onclick="simulateLayer('stats')">Simulate stats.html</button>
-          <button class="btn-sim" onclick="simulateLayer('lore')">Simulate lore.html</button>
-          <button class="btn-sim" onclick="simulateLayer('profile')">Simulate profile.html</button>
+      <div class="unlock-dock">
+        <div style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">ENTER STAMP OR CODEWORD:</div>
+        <div class="input-row">
+          <input type="text" id="unlockInput" class="key-input" placeholder="Enter code..." />
+          <button class="btn-submit" onclick="playClick(); alert('Code submitted to verification engine.')">UNLOCK</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =======================================================
+         DECK 2: TRAIL (Corridor Map & Cache Specs)
+         ======================================================= -->
+    <div class="deck-container" id="deckTrail" style="display: none;">
+      
+      <!-- Sub-Tabs: Map vs Cache Specs -->
+      <div class="trail-sub-nav">
+        <button class="btn-sub-tab active" id="subTabMap" onclick="switchTrailSubTab('map')">🗺️ CORRIDOR MAP</button>
+        <button class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
+      </div>
+
+      <!-- Sub-View A: Corridor Map -->
+      <div class="map-canvas-mock" id="trailMapView">
+        <div class="corridor-path">
+          <div class="map-node" style="color: var(--text-dim);">
+            <span>✓ Cache 01: Trailhead Pulloff</span>
+            <span>[STAMPED]</span>
+          </div>
+          <div class="map-node" style="color: var(--text-dim);">
+            <span>✓ Cache 02: Irrigation Crossing</span>
+            <span>[STAMPED]</span>
+          </div>
+          <div class="map-node current">
+            <span style="color: var(--text-green); font-weight: bold;">▶ Cache 03: The Milepost Marker</span>
+            <span style="color: var(--amber);">[CURRENT GZ]</span>
+          </div>
+          <div class="map-node" style="color: #4a6854;">
+            <span>🔒 Cache 04: Culvert Guard</span>
+            <span>[LOCKED]</span>
+          </div>
+        </div>
+
+        <button class="btn-gps-handoff" onclick="playClick(); window.open('https://maps.google.com/?q=41.7470,-111.8316', '_blank')">
+          🧭 OPEN IN PHONE GPS / COMPASS
+        </button>
+      </div>
+
+      <!-- Sub-View B: Cache Listing Specs -->
+      <div class="gc-dossier" id="trailCacheView" style="display: none;">
+        <div class="gc-grid">
+          <div class="gc-box">
+            <span class="gc-box-lbl">GC CODE</span>
+            <span class="gc-box-val">GC10003</span>
+          </div>
+          <div class="gc-box">
+            <span class="gc-box-lbl">DIFFICULTY / TERRAIN</span>
+            <span class="gc-box-val">D 2.0 / T 1.5</span>
+          </div>
+          <div class="gc-box">
+            <span class="gc-box-lbl">CONTAINER</span>
+            <span class="gc-box-val">Ammo Can</span>
+          </div>
+          <div class="gc-box">
+            <span class="gc-box-lbl">COORDINATES (WGS84)</span>
+            <span class="gc-box-val" style="font-size: 11px;">N 41° 44.820 W 111° 49.900</span>
+          </div>
+        </div>
+
+        <div class="hint-box" id="hintBox">
+          <strong>SPOILER HINT:</strong><br />
+          <span id="hintText">Onfr bs prqne pbeare cbfg haqre tebhaq yriry fgbar.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =======================================================
+         DECK 3: PACK (Inventory & Swag)
+         ======================================================= -->
+    <div class="deck-container" id="deckPack" style="display: none;">
+      <div class="stage-card">
+        <div style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">FIELD INVENTORY</div>
+        <div class="stage-title">Cacher Trail Pack</div>
+        <div class="stage-desc">
+          Items, washers, and permits collected along the corridor trail.
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+          <div style="background: #080d0a; border: 1px solid var(--border-green); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
+            <div style="font-weight: bold; color: var(--text-bright);">🏷️ Corridor Permit #01</div>
+            <div style="font-size: 11px; color: var(--text-dim);">Stamped Combo: 3-8-4 (Used at Cache 02)</div>
+          </div>
+          <div style="background: #080d0a; border: 1px solid var(--border-green); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
+            <div style="font-weight: bold; color: var(--text-bright);">⚙️ Brass Washer #02</div>
+            <div style="font-size: 11px; color: var(--text-dim);">Stamped Word: "POST"</div>
+          </div>
         </div>
       </div>
     </div>
@@ -394,166 +614,131 @@
   </div>
 
   <script>
-    // =======================================================
-    // 1. WEB AUDIO RELAY CLICKS
-    // =======================================================
+    // Audio Clicks
+    let soundActive = true;
     let audioCtx = null;
-    let soundOn = true;
 
     function initAudio() {
       if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) audioCtx = new AudioContext();
       }
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    function playRelayClick() {
-      if (!soundOn) return;
+    function playClick() {
+      if (!soundActive) return;
       initAudio();
       if (!audioCtx) return;
-
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(140, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
-
       gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.04);
     }
 
-    function toggleAudio(e) {
-      if (e) e.stopPropagation();
-      soundOn = !soundOn;
-      const btn = document.getElementById('btnAudioToggle');
-      if (soundOn) {
-        btn.innerText = "🔊 ON";
-        btn.classList.add('active');
-        playRelayClick();
-      } else {
-        btn.innerText = "🔇 OFF";
-        btn.classList.remove('active');
-      }
-    }
-
-    // =======================================================
-    // 2. DROPDOWN DRAWER CONTROLS
-    // =======================================================
     function toggleMenu(e) {
       if (e) e.stopPropagation();
-      playRelayClick();
-      const drawer = document.getElementById('menuDrawer');
-      drawer.classList.toggle('open');
+      playClick();
+      document.getElementById('menuDrawer').classList.toggle('open');
     }
 
-    function closeMenuIfOpen(e) {
+    function closeMenuIfOpen() {
       const drawer = document.getElementById('menuDrawer');
       if (drawer.classList.contains('open')) {
         drawer.classList.remove('open');
-        playRelayClick();
+        playClick();
       }
     }
 
-    // =======================================================
-    // 3. DYNAMIC LAYER SIMULATOR
-    // =======================================================
-    const LAYER_CONFIGS = {
-      stages: {
-        name: "stages.html",
-        title: "ACTIVE STAGE RUNNER",
-        btnId: "btnNavTrail",
-        desc: "Active corridor trail runner. Handles cache coordinates, lid sensor alert, and codeword unlock input.",
-        actionsHtml: `
-          <button class="btn-context" onclick="playRelayClick(); alert('Jump to Lid Unlock Code Input')">🔓 Jump to Input</button>
-          <button class="btn-context" onclick="playRelayClick(); alert('Opening Container Hint')">💡 Container Hint</button>
-        `
-      },
-      gc: {
-        name: "gc.html",
-        title: "DETAILED GEOCACHE LISTING",
-        btnId: "btnNavCache",
-        desc: "Full GC listing dossier: WGS84 coordinates, container specs, terrain, and spoiler hint decrypter.",
-        actionsHtml: `
-          <button class="btn-context" onclick="playRelayClick(); alert('ROT-13 Decrypted: Attached to ditch culvert guard.')">💡 Decrypt Hint</button>
-          <button class="btn-context" onclick="playRelayClick(); alert('Field Bearing Projector Opened')">📐 Bearing Tool</button>
-        `
-      },
-      pack: {
-        name: "pack.html",
-        title: "FIELD PACK & SWAG INVENTORY",
-        btnId: "btnNavPack",
-        desc: "Virtual pack ledger. Inspect collected stamped Wasatch washers, corridor permits, and perform swag trades.",
-        actionsHtml: `
-          <button class="btn-context" onclick="playRelayClick(); alert('Swag Trade: Drop item / Take item')">🎁 Trade Swag</button>
-          <button class="btn-context" onclick="playRelayClick(); alert('Inspecting Stamped Washer #01')">🔍 Inspect Washer</button>
-        `
-      },
-      stats: {
-        name: "stats.html",
-        title: "CORRIDOR DOSSIER & TOTALS",
-        btnId: "btnNavMenu",
-        desc: "Progress checklist across all 50 corridor caches, personal find records, and live sheet totals.",
-        actionsHtml: `
-          <button class="btn-context" onclick="playRelayClick(); alert('Syncing telemetry with Google Sheet...')">🔄 Sync Ledger</button>
-        `
-      },
-      lore: {
-        name: "lore.html",
-        title: "TRAIL LORE & DISPATCHES",
-        btnId: "btnNavMenu",
-        desc: "Unlocked archives: Rat Pack workshop notes and historical 1984 RSI engineering test logs.",
-        actionsHtml: `
-          <button class="btn-context" onclick="playRelayClick(); alert('Playing audio bark: Episode 101...')">📻 Play Dispatch</button>
-        `
-      },
-      profile: {
-        name: "profile.html",
-        title: "CACHER SETTINGS & ID",
-        btnId: "btnNavMenu",
-        desc: "Registered handle configuration, custom signature item selector, and session controls.",
-        actionsHtml: `
-          <button class="btn-context" onclick="playRelayClick(); alert('Signature Item Saved')">💾 Save Sig Item</button>
-        `
-      }
-    };
+    function toggleSound() {
+      soundActive = !soundActive;
+      playClick();
+      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound Effects: ON" : "🔇 Sound Effects: OFF";
+    }
 
-    function simulateLayer(layerKey) {
-      playRelayClick();
-      const config = LAYER_CONFIGS[layerKey];
-      if (!config) return;
+    function jumpToUnlock() {
+      const input = document.getElementById('unlockInput');
+      input.focus();
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-      // Close menu drawer if open
+    // Deck Switching
+    function switchDeck(deckName) {
+      playClick();
       document.getElementById('menuDrawer').classList.remove('open');
 
-      // Update Nav Buttons Highlight
-      ['btnNavTrail', 'btnNavCache', 'btnNavPack'].forEach(id => {
+      ['btnNavCypher', 'btnNavTrail', 'btnNavPack'].forEach(id => {
         document.getElementById(id).classList.remove('active');
       });
-      if (document.getElementById(config.btnId)) {
-        document.getElementById(config.btnId).classList.add('active');
+      ['deckCypher', 'deckTrail', 'deckPack'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+
+      const actionSlot = document.getElementById('contextActionsSlot');
+
+      if (deckName === 'cypher') {
+        document.getElementById('btnNavCypher').classList.add('active');
+        document.getElementById('deckCypher').style.display = 'flex';
+        actionSlot.innerHTML = `
+          <button class="btn-context" onclick="playClick(); jumpToUnlock()">🔓 Unlock Stage</button>
+          <button class="btn-context" onclick="playClick(); alert('Container Hint: Base of cedar post.')">💡 Lid Hint</button>
+        `;
+      } else if (deckName === 'trail') {
+        document.getElementById('btnNavTrail').classList.add('active');
+        document.getElementById('deckTrail').style.display = 'flex';
+        actionSlot.innerHTML = `
+          <button class="btn-context" onclick="playClick(); window.open('https://maps.google.com/?q=41.7470,-111.8316', '_blank')">🧭 Open Phone GPS</button>
+          <button class="btn-context" onclick="playClick(); decryptHint()">💡 Decrypt Hint</button>
+        `;
+      } else if (deckName === 'pack') {
+        document.getElementById('btnNavPack').classList.add('active');
+        document.getElementById('deckPack').style.display = 'flex';
+        actionSlot.innerHTML = `
+          <button class="btn-context" onclick="playClick(); alert('Trade Swag: Trade Equal or Trade Up')">🎁 Trade Swag</button>
+        `;
       }
-
-      // Update Context Action Row
-      document.getElementById('contextActionsSlot').innerHTML = config.actionsHtml;
-
-      // Update Test Screen Text
-      document.getElementById('activeLayerTitle').innerText = `LAYER: ${config.name.toUpperCase()}`;
-      document.getElementById('activeLayerDescription').innerHTML = `
-        <strong>Simulated: ${config.title}</strong><br />
-        ${config.desc}
-      `;
     }
 
-    // Initialize with stages.html
-    simulateLayer('stages');
+    // Trail Sub-Tabs (Map vs Specs)
+    function switchTrailSubTab(subTab) {
+      playClick();
+      const tabMap = document.getElementById('subTabMap');
+      const tabCache = document.getElementById('subTabCache');
+      const viewMap = document.getElementById('trailMapView');
+      const viewCache = document.getElementById('trailCacheView');
+
+      if (subTab === 'map') {
+        tabMap.classList.add('active');
+        tabCache.classList.remove('active');
+        viewMap.style.display = 'flex';
+        viewCache.style.display = 'none';
+      } else {
+        tabCache.classList.add('active');
+        tabMap.classList.remove('active');
+        viewCache.style.display = 'flex';
+        viewMap.style.display = 'none';
+      }
+    }
+
+    // ROT-13 Decrypter
+    let hintDecrypted = false;
+    function decryptHint() {
+      const hintElem = document.getElementById('hintText');
+      if (!hintDecrypted) {
+        hintElem.innerText = "Base of cedar corner post under ground level stone.";
+        hintDecrypted = true;
+      } else {
+        hintElem.innerText = "Onfr bs prqne pbeare cbfg haqre tebhaq yriry fgbar.";
+        hintDecrypted = false;
+      }
+    }
   </script>
 </body>
 </html>
