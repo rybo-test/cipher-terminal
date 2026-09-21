@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Corridor Terminal System</title>
+  <title>C.I.P.H.E.R. // Cache Tales Corridor</title>
   <style>
     :root {
       --bg-dark: #0a0f0d;
@@ -50,7 +50,7 @@
       margin-bottom: 30px;
     }
 
-    /* Top HUD */
+    /* Top HUD Header */
     header {
       background: #080d0a;
       border-bottom: 2px solid var(--border-green);
@@ -70,7 +70,24 @@
       font-weight: bold;
     }
 
-    /* Interactive Pack Button */
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-small {
+      background: #1c2b21;
+      color: var(--text-dim);
+      border: 1px solid var(--border-green);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-small:hover { color: var(--text-bright); border-color: var(--text-green); }
+
     .btn-pack {
       background: #1c2b21;
       color: var(--text-green);
@@ -90,7 +107,7 @@
       color: var(--bg-dark);
     }
 
-    /* Cypher Dialogue Box */
+    /* Cypher Speech Banner */
     .cypher-dossier {
       padding: 16px;
       background: #0c140f;
@@ -108,7 +125,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: var(--font-mono);
       font-size: 20px;
       flex-shrink: 0;
     }
@@ -126,17 +142,18 @@
       font-weight: bold;
       letter-spacing: 1px;
       margin-bottom: 4px;
+      font-family: var(--font-mono);
     }
 
-    /* Active Mission Card */
-    .mission-card {
+    /* Main Stage Card */
+    .content-card {
       padding: 20px 16px;
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
 
-    .mission-meta {
+    .meta-tag {
       font-family: var(--font-mono);
       font-size: 11px;
       color: var(--text-dim);
@@ -144,45 +161,45 @@
       text-transform: uppercase;
     }
 
-    .mission-title {
+    .card-title {
       font-size: 18px;
       color: var(--text-bright);
       font-weight: bold;
     }
 
-    .mission-body {
+    .card-body {
       font-size: 15px;
       line-height: 1.6;
       color: #d1ded6;
     }
 
-    .mission-tools {
+    .card-tools {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       margin-top: 4px;
     }
 
-    .btn-link {
+    .btn-tool {
       background: #18281e;
       color: var(--text-bright);
       border: 1px solid var(--border-green);
       padding: 10px 14px;
       border-radius: 4px;
-      text-decoration: none;
       font-size: 13px;
       font-weight: bold;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       cursor: pointer;
+      text-decoration: none;
     }
-    .btn-link:hover, .btn-link:active {
+    .btn-tool:hover, .btn-tool:active {
       border-color: var(--text-green);
       color: var(--text-green);
     }
 
-    /* Solution Submission Bar */
+    /* Input & Submission Dock */
     .submission-dock {
       background: #080d0a;
       border-top: 2px solid var(--border-green);
@@ -226,19 +243,15 @@
       background: var(--text-green);
       color: #030604;
       border: none;
-      font-family: var(--font-ui);
       font-weight: bold;
       font-size: 15px;
-      padding: 0 18px;
+      padding: 0 20px;
       border-radius: 4px;
       cursor: pointer;
       min-height: 48px;
     }
-    .btn-submit:active {
-      background: #27ae60;
-    }
+    .btn-submit:active { background: #27ae60; }
 
-    /* Feedback Line */
     .feedback-line {
       font-family: var(--font-mono);
       font-size: 13px;
@@ -248,7 +261,7 @@
     .feedback-error { color: var(--red); }
     .feedback-success { color: var(--text-green); font-weight: bold; }
 
-    /* Inventory Modal */
+    /* Modal / Pack */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -268,7 +281,6 @@
       width: 100%;
       max-width: 500px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
 
     .modal-head {
@@ -287,7 +299,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       max-height: 60vh;
       overflow-y: auto;
     }
@@ -301,263 +313,315 @@
       flex-direction: column;
       gap: 4px;
     }
-    .item-title {
-      font-weight: bold;
-      color: var(--text-bright);
-      font-size: 14px;
-    }
-    .item-desc {
-      font-size: 12px;
-      color: var(--text-dim);
-      font-family: var(--font-mono);
-    }
-
-    .btn-close {
-      background: none;
-      border: 1px solid var(--border-green);
-      color: var(--text-dim);
-      border-radius: 4px;
-      padding: 4px 10px;
-      cursor: pointer;
-      font-family: var(--font-mono);
-    }
+    .item-title { font-weight: bold; color: var(--text-bright); font-size: 14px; }
+    .item-desc { font-size: 12px; color: var(--text-dim); font-family: var(--font-mono); }
   </style>
 </head>
 <body>
 
   <div class="terminal-container">
     
-    <!-- Top HUD Header -->
+    <!-- Top Header -->
     <header>
       <div>
         <span style="color: var(--text-dim);">C.I.P.H.E.R. //</span>
-        <span class="badge-stage" id="stageBadge">STAGE 01 / 50</span>
+        <span class="badge-stage" id="hudStage">BOOT SEQUENCE</span>
       </div>
-      <button class="btn-pack" onclick="openPack()">
-        🎒 PACK (<span id="packCount">0</span>)
-      </button>
+      <div class="header-actions">
+        <button class="btn-pack" id="btnPack" onclick="openPack()" style="display:none;">
+          🎒 PACK (<span id="packCount">0</span>)
+        </button>
+        <button class="btn-small" onclick="rebootSystem()" title="Restart orientation">🔄 Reboot</button>
+      </div>
     </header>
 
-    <!-- Cypher Persona Dialogue Box -->
+    <!-- Cypher Dialogue Area -->
     <div class="cypher-dossier">
       <div class="cypher-avatar">📟</div>
       <div>
-        <div class="cypher-name">CYPHER // 1984 GATEKEEPER</div>
+        <div class="cypher-name" id="cypherLabel">CYPHER // 1984 TERMINAL</div>
         <div class="cypher-speech" id="cypherSpeech">
-          "Great. Another human bean standing in the sagebrush clutching a smartphone. Let's see if you can even crack Stage 1."
+          "Power online. Optics scanning the road... Who is standing out there on the shoulder?"
         </div>
       </div>
     </div>
 
-    <!-- Active Stage Briefing -->
-    <div class="mission-card">
-      <div class="mission-meta" id="missionMeta">NODE: GC10001 // RECON LEVEL 1</div>
-      <div class="mission-title" id="missionTitle">The Tremonton Wiretap</div>
+    <!-- Active Stage Card -->
+    <div class="content-card">
+      <div class="meta-tag" id="cardMeta">INITIALIZATION // STEP 1</div>
+      <div class="card-title" id="cardTitle">Trailhead Operator Sign-In</div>
       
-      <div class="mission-body" id="missionBody">
-        BigG59 and the RSI retirees over at the Tremonton Taco Time set up an encrypted riddle over on CacheSleuth. Crack their keyword to prove you're not just out here staring at the clouds.
+      <div class="card-body" id="cardBody">
+        To link with the 50 caches along the Cache Tales Corridor Trail, enter the exact geocaching username you use to sign physical logbooks.
       </div>
 
-      <!-- Contextual Clue / Tools (Buttons only when needed) -->
-      <div class="mission-tools" id="missionTools">
-        <a class="btn-link" href="https://www.cachesleuth.com" target="_blank">🔗 CacheSleuth Challenge</a>
-        <button class="btn-link" onclick="revealHint()">💡 Field Hint</button>
+      <div class="card-tools" id="cardTools">
+        <!-- Injected dynamically -->
       </div>
     </div>
 
-    <!-- Progression Key Submission Dock -->
+    <!-- Input Dock -->
     <div class="submission-dock">
-      <div class="input-label">Enter Solved Codeword, Certitude Key, or Container Stamp:</div>
+      <div class="input-label" id="inputLabel">Enter Geocaching Username:</div>
       <div class="input-row">
-        <input type="text" id="answerInput" class="key-input" placeholder="Type solution..." autocomplete="off" autocorrect="off" spellcheck="false" />
-        <button class="btn-submit" onclick="submitAnswer()">UNLOCK</button>
+        <input type="text" id="mainInput" class="key-input" placeholder="Type here..." autocomplete="off" autocorrect="off" spellcheck="false" />
+        <button class="btn-submit" id="btnSubmit" onclick="handleInputSubmit()">ENTER</button>
       </div>
       <div class="feedback-line" id="feedbackLine"></div>
     </div>
 
   </div>
 
-  <!-- The Pack Modal (Virtual Inventory) -->
+  <!-- Pack Modal (Virtual Inventory) -->
   <div class="modal-overlay" id="packModal">
     <div class="modal-card">
       <div class="modal-head">
-        <span>FIELD PACK // VIRTUAL RECON INVENTORY</span>
-        <button class="btn-close" onclick="closePack()">✕</button>
+        <span>TRAIL PACK // COLLECTED ITEMS</span>
+        <button class="btn-small" onclick="closePack()">✕</button>
       </div>
-      <div class="modal-body" id="packList">
-        <div style="font-family: var(--font-mono); font-size:12px; color:var(--text-dim); text-align:center; padding: 20px 0;">
-          Pack is empty. Solve stages to collect keys, schematics, and stamped tags.
-        </div>
-      </div>
+      <div class="modal-body" id="packList"></div>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // 5-STAGE MVP PROGRESSION DATA
-    // ==========================================
-    const STAGES = [
+    // =======================================================
+    // 1. BOOT SEQUENCE STEPS (Learning to Swim)
+    // =======================================================
+    const BOOT_STEPS = [
       {
-        id: 1,
-        title: "The Tremonton Wiretap",
-        node: "WEB RIDDLE // LEVEL 1",
-        speech: "RSI meets every Monday morning at Taco Time. BigG59 hid their first radio pass-phrase behind a simple word riddle. Find their favorite side order to break the lock.",
-        body: "Solve the external riddle on CacheSleuth (or deduce what RSI orders alongside their burritos at the Tremonton Taco Time) to retrieve the passkey.",
-        hint: "It's fried, crispy, tater-tot-like, and starts with MEXI-.",
-        solution: "MEXIFRIES",
+        step: 0,
+        meta: "INITIALIZATION // STEP 1",
+        title: "Trailhead Operator Sign-In",
+        speech: "Power online. Optics scanning the road... Who is standing out there on the shoulder?",
+        body: "Enter your official geocaching handle so Cypher can track your progress along the Cache Tales Corridor Trail.",
+        label: "Enter Geocaching Username:",
+        placeholder: "e.g., Nezzmuk",
+        buttonText: "REGISTER",
+        toolsHtml: ""
+      },
+      {
+        step: 1,
+        meta: "ORIENTATION // STEP 2",
+        title: "The Corridor Trail Rules",
+        speech: "Alright, {USER}. Here is how this works: The Cache Tales Corridor Trail has 50 sequential caches hidden along this road. Each cache gives you a keyword or stamp to unlock the next one.",
+        body: "You won't get coordinates to the next cache until you verify the current one. Before we let you out on the trail, let's run a quick field calibration check.",
+        label: "Click 'CONTINUE' to begin calibration:",
+        placeholder: "Press continue...",
+        buttonText: "CONTINUE",
+        toolsHtml: ""
+      },
+      {
+        step: 2,
+        meta: "CALIBRATION DRILL // STEP 3",
+        title: "Field Check: The Golden Rule",
+        speech: "First trial, {USER}. You can solve all 50 puzzles, but if you don't sign the paper log scroll in the container with real ink, you didn't find the cache.",
+        body: "What is the universal four-letter caching rule for what tool you must always carry in your pocket? (Hint: Bring Your Own ____)",
+        label: "Enter 3-Letter Missing Word (P _ _):",
+        placeholder: "Type word...",
+        buttonText: "VERIFY",
+        solution: "PEN",
+        hint: "BYOP = Bring Your Own Pen. Type 'PEN'.",
+        toolsHtml: `<button class="btn-tool" onclick="alert('Hint: BYOP stands for Bring Your Own Pen.')">💡 Need Clue</button>`
+      }
+    ];
+
+    // =======================================================
+    // 2. CORRIDOR TRAIL CACHES (Simple Sequential Caches)
+    // =======================================================
+    const TRAIL_CACHES = [
+      {
+        cacheNum: 1,
+        title: "Cache 1: Trailhead Pulloff",
+        speech: "Calibration verified! You are cleared for the trail. Cache 1 is hidden at the start of the corridor. Pop the latch, sign the log, and enter the verification stamp inside the lid.",
+        body: "Navigate to Cache 1. Find the container, sign the paper log scroll, and enter the 3-letter stamp found inside.",
+        hint: "The stamp on Cache 1 is 'TOW'.",
+        solution: "TOW",
         awardItem: {
-          name: "RSI Radio Pass-Phrase",
-          desc: "Decrypted audio frequency pass-phrase: 'MEXIFRIES-1984'. Used to tap the canal repeater."
+          name: "Corridor Trail Permit #01",
+          desc: "Permit slip stamped with 'TOW-CORRIDOR-01'. Unlocks Cache 2."
         },
         toolsHtml: `
-          <a class="btn-link" href="https://www.cachesleuth.com" target="_blank">🔗 CacheSleuth Portal</a>
-          <button class="btn-link" onclick="revealHint()">💡 Decrypt Hint</button>
+          <button class="btn-tool" onclick="alert('Cache 1 Coords: N 41° 44.100 W 111° 50.400\\nTerrain: 1.5 // Size: Regular Ammo Can')">🧭 Cache 1 Coordinates</button>
+          <button class="btn-tool" onclick="alert('Container Hint: Attached to the ditch culvert guard.')">💡 Container Hint</button>
         `
       },
       {
-        id: 2,
-        title: "The Canal Headgate Stash",
-        node: "FIELD CACHE // GC10001",
-        speech: "Not bad for a human bean. Now put on your trail boots. Nezzmuk and the Rat Pack anchored a heavy steel ammo can to the old irrigation headgate on the valley floor.",
-        body: "Hike to GC10001 (N 41° 44.120 W 111° 50.430). Pop the clamps, sign the paper scroll in ink, and find the 3-letter maintenance tag stamped on the underside of the lid.",
-        hint: "Inspect the inside lid hinge. Ratwaffles stamped the 3 letters with a metal punch.",
-        solution: "IRS",
+        cacheNum: 2,
+        title: "Cache 2: The Irrigation Crossing",
+        speech: "Good log on Cache 1. Keep moving down the road to Cache 2. This one has an inner lockbox. Check your permit for the combination.",
+        body: "Navigate to Cache 2. The inner chamber has a 3-digit combination. Use the number stamped on your Trail Permit from Cache 1 (format: 001).",
+        hint: "Look at your Permit in your [PACK]. The 3-digit number is '001'.",
+        solution: "001",
         awardItem: {
-          name: "Stamped Brass Washer #01",
-          desc: "1-inch brass washer stamped with 'IRS-HEADGATE'. Shows coordinate projection offsets for Stage 3."
+          name: "Brass Washer #02",
+          desc: "Heavy stamped washer from Cache 2. Shows keyword: 'VALLEY'."
         },
         toolsHtml: `
-          <button class="btn-link" onclick="alert('GPS: N 41° 44.120 W 111° 50.430\\nWGS84 Datum. Terrain 2.0')">🧭 View GPS Coords</button>
-          <button class="btn-link" onclick="revealHint()">💡 Container Hint</button>
+          <button class="btn-tool" onclick="alert('Cache 2 Coords: N 41° 44.450 W 111° 50.150\\nTerrain: 2.0 // Size: Lockbox')">🧭 Cache 2 Coordinates</button>
+          <button class="btn-tool" onclick="alert('Lock Hint: 3-digit number on your permit.')">💡 Lock Hint</button>
         `
       },
       {
-        id: 3,
-        title: "The Certitude Firewall",
-        node: "WEB VERIFICATION // CERTITUDE",
-        speech: "Hold on. BigJ54 noticed our packet transmission and locked the mountain coordinates behind a Certitude coordinate checker. We need to crack his cipher.",
-        body: "Look inside your [PACK] at the Stamped Brass Washer #01 you got from the ammo can. Combine the stamp with Cypher's model year to form the Certitude verification keyword.",
-        hint: "Combine the 3 letters on the washer + a hyphen + the year this terminal was built.",
-        solution: "IRS-1984",
+        cacheNum: 3,
+        title: "Cache 3: The Milepost Marker",
+        speech: "You're getting into the groove now, {USER}. Cache 3 is nestled under a cedar fence post. Ratwaffles left a word stamped on the washer.",
+        body: "Look inside your [PACK] at Brass Washer #02 from the last stop, or retrieve the codeword stamped on the lid of Cache 3.",
+        hint: "The codeword on Washer #02 is 'VALLEY'.",
+        solution: "VALLEY",
         awardItem: {
-          name: "Blue Switch Day Schematic",
-          desc: "Folded 1984 wiring blueprint showing the bypassed electrical junction on the mountain repeater."
+          name: "Corridor Mile 3 Checkpoint Pin",
+          desc: "Brass checkpoint pin marking 3 sequential corridor finds."
         },
         toolsHtml: `
-          <a class="btn-link" href="https://www.geocaching.com" target="_blank">🛡️ Certitude Checker</a>
-          <button class="btn-link" onclick="revealHint()">💡 Hint</button>
-        `
-      },
-      {
-        id: 4,
-        title: "The Mountain Repeater (High Bench)",
-        node: "FIELD CACHE // GC10004",
-        speech: "You're actually making progress. Don't drop your pen in the scrub oak. The next box is bolted 400 feet up the Bonneville shoreline bench.",
-        body: "Navigate to GC10004. An inner compartment is protected by a 4-digit Master Lock. Use your Blue Switch Day Schematic from your pack: the combo is the year Selective Availability was turned off.",
-        hint: "Blue Switch Day was May 2, 2000. Enter the 4-digit year.",
-        solution: "2000",
-        awardItem: {
-          name: "Corridor Master Keycard",
-          desc: "Old 8-bit magnetic keycard labeled: 'RSI-SECTOR-01-CLEAR'."
-        },
-        toolsHtml: `
-          <button class="btn-link" onclick="alert('GPS: N 41° 45.310 W 111° 48.950\\nBonneville Shoreline Bench.')">🧭 View GPS Coords</button>
-          <button class="btn-link" onclick="revealHint()">💡 Lock Hint</button>
-        `
-      },
-      {
-        id: 5,
-        title: "Corridor Sector 01 Cleared!",
-        node: "MILESTONE // 5 OF 50",
-        speech: "Well, look at that. You managed to conquer Sector 1 without losing your car keys or crying to the local reviewers. You've earned your trail stripes.",
-        body: "You have officially conquered the first 5-stage loop of the 50-Cache Corridor! The Rat Pack and RSI both acknowledge your find. Ready for Sector 2?",
-        hint: "Sector 2 stages will link deeper into Blacksmith Fork Canyon.",
-        solution: "ONWARD",
-        awardItem: {
-          name: "Trail Veteran Wooden Nickel",
-          desc: "Custom engraved wooden nickel honoring your Sector 01 FTF run."
-        },
-        toolsHtml: `
-          <button class="btn-link" onclick="alert('Sector 02 expands from Stage 06 to Stage 15.')">🗺️ Sector 02 Preview</button>
+          <button class="btn-tool" onclick="alert('Cache 3 Coords: N 41° 44.820 W 111° 49.900\\nTerrain: 1.5 // Size: Ammo Can')">🧭 Cache 3 Coordinates</button>
+          <button class="btn-tool" onclick="alert('Container Hint: Base of cedar corner post.')">💡 Container Hint</button>
         `
       }
     ];
 
-    // ==========================================
-    // STATE ENGINE
-    // ==========================================
-    let currentStageIndex = parseInt(localStorage.getItem('cypher_stage_idx') || '0');
-    let playerPack = JSON.parse(localStorage.getItem('cypher_pack') || '[]');
+    // =======================================================
+    // 3. ENGINE STATE & STORAGE
+    // =======================================================
+    let userHandle = localStorage.getItem('ct_cacher_name') || '';
+    let bootDone = localStorage.getItem('ct_boot_done') === 'true';
+    let currentBootStep = 0;
+    let currentCacheIndex = parseInt(localStorage.getItem('ct_cache_index') || '0');
+    let playerPack = JSON.parse(localStorage.getItem('ct_pack') || '[]');
 
-    function renderStage() {
-      const stage = STAGES[currentStageIndex];
-
-      // Update HUD
-      document.getElementById('stageBadge').innerText = `STAGE 0${stage.id} / 50`;
-      document.getElementById('packCount').innerText = playerPack.length;
-
-      // Update Content
-      document.getElementById('missionMeta').innerText = stage.node;
-      document.getElementById('missionTitle').innerText = stage.title;
-      document.getElementById('cypherSpeech').innerText = `"${stage.speech}"`;
-      document.getElementById('missionBody').innerText = stage.body;
-      document.getElementById('missionTools').innerHTML = stage.toolsHtml;
-
-      // Clear Inputs & Feedback
-      document.getElementById('answerInput').value = '';
-      document.getElementById('feedbackLine').innerText = '';
-    }
-
-    function submitAnswer() {
-      const inputEl = document.getElementById('answerInput');
+    function updateView() {
       const feedback = document.getElementById('feedbackLine');
-      const val = inputEl.value.trim().toUpperCase();
+      feedback.innerText = '';
+      document.getElementById('mainInput').value = '';
 
-      if (!val) {
-        feedback.innerText = "Cypher: Did you think typing nothing would work?";
-        feedback.className = "feedback-line feedback-error";
-        return;
-      }
+      if (!bootDone) {
+        // RENDER BOOT STEP
+        const b = BOOT_STEPS[currentBootStep];
+        document.getElementById('hudStage').innerText = `BOOT [${currentBootStep + 1}/3]`;
+        document.getElementById('btnPack').style.display = 'none';
 
-      const stage = STAGES[currentStageIndex];
+        document.getElementById('cardMeta').innerText = b.meta;
+        document.getElementById('cardTitle').innerText = b.title;
+        document.getElementById('cypherSpeech').innerText = `"${b.speech.replace('{USER}', userHandle || 'human bean')}"`;
+        document.getElementById('cardBody').innerText = b.body;
+        document.getElementById('inputLabel').innerText = b.label;
+        document.getElementById('mainInput').placeholder = b.placeholder;
+        document.getElementById('btnSubmit').innerText = b.buttonText;
+        document.getElementById('cardTools').innerHTML = b.toolsHtml;
 
-      if (val === stage.solution) {
-        // Award Item
-        if (!playerPack.some(i => i.name === stage.awardItem.name)) {
-          playerPack.push(stage.awardItem);
-          localStorage.setItem('cypher_pack', JSON.stringify(playerPack));
+        // If step 1, input is disabled (just click continue)
+        if (currentBootStep === 1) {
+          document.getElementById('mainInput').style.display = 'none';
+        } else {
+          document.getElementById('mainInput').style.display = 'block';
         }
 
-        feedback.innerText = `KEY ACCEPTED: "${val}" is correct! [PACK] updated.`;
-        feedback.className = "feedback-line feedback-success";
-
-        // Advance to next stage after short pause
-        setTimeout(() => {
-          if (currentStageIndex < STAGES.length - 1) {
-            currentStageIndex++;
-            localStorage.setItem('cypher_stage_idx', currentStageIndex);
-            renderStage();
-          } else {
-            alert("Congratulations! You completed the 5-Stage Corridor MVP!");
-          }
-        }, 1200);
-
       } else {
-        feedback.innerText = `ACCESS DENIED: "${val}" is incorrect. Try again, human bean.`;
-        feedback.className = "feedback-line feedback-error";
+        // RENDER TRAIL CACHE
+        const c = TRAIL_CACHES[currentCacheIndex];
+        document.getElementById('hudStage').innerText = `CACHE ${c.cacheNum} / 50`;
+        document.getElementById('btnPack').style.display = 'flex';
+        document.getElementById('packCount').innerText = playerPack.length;
+
+        document.getElementById('cardMeta').innerText = `CACHE TALES CORRIDOR TRAIL // STOP #${c.cacheNum}`;
+        document.getElementById('cardTitle').innerText = c.title;
+        document.getElementById('cypherSpeech').innerText = `"${c.speech.replace('{USER}', userHandle)}"`;
+        document.getElementById('cardBody').innerText = c.body;
+        document.getElementById('inputLabel').innerText = `Enter Stamp / Codeword for Cache ${c.cacheNum}:`;
+        document.getElementById('mainInput').placeholder = "Enter solution...";
+        document.getElementById('mainInput').style.display = 'block';
+        document.getElementById('btnSubmit').innerText = "UNLOCK";
+        document.getElementById('cardTools').innerHTML = c.toolsHtml;
       }
     }
 
-    function revealHint() {
-      const stage = STAGES[currentStageIndex];
-      alert(`CYPHER FIELD HINT:\n\n${stage.hint}`);
+    function handleInputSubmit() {
+      const val = document.getElementById('mainInput').value.trim();
+      const feedback = document.getElementById('feedbackLine');
+
+      if (!bootDone) {
+        // BOOT STEP LOGIC
+        if (currentBootStep === 0) {
+          if (!val) {
+            feedback.innerText = "Cypher: You need to give me a name, human bean.";
+            feedback.className = "feedback-line feedback-error";
+            return;
+          }
+          userHandle = val;
+          localStorage.setItem('ct_cacher_name', userHandle);
+          currentBootStep++;
+          updateView();
+
+        } else if (currentBootStep === 1) {
+          currentBootStep++;
+          updateView();
+
+        } else if (currentBootStep === 2) {
+          if (val.toUpperCase() === BOOT_STEPS[2].solution) {
+            feedback.innerText = "CALIBRATION PASSED! Loading Cache Tales Corridor Trail...";
+            feedback.className = "feedback-line feedback-success";
+            setTimeout(() => {
+              bootDone = true;
+              localStorage.setItem('ct_boot_done', 'true');
+              updateView();
+            }, 1000);
+          } else {
+            feedback.innerText = "INCORRECT. Hint: Bring Your Own Pen (PEN).";
+            feedback.className = "feedback-line feedback-error";
+          }
+        }
+
+      } else {
+        // TRAIL CACHE LOGIC
+        if (!val) {
+          feedback.innerText = "Cypher: Did you find the container or not? Enter the code.";
+          feedback.className = "feedback-line feedback-error";
+          return;
+        }
+
+        const cache = TRAIL_CACHES[currentCacheIndex];
+        if (val.toUpperCase() === cache.solution) {
+          // Award item
+          if (!playerPack.some(i => i.name === cache.awardItem.name)) {
+            playerPack.push(cache.awardItem);
+            localStorage.setItem('ct_pack', JSON.stringify(playerPack));
+          }
+
+          feedback.innerText = `CACHE ${cache.cacheNum} VERIFIED! [PACK] updated.`;
+          feedback.className = "feedback-line feedback-success";
+
+          setTimeout(() => {
+            if (currentCacheIndex < TRAIL_CACHES.length - 1) {
+              currentCacheIndex++;
+              localStorage.setItem('ct_cache_index', currentCacheIndex);
+              updateView();
+            } else {
+              alert("You completed the test corridor run!");
+            }
+          }, 1100);
+
+        } else {
+          feedback.innerText = `CODE REJECTED: "${val}" does not match Cache ${cache.cacheNum}.`;
+          feedback.className = "feedback-line feedback-error";
+        }
+      }
+    }
+
+    function rebootSystem() {
+      if (!confirm("Reboot Cypher and restart the orientation sequence?")) return;
+      localStorage.clear();
+      userHandle = '';
+      bootDone = false;
+      currentBootStep = 0;
+      currentCacheIndex = 0;
+      playerPack = [];
+      updateView();
     }
 
     // Modal Pack Controls
     function openPack() {
       const packList = document.getElementById('packList');
       if (playerPack.length === 0) {
-        packList.innerHTML = `<div style="font-family: var(--font-mono); font-size:12px; color:var(--text-dim); text-align:center; padding: 20px 0;">Pack is empty. Solve stages to collect keys, schematics, and stamped tags.</div>`;
+        packList.innerHTML = `<div style="font-family: var(--font-mono); font-size:12px; color:var(--text-dim); text-align:center; padding: 20px 0;">Pack is empty. Find corridor caches to collect items.</div>`;
       } else {
         packList.innerHTML = playerPack.map(item => `
           <div class="inventory-item">
@@ -573,13 +637,13 @@
       document.getElementById('packModal').classList.remove('active');
     }
 
-    // Handle Enter Key
-    document.getElementById('answerInput').addEventListener('keyup', function(e) {
-      if (e.key === 'Enter') submitAnswer();
+    // Enter Key
+    document.getElementById('mainInput').addEventListener('keyup', function(e) {
+      if (e.key === 'Enter') handleInputSubmit();
     });
 
-    // Boot
-    renderStage();
+    // Run
+    updateView();
   </script>
 </body>
 </html>
