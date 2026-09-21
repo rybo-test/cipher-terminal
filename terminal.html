@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Field Terminal Model RSI-1984</title>
+  <title>C.I.P.H.E.R. // Corridor Terminal System</title>
   <style>
     :root {
-      --crt-bg: #050d06;
-      --crt-green: #33ff66;
-      --crt-dim: #1a8833;
-      --crt-dark: #0f3316;
-      --crt-amber: #ffb000;
-      --crt-red: #ff3333;
+      --bg-dark: #0a0f0d;
+      --panel-bg: #121a15;
+      --border-green: #2a5a3a;
+      --text-green: #38ef7d;
+      --text-dim: #7da88d;
+      --text-bright: #ffffff;
+      --amber: #f7b731;
+      --red: #eb3b5a;
       --font-mono: 'Courier New', Courier, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     * {
@@ -23,705 +26,560 @@
     }
 
     body {
-      background-color: #000;
-      color: var(--crt-green);
-      font-family: var(--font-mono);
+      background-color: var(--bg-dark);
+      color: var(--text-green);
+      font-family: var(--font-ui);
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      align-items: center;
-      padding: 10px;
+      align-items: flex-start;
+      padding: 12px;
     }
 
-    /* CRT Terminal Frame */
-    .chassis {
+    .terminal-container {
       width: 100%;
-      max-width: 600px;
-      background: var(--crt-bg);
-      border: 3px solid var(--crt-dim);
+      max-width: 650px;
+      background: var(--panel-bg);
+      border: 2px solid var(--border-green);
       border-radius: 8px;
-      box-shadow: 0 0 20px rgba(51, 255, 102, 0.2);
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
-      min-height: 90vh;
-      position: relative;
-    }
-
-    /* Screen Scanline Effect */
-    .chassis::before {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-      background-size: 100% 4px;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    /* Top Status Bar */
-    header {
-      background: var(--crt-dark);
-      padding: 8px 12px;
-      border-bottom: 2px solid var(--crt-dim);
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      z-index: 12;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      margin-top: 10px;
+      margin-bottom: 30px;
     }
 
-    .meta-row {
+    /* Top HUD */
+    header {
+      background: #080d0a;
+      border-bottom: 2px solid var(--border-green);
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
-      font-size: 11px;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .badge-stage {
+      background: var(--border-green);
+      color: var(--text-bright);
+      padding: 3px 8px;
+      border-radius: 4px;
       font-weight: bold;
+    }
+
+    /* Interactive Pack Button */
+    .btn-pack {
+      background: #1c2b21;
+      color: var(--text-green);
+      border: 1px solid var(--text-green);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+    .btn-pack:active {
+      background: var(--text-green);
+      color: var(--bg-dark);
+    }
+
+    /* Cypher Dialogue Box */
+    .cypher-dossier {
+      padding: 16px;
+      background: #0c140f;
+      border-bottom: 1px solid var(--border-green);
+      display: flex;
+      gap: 12px;
+    }
+
+    .cypher-avatar {
+      width: 44px;
+      height: 44px;
+      background: #1c2b21;
+      border: 1px solid var(--border-green);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .cypher-speech {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-bright);
+    }
+
+    .cypher-name {
+      font-size: 11px;
+      color: var(--amber);
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    /* Active Mission Card */
+    .mission-card {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mission-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .mission-title {
+      font-size: 18px;
+      color: var(--text-bright);
+      font-weight: bold;
+    }
+
+    .mission-body {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #d1ded6;
+    }
+
+    .mission-tools {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .btn-link {
+      background: #18281e;
+      color: var(--text-bright);
+      border: 1px solid var(--border-green);
+      padding: 10px 14px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .btn-link:hover, .btn-link:active {
+      border-color: var(--text-green);
+      color: var(--text-green);
+    }
+
+    /* Solution Submission Bar */
+    .submission-dock {
+      background: #080d0a;
+      border-top: 2px solid var(--border-green);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .input-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
       letter-spacing: 1px;
     }
 
-    .nav-row {
+    .input-row {
       display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    /* Buttons */
-    .btn {
-      background: var(--crt-dark);
-      color: var(--crt-green);
-      border: 1px solid var(--crt-green);
+    .key-input {
+      flex: 1;
+      background: #030604;
+      border: 1px solid var(--border-green);
+      color: var(--text-bright);
       font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: bold;
-      padding: 8px 10px;
-      cursor: pointer;
+      font-size: 16px;
+      padding: 12px 14px;
       border-radius: 4px;
-      min-height: 44px;
-      display: inline-flex;
+      text-transform: uppercase;
+      outline: none;
+    }
+    .key-input:focus {
+      border-color: var(--text-green);
+      box-shadow: 0 0 8px rgba(56, 239, 125, 0.2);
+    }
+
+    .btn-submit {
+      background: var(--text-green);
+      color: #030604;
+      border: none;
+      font-family: var(--font-ui);
+      font-weight: bold;
+      font-size: 15px;
+      padding: 0 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      min-height: 48px;
+    }
+    .btn-submit:active {
+      background: #27ae60;
+    }
+
+    /* Feedback Line */
+    .feedback-line {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      min-height: 20px;
+      line-height: 1.4;
+    }
+    .feedback-error { color: var(--red); }
+    .feedback-success { color: var(--text-green); font-weight: bold; }
+
+    /* Inventory Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(3, 8, 5, 0.85);
+      z-index: 1000;
+      display: none;
       align-items: center;
       justify-content: center;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      user-select: none;
-    }
-
-    .btn:active {
-      background: var(--crt-green);
-      color: var(--crt-bg);
-    }
-
-    .btn-nav {
-      flex: 1;
-      min-height: 34px;
-      font-size: 11px;
-      padding: 4px 6px;
-    }
-
-    .btn-amber {
-      border-color: var(--crt-amber);
-      color: var(--crt-amber);
-    }
-
-    .btn-red {
-      border-color: var(--crt-red);
-      color: var(--crt-red);
-    }
-
-    /* State Sim Switcher (For Testing) */
-    .sim-strip {
-      background: #000;
-      border-bottom: 1px solid var(--crt-dim);
-      padding: 6px 12px;
-      font-size: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: #888;
-      z-index: 12;
-    }
-
-    .sim-strip select {
-      background: var(--crt-bg);
-      color: var(--crt-green);
-      border: 1px solid var(--crt-dim);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      padding: 2px 4px;
-    }
-
-    /* Terminal Console Screen */
-    .terminal-screen {
-      flex: 1;
-      padding: 12px;
-      overflow-y: auto;
-      font-size: 13px;
-      line-height: 1.5;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .log-line {
-      word-break: break-word;
-    }
-
-    .log-sys { color: var(--crt-dim); }
-    .log-warn { color: var(--crt-amber); }
-    .log-alert { color: var(--crt-red); font-weight: bold; }
-    .log-highlight { color: #fff; font-weight: bold; }
-
-    /* Action Deck Grid */
-    .action-deck {
-      background: var(--crt-dark);
-      border-top: 2px solid var(--crt-dim);
-      padding: 10px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      z-index: 12;
-    }
-
-    /* Modals */
-    .modal-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(5, 13, 6, 0.95);
-      border: 2px solid var(--crt-green);
-      z-index: 100;
-      display: none;
-      flex-direction: column;
       padding: 16px;
-      overflow-y: auto;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal-card {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-green);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 500px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
 
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal-header {
+    .modal-head {
+      background: #080d0a;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-green);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--crt-dim);
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
       font-weight: bold;
     }
 
     .modal-body {
-      flex: 1;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      font-size: 13px;
+      max-height: 60vh;
+      overflow-y: auto;
     }
 
-    input[type="text"], input[type="number"], select {
-      background: #000;
-      border: 1px solid var(--crt-green);
-      color: var(--crt-green);
-      font-family: var(--font-mono);
-      font-size: 14px;
-      padding: 10px;
-      border-radius: 4px;
-      width: 100%;
-    }
-
-    .interactive-card {
-      border: 1px solid var(--crt-dim);
-      padding: 10px;
-      background: #030804;
-      border-radius: 4px;
+    .inventory-item {
+      background: #080d0a;
+      border: 1px solid var(--border-green);
+      border-radius: 6px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
+    }
+    .item-title {
+      font-weight: bold;
+      color: var(--text-bright);
+      font-size: 14px;
+    }
+    .item-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
     }
 
-    /* Slider styling for Mini-Game */
-    input[type="range"] {
-      accent-color: var(--crt-green);
-      width: 100%;
+    .btn-close {
+      background: none;
+      border: 1px solid var(--border-green);
+      color: var(--text-dim);
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: var(--font-mono);
     }
   </style>
 </head>
 <body>
 
-  <div class="chassis">
-    <!-- Header -->
+  <div class="terminal-container">
+    
+    <!-- Top HUD Header -->
     <header>
-      <div class="meta-row">
-        <span>C.I.P.H.E.R. // RSI-1984</span>
-        <span id="voltReadout">12.2V SLA</span>
+      <div>
+        <span style="color: var(--text-dim);">C.I.P.H.E.R. //</span>
+        <span class="badge-stage" id="stageBadge">STAGE 01 / 50</span>
       </div>
-      <div class="nav-row" id="headerNav" style="display: none;">
-        <button class="btn btn-nav" onclick="openModal('profileModal')">👤 Profile</button>
-        <button class="btn btn-nav" onclick="openModal('statsModal')">📊 Stats</button>
-        <button class="btn btn-nav btn-amber" onclick="openModal('missionsModal')">🎯 Missions</button>
-        <button class="btn btn-nav btn-red" onclick="logOff()">🚪 Log Off</button>
-      </div>
+      <button class="btn-pack" onclick="openPack()">
+        🎒 PACK (<span id="packCount">0</span>)
+      </button>
     </header>
 
-    <!-- Dev Testing Mode Bar -->
-    <div class="sim-strip">
-      <span>TEST STATE:</span>
-      <select id="stateSelector" onchange="switchState(this.value)">
-        <option value="guest">Guest (First Visit)</option>
-        <option value="remote">Remote Scouting (Home)</option>
-        <option value="gz">Ground Zero (Lid Open)</option>
-      </select>
-    </div>
-
-    <!-- Screen Log -->
-    <div class="terminal-screen" id="consoleScreen">
-      <div class="log-line log-sys">C.I.P.H.E.R. BOOT COMPLETE // V.3.8-RSI</div>
-      <div class="log-line log-sys">LOGAN CANYON CORRIDOR NODE // CACHE VALLEY</div>
-      <div class="log-line log-warn" id="welcomeGreeting">No cacher handle registered. Please set username before logging.</div>
-    </div>
-
-    <!-- Action Deck -->
-    <div class="action-deck" id="actionDeck">
-      <!-- Injected via JS depending on state -->
-    </div>
-
-    <!-- ==================== MODALS ==================== -->
-
-    <!-- PROFILE MODAL -->
-    <div class="modal-overlay" id="profileModal">
-      <div class="modal-header">
-        <span>[ 👤 CACHER PROFILE ]</span>
-        <button class="btn btn-nav" onclick="closeModal('profileModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <label>Geocaching Handle (Used on paper log):</label>
-        <input type="text" id="usernameInput" placeholder="e.g., Nezzmuk" />
-        <label>Signature Item Left in Containers:</label>
-        <input type="text" id="sigItemInput" placeholder="e.g., Stamped Copper Washer / Wooden Nickel" />
-        <button class="btn" onclick="saveProfile()">💾 Save Cacher Profile</button>
-      </div>
-    </div>
-
-    <!-- STATS MODAL -->
-    <div class="modal-overlay" id="statsModal">
-      <div class="modal-header">
-        <span>[ 📊 CORRIDOR STATS ]</span>
-        <button class="btn btn-nav" onclick="closeModal('statsModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="interactive-card">
-          <div><strong>Total Finds:</strong> <span id="statFinds">0</span></div>
-          <div><strong>DNFs Logged:</strong> <span id="statDNFs">0</span></div>
-          <div><strong>Corridor Stages Logged:</strong></div>
-          <div id="statList" style="font-size: 11px; color: var(--crt-dim);">None logged yet.</div>
+    <!-- Cypher Persona Dialogue Box -->
+    <div class="cypher-dossier">
+      <div class="cypher-avatar">📟</div>
+      <div>
+        <div class="cypher-name">CYPHER // 1984 GATEKEEPER</div>
+        <div class="cypher-speech" id="cypherSpeech">
+          "Great. Another human bean standing in the sagebrush clutching a smartphone. Let's see if you can even crack Stage 1."
         </div>
       </div>
     </div>
 
-    <!-- MISSIONS MODAL -->
-    <div class="modal-overlay" id="missionsModal">
-      <div class="modal-header">
-        <span>[ 🎯 ACTIVE CORRIDOR MISSIONS ]</span>
-        <button class="btn btn-nav" onclick="closeModal('missionsModal')">✕</button>
+    <!-- Active Stage Briefing -->
+    <div class="mission-card">
+      <div class="mission-meta" id="missionMeta">NODE: GC10001 // RECON LEVEL 1</div>
+      <div class="mission-title" id="missionTitle">The Tremonton Wiretap</div>
+      
+      <div class="mission-body" id="missionBody">
+        BigG59 and the RSI retirees over at the Tremonton Taco Time set up an encrypted riddle over on CacheSleuth. Crack their keyword to prove you're not just out here staring at the clouds.
       </div>
-      <div class="modal-body">
-        <div class="interactive-card">
-          <div><strong class="log-warn">MISSION 01: CORRIDOR POWER BOOST (+10%)</strong></div>
-          <p style="font-size:12px;">Cypher's lead-acid cell is low. Complete tasks to bring voltage to float.</p>
-          <hr style="border:0; border-top:1px solid var(--crt-dim); margin:4px 0;">
-          
-          <!-- Task 1 -->
-          <div>
-            <strong>1. Daily Float Check:</strong>
-            <button class="btn" style="width:100%; margin-top:4px;" id="btnTaskDaily" onclick="completeDailyFloat()">☀️ Verify Daylight Voltage (+0.4V)</button>
-          </div>
-          
-          <!-- Task 2 (Mini-Game) -->
-          <div style="margin-top:8px;">
-            <strong>2. RATBRAIN Solar Frequency Sync:</strong>
-            <p style="font-size:11px; color:#888;">Slide frequency to lock onto the peak 40W resonant solar band (Target: ~72Hz):</p>
-            <input type="range" id="freqSlider" min="10" max="100" value="30" oninput="updateFreq(this.value)" />
-            <div style="display:flex; justify-content:space-between; font-size:11px;">
-              <span>Freq: <span id="curFreq">30</span>Hz</span>
-              <span id="lockStatus" class="log-alert">UNLOCKED</span>
-            </div>
-            <button class="btn btn-amber" style="width:100%; margin-top:4px;" id="btnLockFreq" onclick="lockFrequency()" disabled>⚡ Calibrate Solar Sync</button>
-          </div>
 
-          <!-- Task 3 (Scavenger Code) -->
-          <div style="margin-top:8px;">
-            <strong>3. Physical Scavenger Item Code:</strong>
-            <p style="font-size:11px; color:#888;">Enter the 3-letter maintenance tag found in GC10001 (Hint: RSI):</p>
-            <div style="display:flex; gap:6px;">
-              <input type="text" id="tagCodeInput" maxlength="6" placeholder="CODE" style="text-transform:uppercase;" />
-              <button class="btn" onclick="submitTagCode()">Verify</button>
-            </div>
-          </div>
-        </div>
+      <!-- Contextual Clue / Tools (Buttons only when needed) -->
+      <div class="mission-tools" id="missionTools">
+        <a class="btn-link" href="https://www.cachesleuth.com" target="_blank">🔗 CacheSleuth Challenge</a>
+        <button class="btn-link" onclick="revealHint()">💡 Field Hint</button>
       </div>
     </div>
 
-    <!-- HOW TO PLAY / TRAINING MODAL -->
-    <div class="modal-overlay" id="howToPlayModal">
-      <div class="modal-header">
-        <span>[ 🎓 FIELD TRAINING & RULES ]</span>
-        <button class="btn btn-nav" onclick="closeModal('howToPlayModal')">✕</button>
+    <!-- Progression Key Submission Dock -->
+    <div class="submission-dock">
+      <div class="input-label">Enter Solved Codeword, Certitude Key, or Container Stamp:</div>
+      <div class="input-row">
+        <input type="text" id="answerInput" class="key-input" placeholder="Type solution..." autocomplete="off" autocorrect="off" spellcheck="false" />
+        <button class="btn-submit" onclick="submitAnswer()">UNLOCK</button>
       </div>
-      <div class="modal-body">
-        <div class="interactive-card">
-          <strong class="log-highlight">THE SACRED CORRIDOR RULES:</strong>
-          <p>1. <strong>BYOP:</strong> You must sign the physical Rite-in-the-Rain log scroll with real ink. Digital logs without ink are invalid.</p>
-          <p>2. <strong>EPDM GASKET:</strong> Clamp the steel lid latches securely to keep out Cache Valley rain and snow.</p>
-          <p>3. <strong>SWAG:</strong> Trade equal or trade up. Never leave broken junk.</p>
-        </div>
-
-        <div class="interactive-card">
-          <strong class="log-warn">TRAINING DRILL: BEARING PROJECTION</strong>
-          <p style="font-size:11px;">Project an offset: From Base, walk 150ft at 090° (True East).</p>
-          <button class="btn" onclick="runBearingDrill()">Run Calculation Sandbox</button>
-        </div>
-
-        <div class="interactive-card">
-          <strong class="log-warn">TRAINING DRILL: 4-DIAL LOCK PRACTICE</strong>
-          <p style="font-size:11px;">Clue: Year Blue Switch Day occurred (2000) minus 1996 = ?</p>
-          <input type="text" id="drillLockInput" placeholder="4 digits (e.g. 0004)" maxlength="4" />
-          <button class="btn" onclick="testDrillLock()">Test Combination</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- LOG FIND MODAL -->
-    <div class="modal-overlay" id="signModal">
-      <div class="modal-header">
-        <span>[ 📝 SIGN PHYSICAL LOG ]</span>
-        <button class="btn btn-nav" onclick="closeModal('signModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="log-warn">Did you put physical ink on the paper scroll inside the ammo can?</p>
-        <label>Trail Log Notes (Swag traded, conditions):</label>
-        <input type="text" id="findNoteInput" placeholder="TFTC! Replaced dry pencil." />
-        <button class="btn" onclick="confirmFind()">✍️ Record Official Find</button>
-      </div>
-    </div>
-
-    <!-- DNF MODAL -->
-    <div class="modal-overlay" id="dnfModal">
-      <div class="modal-header">
-        <span>[ ❌ LOG DID NOT FIND ]</span>
-        <button class="btn btn-nav" onclick="closeModal('dnfModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:12px;">Searched and came up empty? Report it to help corridor maintenance audit the hide.</p>
-        <label>Where did you search? Any muggle issues?</label>
-        <input type="text" id="dnfNoteInput" placeholder="Searched culvert, high muggle activity." />
-        <button class="btn btn-red" onclick="confirmDNF()">📌 Submit DNF Log</button>
-      </div>
-    </div>
-
-    <!-- SWAG MODAL -->
-    <div class="modal-overlay" id="swagModal">
-      <div class="modal-header">
-        <span>[ 🎁 TRADE SWAG & TRACKABLES ]</span>
-        <button class="btn btn-nav" onclick="closeModal('swagModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:12px;">Rule: Trade equal or trade up. Leave no junk.</p>
-        <div id="swagList" class="interactive-card">
-          <div>• 2004 Utah Geocoin (Trackable #UT8812)</div>
-          <div>• Nezzmuk Signature Stamped Washer</div>
-          <div>• Emergency Carabiner</div>
-        </div>
-        <label>Drop New Swag Item in Container:</label>
-        <input type="text" id="newSwagInput" placeholder="e.g., Wooden Nickel" />
-        <button class="btn" onclick="dropSwag()">Drop Swag</button>
-      </div>
-    </div>
-
-    <!-- BEARING PROJECTION MODAL -->
-    <div class="modal-overlay" id="projectModal">
-      <div class="modal-header">
-        <span>[ 📐 PROJECT WAYPOINT ]</span>
-        <button class="btn btn-nav" onclick="closeModal('projectModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <label>Bearing (Degrees True North, 000-359):</label>
-        <input type="number" id="projBearing" placeholder="045" />
-        <label>Distance (Feet):</label>
-        <input type="number" id="projDist" placeholder="220" />
-        <button class="btn" onclick="executeProjection()">🧭 Calculate Projected Coordinates</button>
-      </div>
-    </div>
-
-    <!-- LOCK COMBO MODAL -->
-    <div class="modal-overlay" id="lockModal">
-      <div class="modal-header">
-        <span>[ 🔓 TEST 4-DIGIT COMBINATION ]</span>
-        <button class="btn btn-nav" onclick="closeModal('lockModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:12px;">Enter combination for the inner lockbox shackle:</p>
-        <input type="text" id="comboInput" maxlength="4" placeholder="0000" />
-        <button class="btn" onclick="testPadlock()">🔓 Test Padlock Mechanism</button>
-      </div>
+      <div class="feedback-line" id="feedbackLine"></div>
     </div>
 
   </div>
 
+  <!-- The Pack Modal (Virtual Inventory) -->
+  <div class="modal-overlay" id="packModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>FIELD PACK // VIRTUAL RECON INVENTORY</span>
+        <button class="btn-close" onclick="closePack()">✕</button>
+      </div>
+      <div class="modal-body" id="packList">
+        <div style="font-family: var(--font-mono); font-size:12px; color:var(--text-dim); text-align:center; padding: 20px 0;">
+          Pack is empty. Solve stages to collect keys, schematics, and stamped tags.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // System State
-    let state = {
-      username: localStorage.getItem('cacher_handle') || '',
-      sigItem: localStorage.getItem('cacher_sig') || '',
-      finds: parseInt(localStorage.getItem('cacher_finds') || '0'),
-      dnfs: parseInt(localStorage.getItem('cacher_dnfs') || '0'),
-      voltage: 12.2,
-      mode: 'guest',
-      missionTask1: false,
-      missionTask2: false,
-      missionTask3: false
-    };
+    // ==========================================
+    // 5-STAGE MVP PROGRESSION DATA
+    // ==========================================
+    const STAGES = [
+      {
+        id: 1,
+        title: "The Tremonton Wiretap",
+        node: "WEB RIDDLE // LEVEL 1",
+        speech: "RSI meets every Monday morning at Taco Time. BigG59 hid their first radio pass-phrase behind a simple word riddle. Find their favorite side order to break the lock.",
+        body: "Solve the external riddle on CacheSleuth (or deduce what RSI orders alongside their burritos at the Tremonton Taco Time) to retrieve the passkey.",
+        hint: "It's fried, crispy, tater-tot-like, and starts with MEXI-.",
+        solution: "MEXIFRIES",
+        awardItem: {
+          name: "RSI Radio Pass-Phrase",
+          desc: "Decrypted audio frequency pass-phrase: 'MEXIFRIES-1984'. Used to tap the canal repeater."
+        },
+        toolsHtml: `
+          <a class="btn-link" href="https://www.cachesleuth.com" target="_blank">🔗 CacheSleuth Portal</a>
+          <button class="btn-link" onclick="revealHint()">💡 Decrypt Hint</button>
+        `
+      },
+      {
+        id: 2,
+        title: "The Canal Headgate Stash",
+        node: "FIELD CACHE // GC10001",
+        speech: "Not bad for a human bean. Now put on your trail boots. Nezzmuk and the Rat Pack anchored a heavy steel ammo can to the old irrigation headgate on the valley floor.",
+        body: "Hike to GC10001 (N 41° 44.120 W 111° 50.430). Pop the clamps, sign the paper scroll in ink, and find the 3-letter maintenance tag stamped on the underside of the lid.",
+        hint: "Inspect the inside lid hinge. Ratwaffles stamped the 3 letters with a metal punch.",
+        solution: "IRS",
+        awardItem: {
+          name: "Stamped Brass Washer #01",
+          desc: "1-inch brass washer stamped with 'IRS-HEADGATE'. Shows coordinate projection offsets for Stage 3."
+        },
+        toolsHtml: `
+          <button class="btn-link" onclick="alert('GPS: N 41° 44.120 W 111° 50.430\\nWGS84 Datum. Terrain 2.0')">🧭 View GPS Coords</button>
+          <button class="btn-link" onclick="revealHint()">💡 Container Hint</button>
+        `
+      },
+      {
+        id: 3,
+        title: "The Certitude Firewall",
+        node: "WEB VERIFICATION // CERTITUDE",
+        speech: "Hold on. BigJ54 noticed our packet transmission and locked the mountain coordinates behind a Certitude coordinate checker. We need to crack his cipher.",
+        body: "Look inside your [PACK] at the Stamped Brass Washer #01 you got from the ammo can. Combine the stamp with Cypher's model year to form the Certitude verification keyword.",
+        hint: "Combine the 3 letters on the washer + a hyphen + the year this terminal was built.",
+        solution: "IRS-1984",
+        awardItem: {
+          name: "Blue Switch Day Schematic",
+          desc: "Folded 1984 wiring blueprint showing the bypassed electrical junction on the mountain repeater."
+        },
+        toolsHtml: `
+          <a class="btn-link" href="https://www.geocaching.com" target="_blank">🛡️ Certitude Checker</a>
+          <button class="btn-link" onclick="revealHint()">💡 Hint</button>
+        `
+      },
+      {
+        id: 4,
+        title: "The Mountain Repeater (High Bench)",
+        node: "FIELD CACHE // GC10004",
+        speech: "You're actually making progress. Don't drop your pen in the scrub oak. The next box is bolted 400 feet up the Bonneville shoreline bench.",
+        body: "Navigate to GC10004. An inner compartment is protected by a 4-digit Master Lock. Use your Blue Switch Day Schematic from your pack: the combo is the year Selective Availability was turned off.",
+        hint: "Blue Switch Day was May 2, 2000. Enter the 4-digit year.",
+        solution: "2000",
+        awardItem: {
+          name: "Corridor Master Keycard",
+          desc: "Old 8-bit magnetic keycard labeled: 'RSI-SECTOR-01-CLEAR'."
+        },
+        toolsHtml: `
+          <button class="btn-link" onclick="alert('GPS: N 41° 45.310 W 111° 48.950\\nBonneville Shoreline Bench.')">🧭 View GPS Coords</button>
+          <button class="btn-link" onclick="revealHint()">💡 Lock Hint</button>
+        `
+      },
+      {
+        id: 5,
+        title: "Corridor Sector 01 Cleared!",
+        node: "MILESTONE // 5 OF 50",
+        speech: "Well, look at that. You managed to conquer Sector 1 without losing your car keys or crying to the local reviewers. You've earned your trail stripes.",
+        body: "You have officially conquered the first 5-stage loop of the 50-Cache Corridor! The Rat Pack and RSI both acknowledge your find. Ready for Sector 2?",
+        hint: "Sector 2 stages will link deeper into Blacksmith Fork Canyon.",
+        solution: "ONWARD",
+        awardItem: {
+          name: "Trail Veteran Wooden Nickel",
+          desc: "Custom engraved wooden nickel honoring your Sector 01 FTF run."
+        },
+        toolsHtml: `
+          <button class="btn-link" onclick="alert('Sector 02 expands from Stage 06 to Stage 15.')">🗺️ Sector 02 Preview</button>
+        `
+      }
+    ];
 
-    // DOM Elements
-    const screen = document.getElementById('consoleScreen');
-    const deck = document.getElementById('actionDeck');
-    const headerNav = document.getElementById('headerNav');
-    const stateSelector = document.getElementById('stateSelector');
+    // ==========================================
+    // STATE ENGINE
+    // ==========================================
+    let currentStageIndex = parseInt(localStorage.getItem('cypher_stage_idx') || '0');
+    let playerPack = JSON.parse(localStorage.getItem('cypher_pack') || '[]');
 
-    function log(msg, type = '') {
-      const line = document.createElement('div');
-      line.className = 'log-line ' + type;
-      line.innerHTML = `> ${msg}`;
-      screen.appendChild(line);
-      screen.scrollTop = screen.scrollHeight;
+    function renderStage() {
+      const stage = STAGES[currentStageIndex];
+
+      // Update HUD
+      document.getElementById('stageBadge').innerText = `STAGE 0${stage.id} / 50`;
+      document.getElementById('packCount').innerText = playerPack.length;
+
+      // Update Content
+      document.getElementById('missionMeta').innerText = stage.node;
+      document.getElementById('missionTitle').innerText = stage.title;
+      document.getElementById('cypherSpeech').innerText = `"${stage.speech}"`;
+      document.getElementById('missionBody').innerText = stage.body;
+      document.getElementById('missionTools').innerHTML = stage.toolsHtml;
+
+      // Clear Inputs & Feedback
+      document.getElementById('answerInput').value = '';
+      document.getElementById('feedbackLine').innerText = '';
     }
 
-    function updateUI() {
-      // Voltage Readout
-      document.getElementById('voltReadout').innerText = `${state.voltage.toFixed(1)}V SLA`;
+    function submitAnswer() {
+      const inputEl = document.getElementById('answerInput');
+      const feedback = document.getElementById('feedbackLine');
+      const val = inputEl.value.trim().toUpperCase();
 
-      // Header controls display if user is logged in
-      if (state.username) {
-        headerNav.style.display = 'flex';
-        document.getElementById('welcomeGreeting').innerText = `AUTHENTICATED: ${state.username} // READY ON TRAIL`;
-        document.getElementById('welcomeGreeting').className = 'log-line log-sys';
-        if (state.mode === 'guest') {
-          state.mode = 'remote';
-          stateSelector.value = 'remote';
+      if (!val) {
+        feedback.innerText = "Cypher: Did you think typing nothing would work?";
+        feedback.className = "feedback-line feedback-error";
+        return;
+      }
+
+      const stage = STAGES[currentStageIndex];
+
+      if (val === stage.solution) {
+        // Award Item
+        if (!playerPack.some(i => i.name === stage.awardItem.name)) {
+          playerPack.push(stage.awardItem);
+          localStorage.setItem('cypher_pack', JSON.stringify(playerPack));
         }
+
+        feedback.innerText = `KEY ACCEPTED: "${val}" is correct! [PACK] updated.`;
+        feedback.className = "feedback-line feedback-success";
+
+        // Advance to next stage after short pause
+        setTimeout(() => {
+          if (currentStageIndex < STAGES.length - 1) {
+            currentStageIndex++;
+            localStorage.setItem('cypher_stage_idx', currentStageIndex);
+            renderStage();
+          } else {
+            alert("Congratulations! You completed the 5-Stage Corridor MVP!");
+          }
+        }, 1200);
+
       } else {
-        headerNav.style.display = 'none';
-        state.mode = 'guest';
-        stateSelector.value = 'guest';
-      }
-
-      // Stats Modal Data
-      document.getElementById('statFinds').innerText = state.finds;
-      document.getElementById('statDNFs').innerText = state.dnfs;
-
-      renderDeck();
-    }
-
-    function switchState(newMode) {
-      state.mode = newMode;
-      log(`OPERATIONAL STATE SWITCHED: ${newMode.toUpperCase()}`, 'log-warn');
-      renderDeck();
-    }
-
-    function renderDeck() {
-      deck.innerHTML = '';
-
-      if (state.mode === 'guest') {
-        deck.innerHTML = `
-          <button class="btn" onclick="openModal('profileModal')">👤 SET USERNAME</button>
-          <button class="btn" onclick="openModal('howToPlayModal')">❓ HOW TO PLAY / DRILLS</button>
-        `;
-      } else if (state.mode === 'remote') {
-        deck.innerHTML = `
-          <button class="btn" onclick="showListing()">🗺️ CACHE INFO</button>
-          <button class="btn" onclick="decryptHint()">💡 DECRYPT HINT</button>
-          <button class="btn" onclick="showCoordinates()">🧭 COORDINATES</button>
-          <button class="btn" onclick="openModal('projectModal')">📐 PROJECT BEARING</button>
-          <button class="btn btn-red" onclick="openModal('dnfModal')">❌ LOG DNF</button>
-          <button class="btn" onclick="showBattery()">🔋 CHECK BATTERY</button>
-        `;
-      } else if (state.mode === 'gz') {
-        deck.innerHTML = `
-          <button class="btn" onclick="openModal('signModal')">📝 SIGN LOG</button>
-          <button class="btn" onclick="openModal('swagModal')">🎁 TRADE SWAG</button>
-          <button class="btn" onclick="openModal('lockModal')">🔓 LOCK COMBO</button>
-          <button class="btn btn-red" onclick="openModal('dnfModal')">❌ LOG DNF</button>
-          <button class="btn" onclick="showListing()">🗺️ CACHE INFO</button>
-          <button class="btn" onclick="showBattery()">🔋 CHECK BATTERY</button>
-        `;
+        feedback.innerText = `ACCESS DENIED: "${val}" is incorrect. Try again, human bean.`;
+        feedback.className = "feedback-line feedback-error";
       }
     }
 
-    // Modal Handlers
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-    // User Profile Actions
-    function saveProfile() {
-      const handle = document.getElementById('usernameInput').value.trim();
-      const sig = document.getElementById('sigItemInput').value.trim();
-      if (!handle) return alert('Username required.');
-
-      state.username = handle;
-      state.sigItem = sig;
-      localStorage.setItem('cacher_handle', handle);
-      localStorage.setItem('cacher_sig', sig);
-
-      log(`PROFILE COMMITTED: Cacher [${handle}] verified.`, 'log-highlight');
-      closeModal('profileModal');
-      updateUI();
+    function revealHint() {
+      const stage = STAGES[currentStageIndex];
+      alert(`CYPHER FIELD HINT:\n\n${stage.hint}`);
     }
 
-    function logOff() {
-      if (!confirm('Log off session for next cacher?')) return;
-      localStorage.removeItem('cacher_handle');
-      state.username = '';
-      log('SESSION CLEARED // RETURNED TO GUEST ONBOARDING', 'log-sys');
-      updateUI();
-    }
-
-    // Trail Actions
-    function showListing() {
-      log(`CACHE LISTING: GC10001 (The Welded Anchor)`, 'log-highlight');
-      log(`Type: Traditional // Size: Regular Ammo Box // D2.0 / T2.5`);
-      log(`Description: Bolted along the Logan irrigation canal. Bring your own pen and reseat the EPDM rubber gasket firmly.`);
-    }
-
-    let hintDecrypted = false;
-    function decryptHint() {
-      if (!hintDecrypted) {
-        log(`HINT [ROT-13]: Fhfcraqrq haqre vfevtngvba pbashvg syntfgbar.`, 'log-warn');
-        log(`Plaintext: Suspended under irrigation conduit flagstone.`, 'log-highlight');
-        hintDecrypted = true;
+    // Modal Pack Controls
+    function openPack() {
+      const packList = document.getElementById('packList');
+      if (playerPack.length === 0) {
+        packList.innerHTML = `<div style="font-family: var(--font-mono); font-size:12px; color:var(--text-dim); text-align:center; padding: 20px 0;">Pack is empty. Solve stages to collect keys, schematics, and stamped tags.</div>`;
       } else {
-        log(`Plaintext: Suspended under irrigation conduit flagstone.`, 'log-highlight');
+        packList.innerHTML = playerPack.map(item => `
+          <div class="inventory-item">
+            <div class="item-title">📦 ${item.name}</div>
+            <div class="item-desc">${item.desc}</div>
+          </div>
+        `).join('');
       }
+      document.getElementById('packModal').classList.add('active');
     }
 
-    function showCoordinates() {
-      log(`POSTED GPS: N 41° 44.120 W 111° 50.430 (WGS84)`, 'log-highlight');
+    function closePack() {
+      document.getElementById('packModal').classList.remove('active');
     }
 
-    function showBattery() {
-      log(`12V SLA BATTERY: ${state.voltage.toFixed(2)}V (Healthy Solar Float: 12.6V - 13.8V)`, 'log-sys');
-    }
+    // Handle Enter Key
+    document.getElementById('answerInput').addEventListener('keyup', function(e) {
+      if (e.key === 'Enter') submitAnswer();
+    });
 
-    function confirmFind() {
-      const note = document.getElementById('findNoteInput').value.trim();
-      state.finds += 1;
-      localStorage.setItem('cacher_finds', state.finds);
-      log(`FIND RECORDED! GC10001 stamped into personal ledger. Total finds: ${state.finds}`, 'log-highlight');
-      if (note) log(`Trail note: "${note}"`, 'log-sys');
-      closeModal('signModal');
-      updateUI();
-    }
-
-    function confirmDNF() {
-      const note = document.getElementById('dnfNoteInput').value.trim();
-      state.dnfs += 1;
-      localStorage.setItem('cacher_dnfs', state.dnfs);
-      log(`DNF SUBMITTED. Recorded for corridor maintenance audit. Total DNFs: ${state.dnfs}`, 'log-warn');
-      if (note) log(`Search notes: "${note}"`, 'log-sys');
-      closeModal('dnfModal');
-      updateUI();
-    }
-
-    function dropSwag() {
-      const item = document.getElementById('newSwagInput').value.trim();
-      if (!item) return;
-      log(`SWAG DROPPED: [${item}] added to ammo can inventory.`, 'log-sys');
-      document.getElementById('newSwagInput').value = '';
-      closeModal('swagModal');
-    }
-
-    function executeProjection() {
-      const b = document.getElementById('projBearing').value;
-      const d = document.getElementById('projDist').value;
-      if (!b || !d) return alert('Enter bearing and distance.');
-      log(`PROJECTION CALCULATED: Bearing ${b}° True North, ${d}ft -> Projected GZ: N 41° 44.152 W 111° 50.395`, 'log-highlight');
-      closeModal('projectModal');
-    }
-
-    function testPadlock() {
-      const code = document.getElementById('comboInput').value.trim();
-      if (code === '1984') {
-        log(`COMBINATION ACCEPTED (1984) // INNER SHACKLE POPPED!`, 'log-highlight');
-      } else {
-        log(`COMBO (${code || '----'}) FAILED: Shackle seized. Deduce clues from canal headgate.`, 'log-alert');
-      }
-      closeModal('lockModal');
-    }
-
-    // Missions & RATBRAIN Game Mechanics
-    function completeDailyFloat() {
-      if (state.missionTask1) return alert('Already completed today.');
-      state.missionTask1 = true;
-      state.voltage += 0.4;
-      document.getElementById('btnTaskDaily').innerText = '✔ Daylight Voltage Verified (+0.4V)';
-      document.getElementById('btnTaskDaily').disabled = true;
-      log('MISSION PROGRESS: Daylight float verified (+0.4V).', 'log-highlight');
-      updateUI();
-    }
-
-    function updateFreq(val) {
-      document.getElementById('curFreq').innerText = val;
-      const status = document.getElementById('lockStatus');
-      const btn = document.getElementById('btnLockFreq');
-      if (val >= 70 && val <= 74) {
-        status.innerText = 'RESONANCE LOCKED';
-        status.className = 'log-highlight';
-        btn.disabled = false;
-      } else {
-        status.innerText = 'UNLOCKED';
-        status.className = 'log-alert';
-        btn.disabled = true;
-      }
-    }
-
-    function lockFrequency() {
-      if (state.missionTask2) return;
-      state.missionTask2 = true;
-      state.voltage += 0.5;
-      document.getElementById('btnLockFreq').innerText = '✔ Solar Sync Locked (+0.5V)';
-      document.getElementById('btnLockFreq').disabled = true;
-      log('RATBRAIN: Solar relay harmonic frequency locked at 72Hz! Voltage boosted +0.5V.', 'log-highlight');
-      updateUI();
-    }
-
-    function submitTagCode() {
-      const code = document.getElementById('tagCodeInput').value.trim().toUpperCase();
-      if (code === 'RSI') {
-        if (state.missionTask3) return alert('Code already accepted.');
-        state.missionTask3 = true;
-        state.voltage += 0.3;
-        log('SCAVENGER TAG RECOGNIZED: RSI Maintenance Node Verified (+0.3V).', 'log-highlight');
-        log('*** MISSION 01 COMPLETE: Corridor Power Boost (+10%) Achieved! ***', 'log-highlight');
-        updateUI();
-      } else {
-        log(`TAG CODE [${code}] NOT RECOGNIZED. Inspect the solar bracket on GC10001.`, 'log-alert');
-      }
-    }
-
-    // Training Sandbox Drills
-    function runBearingDrill() {
-      log('TRAINING SANDBOX: Bearing 090° (East), 150ft from N 41° 44.000 W 111° 50.000 -> N 41° 44.000 W 111° 49.967.', 'log-sys');
-      closeModal('howToPlayModal');
-    }
-
-    function testDrillLock() {
-      const val = document.getElementById('drillLockInput').value.trim();
-      if (val === '0004') {
-        log('TRAINING LOCK: CORRECT (0004)! Shackle unlocked.', 'log-highlight');
-      } else {
-        log('TRAINING LOCK: INCORRECT. Hint: 2000 - 1996 = 4 -> format as 4 digits (0004).', 'log-alert');
-      }
-      closeModal('howToPlayModal');
-    }
-
-    // Init
-    updateUI();
+    // Boot
+    renderStage();
   </script>
 </body>
 </html>
