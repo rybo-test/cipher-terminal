@@ -9,8 +9,7 @@
        THEME PROFILES (Display Modes)
        -------------------------------------------------------- */
     :root {
-      /* Base Metrics */
-      --font-scale: 1;
+      --content-scale: 1;
       --font-mono: 'Courier New', Courier, monospace;
       --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
@@ -32,23 +31,23 @@
       --map-node-bg: #0c1810;
     }
 
-    /* Theme: Paper Log (Light Mode for Mid-Day Utah Sun Glare) */
+    /* Theme: Paper Log (Ultra High-Contrast for Bright Sunlight) */
     body.theme-light {
-      --bg-dark: #e8ece9;
-      --panel-bg: #f5f7f5;
-      --panel-inner: #e2e8e3;
-      --border-main: #8ba893;
-      --border-accent: #2d663e;
-      --accent: #1e5a32;
-      --accent-dim: #4d6e56;
-      --text-bright: #0c1810;
-      --text-main: #143520;
-      --text-dim: #415e4b;
-      --warning: #b37400;
-      --danger: #b31d28;
-      --map-canal: #82a8c2;
-      --map-trail: #7a9c84;
-      --map-node-bg: #dbe4dd;
+      --bg-dark: #d8ded9;
+      --panel-bg: #f4f6f4;
+      --panel-inner: #e6eae6;
+      --border-main: #405747;
+      --border-accent: #174223;
+      --accent: #144724;
+      --accent-dim: #254d33;
+      --text-bright: #050a06;
+      --text-main: #050a06;
+      --text-dim: #1f3626;
+      --warning: #874b00;
+      --danger: #a81320;
+      --map-canal: #4f738c;
+      --map-trail: #41634c;
+      --map-node-bg: #c9d6cb;
     }
 
     /* Theme: Amber Phosphor */
@@ -90,11 +89,11 @@
     }
 
     /* --------------------------------------------------------
-       FONT SIZE TIERS
+       FONT SIZE TIERS (Applied to reading content, not chrome)
        -------------------------------------------------------- */
-    body.font-regular { --font-scale: 1; }
-    body.font-large { --font-scale: 1.15; }
-    body.font-trailxl { --font-scale: 1.3; }
+    body.font-regular { --content-scale: 1; }
+    body.font-large { --content-scale: 1.15; }
+    body.font-trailxl { --content-scale: 1.35; }
 
     * {
       box-sizing: border-box;
@@ -107,7 +106,7 @@
       background-color: var(--bg-dark);
       color: var(--text-main);
       font-family: var(--font-ui);
-      font-size: calc(14px * var(--font-scale));
+      font-size: 14px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -126,44 +125,47 @@
     }
 
     /* =======================================================
-       UNIVERSAL TOP TOOLBAR
+       UNIVERSAL TOP TOOLBAR (STABLE CHROME - NEVER WRAPS)
        ======================================================= */
     .cipher-toolbar {
       background: var(--panel-inner);
       border: 2px solid var(--border-main);
       border-radius: 8px;
       position: relative;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
       display: flex;
       flex-direction: column;
     }
 
-    /* Row 1: Hardware Identity & Status Placeholder */
+    /* Row 1: Fixed dimensions so XL text never breaks it */
     .tb-status-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 12px;
+      padding: 7px 10px;
       border-bottom: 1px solid var(--border-main);
       font-family: var(--font-mono);
-      font-size: calc(12px * var(--font-scale));
+      font-size: 12px;
       background: var(--panel-inner);
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .tb-status-badge {
       background: var(--panel-bg);
       color: var(--accent);
       border: 1px solid var(--border-main);
-      padding: 2px 8px;
+      padding: 2px 6px;
       border-radius: 3px;
       font-weight: bold;
-      font-size: calc(11px * var(--font-scale));
+      font-size: 11px;
+      flex-shrink: 0;
     }
 
     /* Row 2: 4 Primary Anchors */
     .tb-nav-row {
       display: grid;
-      grid-template-columns: 1.1fr 1fr 1fr 0.9fr;
+      grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
       gap: 4px;
       padding: 6px;
       background: var(--panel-bg);
@@ -173,10 +175,10 @@
       background: var(--panel-inner);
       border: 1px solid var(--border-main);
       color: var(--text-dim);
-      padding: 9px 4px;
+      padding: 8px 3px;
       border-radius: 4px;
       font-family: var(--font-mono);
-      font-size: calc(12px * var(--font-scale));
+      font-size: 12px;
       font-weight: bold;
       cursor: pointer;
       text-align: center;
@@ -184,7 +186,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 3px;
     }
     .tb-btn:active { background: var(--border-main); }
     .tb-btn.active {
@@ -202,8 +204,9 @@
       align-items: center;
       gap: 8px;
       font-family: var(--font-mono);
-      font-size: calc(11px * var(--font-scale));
+      font-size: 11px;
       overflow-x: auto;
+      white-space: nowrap;
     }
 
     .tb-context-label {
@@ -222,10 +225,11 @@
       background: var(--panel-bg);
       color: var(--text-bright);
       border: 1px solid var(--border-main);
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: 4px;
-      font-size: calc(11px * var(--font-scale));
+      font-size: 11px;
       font-family: var(--font-mono);
+      font-weight: bold;
       white-space: nowrap;
       cursor: pointer;
     }
@@ -249,7 +253,7 @@
       background: var(--panel-inner);
       border: 2px solid var(--border-accent);
       border-radius: 6px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.7);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
       z-index: 100;
       padding: 8px 0;
       font-family: var(--font-mono);
@@ -258,34 +262,37 @@
 
     .tb-menu-header {
       padding: 4px 12px;
-      font-size: calc(10px * var(--font-scale));
+      font-size: 10px;
       color: var(--warning);
       letter-spacing: 1px;
       text-transform: uppercase;
+      font-weight: bold;
       border-bottom: 1px solid var(--border-main);
     }
 
     .tb-menu-item {
-      padding: 10px 12px;
+      padding: 9px 12px;
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: calc(13px * var(--font-scale));
+      font-size: 12px;
       color: var(--text-bright);
+      font-weight: bold;
       cursor: pointer;
       text-decoration: none;
     }
     .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
 
     .tb-menu-controls {
-      padding: 8px 12px;
+      padding: 6px 12px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
     .control-label {
-      font-size: calc(10px * var(--font-scale));
+      font-size: 10px;
       color: var(--text-dim);
+      font-weight: bold;
     }
     .control-grid {
       display: grid;
@@ -301,9 +308,10 @@
       background: var(--panel-bg);
       border: 1px solid var(--border-main);
       color: var(--text-dim);
-      padding: 5px 2px;
-      font-size: calc(10px * var(--font-scale));
+      padding: 6px 2px;
+      font-size: 10px;
       font-family: var(--font-mono);
+      font-weight: bold;
       text-align: center;
       border-radius: 3px;
       cursor: pointer;
@@ -311,18 +319,17 @@
     .btn-control-chip.active {
       background: var(--accent);
       color: var(--bg-dark);
-      font-weight: bold;
       border-color: var(--accent);
     }
 
     .tb-menu-divider {
       height: 1px;
       background: var(--border-main);
-      margin: 6px 0;
+      margin: 5px 0;
     }
 
     /* =======================================================
-       DECKS
+       DECKS (READING CONTENT SCALED BY FONT SIZE TIERS)
        ======================================================= */
     .deck-container {
       background: var(--panel-bg);
@@ -358,9 +365,10 @@
 
     .terminal-speech {
       font-family: var(--font-mono);
-      font-size: calc(13px * var(--font-scale));
+      font-size: calc(13px * var(--content-scale));
       line-height: 1.5;
       color: var(--text-bright);
+      font-weight: 600;
     }
 
     .mission-card {
@@ -371,22 +379,24 @@
     }
 
     .mission-meta {
-      font-size: calc(11px * var(--font-scale));
+      font-size: calc(11px * var(--content-scale));
       color: var(--warning);
       font-family: var(--font-mono);
       font-weight: bold;
+      letter-spacing: 0.5px;
     }
 
     .mission-title {
-      font-size: calc(17px * var(--font-scale));
+      font-size: calc(17px * var(--content-scale));
       font-weight: bold;
       color: var(--text-bright);
     }
 
     .mission-desc {
-      font-size: calc(14px * var(--font-scale));
+      font-size: calc(14px * var(--content-scale));
       line-height: 1.5;
-      color: var(--text-dim);
+      color: var(--text-main);
+      font-weight: 500;
     }
 
     .unlock-dock {
@@ -406,10 +416,11 @@
       border: 1px solid var(--border-main);
       color: var(--text-bright);
       font-family: var(--font-mono);
-      font-size: calc(15px * var(--font-scale));
+      font-size: calc(15px * var(--content-scale));
       padding: 10px;
       border-radius: 4px;
       text-transform: uppercase;
+      font-weight: bold;
       outline: none;
     }
 
@@ -418,14 +429,14 @@
       color: var(--bg-dark);
       border: none;
       font-weight: bold;
-      font-size: calc(14px * var(--font-scale));
+      font-size: calc(14px * var(--content-scale));
       padding: 0 16px;
       border-radius: 4px;
       cursor: pointer;
     }
 
     /* --------------------------------------------------------
-       TRAIL DECK & SVG MAP WITH ZOOM CONTROLS
+       TRAIL DECK & SVG MAP
        -------------------------------------------------------- */
     .trail-sub-nav {
       display: flex;
@@ -441,7 +452,7 @@
       border: none;
       color: var(--text-dim);
       font-family: var(--font-mono);
-      font-size: calc(12px * var(--font-scale));
+      font-size: 12px;
       font-weight: bold;
       cursor: pointer;
       border-bottom: 2px solid transparent;
@@ -469,7 +480,7 @@
       position: relative;
     }
 
-    /* Zoom Rocker Floating Inside Map */
+    /* Zoom Rocker */
     .map-zoom-rocker {
       position: absolute;
       top: 8px;
@@ -480,7 +491,7 @@
       display: flex;
       align-items: center;
       z-index: 10;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .btn-zoom {
       background: transparent;
@@ -542,17 +553,9 @@
       stroke-width: 2;
       transition: all 0.2s ease;
     }
-    .map-node-circle.found {
-      stroke: var(--accent);
-    }
-    .map-node-circle.active-target {
-      stroke: var(--accent);
-      stroke-width: 3;
-    }
-    .map-node-circle.locked {
-      stroke: var(--border-main);
-      opacity: 0.5;
-    }
+    .map-node-circle.found { stroke: var(--accent); stroke-width: 2.5; }
+    .map-node-circle.active-target { stroke: var(--accent); stroke-width: 3.5; }
+    .map-node-circle.locked { stroke: var(--border-main); opacity: 0.6; }
 
     .map-pulse {
       animation: pulse-ring 2s infinite ease-out;
@@ -584,13 +587,13 @@
     }
 
     .inspector-name {
-      font-size: calc(14px * var(--font-scale));
+      font-size: calc(14px * var(--content-scale));
       font-weight: bold;
       color: var(--text-bright);
     }
 
     .inspector-status {
-      font-size: calc(10px * var(--font-scale));
+      font-size: 10px;
       padding: 2px 6px;
       border-radius: 3px;
       font-weight: bold;
@@ -600,16 +603,18 @@
     .status-locked { background: var(--panel-bg); color: var(--text-dim); border: 1px dashed var(--border-main); }
 
     .inspector-comment {
-      font-size: calc(12px * var(--font-scale));
+      font-size: calc(12px * var(--content-scale));
       line-height: 1.4;
       color: var(--text-main);
+      font-weight: 600;
     }
 
     .inspector-meta {
       display: flex;
       justify-content: space-between;
-      font-size: calc(11px * var(--font-scale));
+      font-size: calc(11px * var(--content-scale));
       color: var(--text-dim);
+      font-weight: bold;
     }
 
     .btn-gps-handoff {
@@ -619,7 +624,7 @@
       padding: 10px;
       border-radius: 4px;
       font-family: var(--font-mono);
-      font-size: calc(12px * var(--font-scale));
+      font-size: 12px;
       font-weight: bold;
       text-align: center;
       cursor: pointer;
@@ -660,17 +665,18 @@
       flex-direction: column;
       gap: 2px;
     }
-    .gc-box-lbl { font-size: calc(10px * var(--font-scale)); color: var(--text-dim); }
-    .gc-box-val { font-size: calc(13px * var(--font-scale)); color: var(--text-bright); font-weight: bold; }
+    .gc-box-lbl { font-size: 10px; color: var(--text-dim); font-weight: bold; }
+    .gc-box-val { font-size: calc(13px * var(--content-scale)); color: var(--text-bright); font-weight: bold; }
 
     .hint-box {
       background: var(--panel-inner);
       border: 1px dashed var(--warning);
       padding: 12px;
       border-radius: 4px;
-      font-size: calc(12px * var(--font-scale));
+      font-size: calc(12px * var(--content-scale));
       line-height: 1.4;
       color: var(--warning);
+      font-weight: bold;
     }
   </style>
 </head>
@@ -679,15 +685,15 @@
   <div class="app-shell">
 
     <!-- =======================================================
-         UNIVERSAL TOP TOOLBAR
+         UNIVERSAL TOP TOOLBAR (NEVER BREAKS OR WRAPS)
          ======================================================= -->
     <div class="cipher-toolbar" id="cipherToolbar">
       
       <!-- Row 1: Hardware Identity & Status Placeholder -->
       <div class="tb-status-row">
-        <span style="color: var(--text-dim);">C.I.P.H.E.R. //</span>
+        <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
         <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
-        <span style="color: var(--text-bright);">NEZZMUK 👤</span>
+        <span style="color: var(--text-bright); font-weight: bold;">NEZZMUK 👤</span>
       </div>
 
       <!-- Row 2: 4 Primary Anchors -->
@@ -736,7 +742,7 @@
         </div>
 
         <div class="tb-menu-controls">
-          <span class="control-label">FONT SIZE SCALING:</span>
+          <span class="control-label">READING FONT SCALING:</span>
           <div class="control-grid">
             <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REGULAR</button>
             <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
@@ -776,7 +782,7 @@
       </div>
 
       <div class="unlock-dock">
-        <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim); font-family: var(--font-mono);">ENTER STAMP OR CODEWORD:</div>
+        <div style="font-size: calc(11px * var(--content-scale)); color: var(--text-dim); font-family: var(--font-mono); font-weight: bold;">ENTER STAMP OR CODEWORD:</div>
         <div class="input-row">
           <input type="text" id="unlockInput" class="key-input" placeholder="Enter code..." />
           <button type="button" class="btn-submit" onclick="playClick(); alert('Code submitted to verification engine.')">UNLOCK</button>
@@ -823,14 +829,14 @@
             <g class="map-node-target" onclick="inspectMapCache(1)">
               <circle cx="50" cy="190" r="11" class="map-node-circle found" />
               <text x="50" y="193" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
-              <text x="50" y="212" fill="var(--accent-dim)" font-family="monospace" font-size="9" text-anchor="middle">01</text>
+              <text x="50" y="212" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">01</text>
             </g>
 
             <!-- Stage 02 (Completed) -->
             <g class="map-node-target" onclick="inspectMapCache(2)">
               <circle cx="140" cy="150" r="11" class="map-node-circle found" />
               <text x="140" y="153" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
-              <text x="140" y="132" fill="var(--accent-dim)" font-family="monospace" font-size="9" text-anchor="middle">02</text>
+              <text x="140" y="132" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">02</text>
             </g>
 
             <!-- Stage 03 (Current Active GZ) -->
@@ -843,15 +849,15 @@
             <!-- Stage 04 (Locked) -->
             <g class="map-node-target" onclick="inspectMapCache(4)">
               <circle cx="360" cy="110" r="11" class="map-node-circle locked" />
-              <text x="360" y="113" fill="var(--text-dim)" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
-              <text x="360" y="92" fill="var(--text-dim)" font-family="monospace" font-size="9" text-anchor="middle">04</text>
+              <text x="360" y="113" fill="var(--text-dim)" font-family="monospace" font-size="8" font-weight="bold" text-anchor="middle">🔒</text>
+              <text x="360" y="92" fill="var(--text-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">04</text>
             </g>
 
             <!-- Stage 05 (Locked) -->
             <g class="map-node-target" onclick="inspectMapCache(5)">
               <circle cx="450" cy="130" r="11" class="map-node-circle locked" />
-              <text x="450" y="133" fill="var(--text-dim)" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
-              <text x="450" y="152" fill="var(--text-dim)" font-family="monospace" font-size="9" text-anchor="middle">05</text>
+              <text x="450" y="133" fill="var(--text-dim)" font-family="monospace" font-size="8" font-weight="bold" text-anchor="middle">🔒</text>
+              <text x="450" y="152" fill="var(--text-dim)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">05</text>
             </g>
           </svg>
         </div>
@@ -872,7 +878,6 @@
             <span id="inspDt">D 2.0 / T 1.5</span>
           </div>
 
-          <!-- GPS Launch Button (Contextually enabled/disabled) -->
           <button type="button" class="btn-gps-handoff" id="inspGpsBtn" onclick="launchPhoneGps()">
             🧭 OPEN IN PHONE GPS (WGS84)
           </button>
@@ -897,7 +902,7 @@
           </div>
           <div class="gc-box">
             <span class="gc-box-lbl">COORDINATES (WGS84)</span>
-            <span class="gc-box-val" style="font-size: calc(11px * var(--font-scale));">N 41° 44.820 W 111° 49.900</span>
+            <span class="gc-box-val" style="font-size: calc(11px * var(--content-scale));">N 41° 44.820 W 111° 49.900</span>
           </div>
         </div>
 
@@ -914,7 +919,7 @@
          ======================================================= -->
     <div class="deck-container" id="deckPack" style="display: none;">
       <div class="mission-card">
-        <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim); font-family: var(--font-mono);">FIELD INVENTORY</div>
+        <div style="font-size: calc(11px * var(--content-scale)); color: var(--text-dim); font-family: var(--font-mono); font-weight: bold;">FIELD INVENTORY</div>
         <div class="mission-title">Cacher Trail Pack</div>
         <div class="mission-desc">
           Items, stamped washers, and corridor permits collected along the trail.
@@ -923,11 +928,11 @@
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
           <div style="background: var(--panel-inner); border: 1px solid var(--border-main); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
             <div style="font-weight: bold; color: var(--text-bright);">🏷️ Corridor Permit #01</div>
-            <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim);">Stamped Combo: 3-8-4 (Used at Cache 02)</div>
+            <div style="font-size: calc(11px * var(--content-scale)); color: var(--text-dim); font-weight: bold;">Stamped Combo: 3-8-4 (Used at Cache 02)</div>
           </div>
           <div style="background: var(--panel-inner); border: 1px solid var(--border-main); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
             <div style="font-weight: bold; color: var(--text-bright);">⚙️ Brass Washer #02</div>
-            <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim);">Stamped Word: "POST"</div>
+            <div style="font-size: calc(11px * var(--content-scale)); color: var(--text-dim); font-weight: bold;">Stamped Word: "POST"</div>
           </div>
         </div>
       </div>
@@ -936,9 +941,7 @@
   </div>
 
   <script>
-    // =======================================================
-    // 1. DISPLAY THEMES & FONT SCALING (Accessibility)
-    // =======================================================
+    // 1. DISPLAY THEMES & FONT SCALING
     function setTheme(themeKey) {
       playClick();
       document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
@@ -984,9 +987,7 @@
       try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
     }
 
-    // =======================================================
     // 2. AUDIO FEEDBACK
-    // =======================================================
     let soundActive = true;
     let audioCtx = null;
 
@@ -1054,9 +1055,7 @@
       }
     }
 
-    // =======================================================
     // 3. DECK SWITCHING
-    // =======================================================
     function switchDeck(deckName) {
       playClick();
       const drawer = document.getElementById('menuDrawer');
@@ -1138,10 +1137,8 @@
       }
     }
 
-    // =======================================================
     // 4. MULTI-TIER SVG MAP ZOOM
-    // =======================================================
-    let currentZoomTier = 0; // 0: 1× (Full), 1: 2× (Sector), 2: 4× (GZ Tight)
+    let currentZoomTier = 0;
     const ZOOM_TIERS = [
       { label: "1×", viewBox: "0 0 500 240" },
       { label: "2×", viewBox: "100 80 300 144" },
@@ -1156,9 +1153,7 @@
       document.getElementById('zoomBadge').innerText = tier.label;
     }
 
-    // =======================================================
-    // 5. MAP NODE INSPECTION & CONTEXTUAL BUTTON GUARD
-    // =======================================================
+    // 5. MAP NODE INSPECTION
     const MAP_CACHES = {
       1: {
         title: "Cache 01: Trailhead Pulloff",
