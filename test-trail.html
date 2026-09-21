@@ -5,18 +5,96 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>C.I.P.H.E.R. // Field Terminal Prototype</title>
   <style>
+    /* --------------------------------------------------------
+       THEME PROFILES (Display Modes)
+       -------------------------------------------------------- */
     :root {
-      --bg-dark: #0a0f0d;
-      --panel-bg: #121a15;
-      --border-green: #2a5a3a;
-      --text-green: #38ef7d;
-      --text-dim: #7da88d;
-      --text-bright: #ffffff;
-      --amber: #f7b731;
-      --red: #eb3b5a;
+      /* Base Metrics */
+      --font-scale: 1;
       --font-mono: 'Courier New', Courier, monospace;
       --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      /* CRT Green (Default) */
+      --bg-dark: #0a0f0d;
+      --panel-bg: #121a15;
+      --panel-inner: #080d0a;
+      --border-main: #2a5a3a;
+      --border-accent: #38ef7d;
+      --accent: #38ef7d;
+      --accent-dim: #7da88d;
+      --text-bright: #ffffff;
+      --text-main: #38ef7d;
+      --text-dim: #7da88d;
+      --warning: #f7b731;
+      --danger: #eb3b5a;
+      --map-canal: #102636;
+      --map-trail: #1b3824;
+      --map-node-bg: #0c1810;
     }
+
+    /* Theme: Paper Log (Light Mode for Mid-Day Utah Sun Glare) */
+    body.theme-light {
+      --bg-dark: #e8ece9;
+      --panel-bg: #f5f7f5;
+      --panel-inner: #e2e8e3;
+      --border-main: #8ba893;
+      --border-accent: #2d663e;
+      --accent: #1e5a32;
+      --accent-dim: #4d6e56;
+      --text-bright: #0c1810;
+      --text-main: #143520;
+      --text-dim: #415e4b;
+      --warning: #b37400;
+      --danger: #b31d28;
+      --map-canal: #82a8c2;
+      --map-trail: #7a9c84;
+      --map-node-bg: #dbe4dd;
+    }
+
+    /* Theme: Amber Phosphor */
+    body.theme-amber {
+      --bg-dark: #120b00;
+      --panel-bg: #1f1402;
+      --panel-inner: #0f0a00;
+      --border-main: #5c3f0d;
+      --border-accent: #ffb000;
+      --accent: #ffb000;
+      --accent-dim: #ba8829;
+      --text-bright: #ffffff;
+      --text-main: #ffb000;
+      --text-dim: #ba8829;
+      --warning: #ffcf66;
+      --danger: #ff4d4d;
+      --map-canal: #3b2808;
+      --map-trail: #4a330b;
+      --map-node-bg: #1c1303;
+    }
+
+    /* Theme: Hi-Vis (Color-Blind Safe Blue/Yellow) */
+    body.theme-hivis {
+      --bg-dark: #0a0e14;
+      --panel-bg: #131924;
+      --panel-inner: #0d121c;
+      --border-main: #2b456b;
+      --border-accent: #4ba3ff;
+      --accent: #4ba3ff;
+      --accent-dim: #8ab6e9;
+      --text-bright: #ffffff;
+      --text-main: #4ba3ff;
+      --text-dim: #8ab6e9;
+      --warning: #ffd13b;
+      --danger: #ff5252;
+      --map-canal: #1c2b42;
+      --map-trail: #273e5e;
+      --map-node-bg: #151f30;
+    }
+
+    /* --------------------------------------------------------
+       FONT SIZE TIERS
+       -------------------------------------------------------- */
+    body.font-regular { --font-scale: 1; }
+    body.font-large { --font-scale: 1.15; }
+    body.font-trailxl { --font-scale: 1.3; }
 
     * {
       box-sizing: border-box;
@@ -27,13 +105,15 @@
 
     body {
       background-color: var(--bg-dark);
-      color: var(--text-green);
+      color: var(--text-main);
       font-family: var(--font-ui);
+      font-size: calc(14px * var(--font-scale));
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       padding: 10px;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .app-shell {
@@ -49,11 +129,11 @@
        UNIVERSAL TOP TOOLBAR
        ======================================================= */
     .cipher-toolbar {
-      background: #080d0a;
-      border: 2px solid var(--border-green);
+      background: var(--panel-inner);
+      border: 2px solid var(--border-main);
       border-radius: 8px;
       position: relative;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
       display: flex;
       flex-direction: column;
     }
@@ -64,21 +144,20 @@
       justify-content: space-between;
       align-items: center;
       padding: 8px 12px;
-      border-bottom: 1px solid var(--border-green);
+      border-bottom: 1px solid var(--border-main);
       font-family: var(--font-mono);
-      font-size: 12px;
-      background: #040805;
+      font-size: calc(12px * var(--font-scale));
+      background: var(--panel-inner);
     }
 
     .tb-status-badge {
-      background: #14281b;
-      color: var(--text-green);
-      border: 1px solid var(--border-green);
+      background: var(--panel-bg);
+      color: var(--accent);
+      border: 1px solid var(--border-main);
       padding: 2px 8px;
       border-radius: 3px;
       font-weight: bold;
-      font-size: 11px;
-      letter-spacing: 0.5px;
+      font-size: calc(11px * var(--font-scale));
     }
 
     /* Row 2: 4 Primary Anchors */
@@ -87,17 +166,17 @@
       grid-template-columns: 1.1fr 1fr 1fr 0.9fr;
       gap: 4px;
       padding: 6px;
-      background: #0b130e;
+      background: var(--panel-bg);
     }
 
     .tb-btn {
-      background: #142018;
-      border: 1px solid var(--border-green);
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
       color: var(--text-dim);
       padding: 9px 4px;
       border-radius: 4px;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       font-weight: bold;
       cursor: pointer;
       text-align: center;
@@ -107,32 +186,28 @@
       justify-content: center;
       gap: 4px;
     }
-
-    .tb-btn:active {
-      background: #1f3526;
-    }
-
+    .tb-btn:active { background: var(--border-main); }
     .tb-btn.active {
-      background: var(--text-green);
-      color: #030604;
-      border-color: var(--text-green);
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
     }
 
     /* Row 3: Dynamic Action Bar */
     .tb-context-row {
       padding: 6px 8px;
-      background: #080d0a;
-      border-top: 1px dashed var(--border-green);
+      background: var(--panel-inner);
+      border-top: 1px dashed var(--border-main);
       display: flex;
       align-items: center;
       gap: 8px;
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: calc(11px * var(--font-scale));
       overflow-x: auto;
     }
 
     .tb-context-label {
-      color: var(--amber);
+      color: var(--warning);
       font-weight: bold;
       flex-shrink: 0;
     }
@@ -144,19 +219,24 @@
     }
 
     .btn-context {
-      background: #142018;
+      background: var(--panel-bg);
       color: var(--text-bright);
-      border: 1px solid var(--border-green);
-      padding: 5px 8px;
+      border: 1px solid var(--border-main);
+      padding: 6px 10px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: calc(11px * var(--font-scale));
       font-family: var(--font-mono);
       white-space: nowrap;
       cursor: pointer;
     }
     .btn-context:active {
-      border-color: var(--text-green);
-      color: var(--text-green);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-context:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-style: dashed;
     }
 
     /* Dropdown Drawer */
@@ -165,27 +245,24 @@
       position: absolute;
       top: calc(100% + 4px);
       right: 6px;
-      width: 250px;
-      background: #080d0a;
-      border: 2px solid var(--text-green);
+      width: 290px;
+      background: var(--panel-inner);
+      border: 2px solid var(--border-accent);
       border-radius: 6px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.7);
       z-index: 100;
-      padding: 6px 0;
+      padding: 8px 0;
       font-family: var(--font-mono);
     }
-
-    .tb-menu-drawer.open {
-      display: block;
-    }
+    .tb-menu-drawer.open { display: block; }
 
     .tb-menu-header {
-      padding: 4px 10px;
-      font-size: 10px;
-      color: var(--amber);
+      padding: 4px 12px;
+      font-size: calc(10px * var(--font-scale));
+      color: var(--warning);
       letter-spacing: 1px;
       text-transform: uppercase;
-      border-bottom: 1px solid #1c2b21;
+      border-bottom: 1px solid var(--border-main);
     }
 
     .tb-menu-item {
@@ -193,39 +270,74 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+      font-size: calc(13px * var(--font-scale));
       color: var(--text-bright);
       cursor: pointer;
       text-decoration: none;
     }
-    .tb-menu-item:active {
-      background: #14241a;
-      color: var(--text-green);
+    .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
+
+    .tb-menu-controls {
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .control-label {
+      font-size: calc(10px * var(--font-scale));
+      color: var(--text-dim);
+    }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .control-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+    }
+    .btn-control-chip {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
+      color: var(--text-dim);
+      padding: 5px 2px;
+      font-size: calc(10px * var(--font-scale));
+      font-family: var(--font-mono);
+      text-align: center;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .btn-control-chip.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      font-weight: bold;
+      border-color: var(--accent);
     }
 
     .tb-menu-divider {
       height: 1px;
-      background: var(--border-green);
-      margin: 4px 0;
+      background: var(--border-main);
+      margin: 6px 0;
     }
 
     /* =======================================================
-       DECKS (MISSION VS TRAIL VS PACK)
+       DECKS
        ======================================================= */
     .deck-container {
       background: var(--panel-bg);
-      border: 2px solid var(--border-green);
+      border: 2px solid var(--border-main);
       border-radius: 8px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
-    /* Mission Deck */
+    /* Dialogue Bubble */
     .dialogue-card {
       padding: 14px;
-      background: #0c140f;
-      border-bottom: 1px solid var(--border-green);
+      background: var(--panel-inner);
+      border-bottom: 1px solid var(--border-main);
       display: flex;
       align-items: flex-start;
       gap: 12px;
@@ -234,8 +346,8 @@
     .terminal-avatar {
       width: 40px;
       height: 40px;
-      background: #1c2b21;
-      border: 1px solid var(--border-green);
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -246,7 +358,7 @@
 
     .terminal-speech {
       font-family: var(--font-mono);
-      font-size: 13px;
+      font-size: calc(13px * var(--font-scale));
       line-height: 1.5;
       color: var(--text-bright);
     }
@@ -259,46 +371,42 @@
     }
 
     .mission-meta {
-      font-size: 11px;
-      color: var(--amber);
+      font-size: calc(11px * var(--font-scale));
+      color: var(--warning);
       font-family: var(--font-mono);
       font-weight: bold;
-      letter-spacing: 0.5px;
     }
 
     .mission-title {
-      font-size: 17px;
+      font-size: calc(17px * var(--font-scale));
       font-weight: bold;
       color: var(--text-bright);
     }
 
     .mission-desc {
-      font-size: 14px;
+      font-size: calc(14px * var(--font-scale));
       line-height: 1.5;
-      color: #cadbd0;
+      color: var(--text-dim);
     }
 
     .unlock-dock {
-      background: #080d0a;
-      border-top: 1px solid var(--border-green);
+      background: var(--panel-inner);
+      border-top: 1px solid var(--border-main);
       padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    .input-row {
-      display: flex;
-      gap: 8px;
-    }
+    .input-row { display: flex; gap: 8px; }
 
     .key-input {
       flex: 1;
-      background: #030604;
-      border: 1px solid var(--border-green);
+      background: var(--bg-dark);
+      border: 1px solid var(--border-main);
       color: var(--text-bright);
       font-family: var(--font-mono);
-      font-size: 15px;
+      font-size: calc(15px * var(--font-scale));
       padding: 10px;
       border-radius: 4px;
       text-transform: uppercase;
@@ -306,21 +414,23 @@
     }
 
     .btn-submit {
-      background: var(--text-green);
-      color: #030604;
+      background: var(--accent);
+      color: var(--bg-dark);
       border: none;
       font-weight: bold;
-      font-size: 14px;
+      font-size: calc(14px * var(--font-scale));
       padding: 0 16px;
       border-radius: 4px;
       cursor: pointer;
     }
 
-    /* Trail Deck (Corridor Map & Cache Specs) */
+    /* --------------------------------------------------------
+       TRAIL DECK & SVG MAP WITH ZOOM CONTROLS
+       -------------------------------------------------------- */
     .trail-sub-nav {
       display: flex;
-      background: #080d0a;
-      border-bottom: 1px solid var(--border-green);
+      background: var(--panel-inner);
+      border-bottom: 1px solid var(--border-main);
     }
 
     .btn-sub-tab {
@@ -331,21 +441,19 @@
       border: none;
       color: var(--text-dim);
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       font-weight: bold;
       cursor: pointer;
       border-bottom: 2px solid transparent;
     }
-
     .btn-sub-tab.active {
-      color: var(--text-green);
-      border-bottom-color: var(--text-green);
-      background: #0e1a12;
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: var(--panel-bg);
     }
 
-    /* SVG Map Container */
     .map-canvas-container {
-      background: #050a07;
+      background: var(--bg-dark);
       padding: 12px;
       display: flex;
       flex-direction: column;
@@ -354,75 +462,111 @@
 
     .svg-map-wrapper {
       width: 100%;
-      background: #070d09;
-      border: 1px solid var(--border-green);
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
       border-radius: 6px;
       overflow: hidden;
       position: relative;
+    }
+
+    /* Zoom Rocker Floating Inside Map */
+    .map-zoom-rocker {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--panel-inner);
+      border: 1px solid var(--border-accent);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .btn-zoom {
+      background: transparent;
+      border: none;
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-zoom:active { background: var(--border-main); }
+    .zoom-level-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--accent);
+      padding: 0 6px;
+      border-left: 1px solid var(--border-main);
+      border-right: 1px solid var(--border-main);
+      min-width: 32px;
+      text-align: center;
     }
 
     .svg-map-wrapper svg {
       width: 100%;
       height: auto;
       display: block;
+      transition: viewBox 0.35s ease-in-out;
     }
 
-    /* SVG Map Styling */
+    /* SVG Map Vector Styles */
     .map-trail-line {
-      stroke: #1b3824;
+      stroke: var(--map-trail);
       stroke-width: 4;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
     .map-trail-active-line {
-      stroke: var(--border-green);
+      stroke: var(--border-accent);
       stroke-width: 4;
       stroke-linecap: round;
       stroke-dasharray: 6 3;
     }
     .map-canal-line {
-      stroke: #102636;
+      stroke: var(--map-canal);
       stroke-width: 8;
       stroke-linecap: round;
     }
 
-    .map-node-target {
-      cursor: pointer;
-    }
+    .map-node-target { cursor: pointer; }
     .map-node-circle {
-      fill: #0c1810;
-      stroke: var(--border-green);
+      fill: var(--map-node-bg);
+      stroke: var(--border-main);
       stroke-width: 2;
       transition: all 0.2s ease;
     }
     .map-node-circle.found {
-      fill: #14281b;
-      stroke: var(--text-green);
+      stroke: var(--accent);
     }
     .map-node-circle.active-target {
-      fill: #1f3d28;
-      stroke: var(--text-green);
+      stroke: var(--accent);
       stroke-width: 3;
     }
     .map-node-circle.locked {
-      fill: #080d0a;
-      stroke: #25382c;
+      stroke: var(--border-main);
+      opacity: 0.5;
     }
 
     .map-pulse {
       animation: pulse-ring 2s infinite ease-out;
       transform-origin: center;
     }
-
     @keyframes pulse-ring {
       0% { r: 12; opacity: 0.8; }
       100% { r: 24; opacity: 0; }
     }
 
-    /* Map Inspector Drawer */
+    /* Map Cache Inspector Card */
     .map-inspector {
-      background: #080d0a;
-      border: 1px solid var(--border-green);
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
       border-radius: 6px;
       padding: 12px;
       display: flex;
@@ -435,47 +579,47 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #14281b;
+      border-bottom: 1px solid var(--border-main);
       padding-bottom: 6px;
     }
 
     .inspector-name {
-      font-size: 14px;
+      font-size: calc(14px * var(--font-scale));
       font-weight: bold;
       color: var(--text-bright);
     }
 
     .inspector-status {
-      font-size: 10px;
+      font-size: calc(10px * var(--font-scale));
       padding: 2px 6px;
       border-radius: 3px;
       font-weight: bold;
     }
-    .status-found { background: #14281b; color: var(--text-green); border: 1px solid var(--border-green); }
-    .status-current { background: var(--text-green); color: #030604; }
-    .status-locked { background: #1a1e1b; color: #5f7a68; border: 1px solid #25382c; }
+    .status-found { background: var(--panel-bg); color: var(--accent); border: 1px solid var(--border-main); }
+    .status-current { background: var(--accent); color: var(--bg-dark); }
+    .status-locked { background: var(--panel-bg); color: var(--text-dim); border: 1px dashed var(--border-main); }
 
     .inspector-comment {
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       line-height: 1.4;
-      color: #cadbd0;
+      color: var(--text-main);
     }
 
     .inspector-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 11px;
+      font-size: calc(11px * var(--font-scale));
       color: var(--text-dim);
     }
 
     .btn-gps-handoff {
-      background: #142018;
+      background: var(--panel-bg);
       color: var(--text-bright);
-      border: 1px solid var(--text-green);
+      border: 1px solid var(--accent);
       padding: 10px;
       border-radius: 4px;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       font-weight: bold;
       text-align: center;
       cursor: pointer;
@@ -484,9 +628,12 @@
       justify-content: center;
       gap: 6px;
     }
-    .btn-gps-handoff:active {
-      background: var(--text-green);
-      color: #030604;
+    .btn-gps-handoff:active { background: var(--accent); color: var(--bg-dark); }
+    .btn-gps-handoff:disabled {
+      border-color: var(--border-main);
+      color: var(--text-dim);
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     /* Cache Listing Specs */
@@ -505,29 +652,29 @@
     }
 
     .gc-box {
-      background: #080d0a;
-      border: 1px solid var(--border-green);
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
       padding: 8px 10px;
       border-radius: 4px;
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
-    .gc-box-lbl { font-size: 10px; color: var(--text-dim); }
-    .gc-box-val { font-size: 13px; color: var(--text-bright); font-weight: bold; }
+    .gc-box-lbl { font-size: calc(10px * var(--font-scale)); color: var(--text-dim); }
+    .gc-box-val { font-size: calc(13px * var(--font-scale)); color: var(--text-bright); font-weight: bold; }
 
     .hint-box {
-      background: #060c08;
-      border: 1px dashed var(--amber);
+      background: var(--panel-inner);
+      border: 1px dashed var(--warning);
       padding: 12px;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       line-height: 1.4;
-      color: #f7d794;
+      color: var(--warning);
     }
   </style>
 </head>
-<body>
+<body class="theme-crt font-regular">
 
   <div class="app-shell">
 
@@ -559,7 +706,7 @@
         </button>
       </div>
 
-      <!-- Row 3: Dynamic Action Bar -->
+      <!-- Row 3: Dynamic Contextual Action Bar -->
       <div class="tb-context-row">
         <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
@@ -577,11 +724,33 @@
         
         <div class="tb-menu-divider"></div>
         
+        <div class="tb-menu-header">DISPLAY & ACCESSIBILITY</div>
+        <div class="tb-menu-controls">
+          <span class="control-label">OPTICAL THEME / SUN MODE:</span>
+          <div class="control-grid-4">
+            <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT GREEN</button>
+            <button type="button" class="btn-control-chip" id="chipThemeLight" onclick="setTheme('light')">PAPER (LIGHT)</button>
+            <button type="button" class="btn-control-chip" id="chipThemeAmber" onclick="setTheme('amber')">AMBER P3</button>
+            <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS SAFE</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-controls">
+          <span class="control-label">FONT SIZE SCALING:</span>
+          <div class="control-grid">
+            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REGULAR</button>
+            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
+            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">TRAIL XL</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-divider"></div>
+
         <div class="tb-menu-header">OPERATOR & HARDWARE</div>
         <div class="tb-menu-item" onclick="playClick(); alert('Opening Cacher Profile')">👤 Cacher Profile</div>
         <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 Trail Manual (BYOP)</div>
         <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound Effects: ON</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Session Cleared.')" style="color: var(--red);">🚪 Log Off</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Session Cleared.')" style="color: var(--danger);">🚪 Log Off</div>
       </div>
 
     </div>
@@ -607,7 +776,7 @@
       </div>
 
       <div class="unlock-dock">
-        <div style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">ENTER STAMP OR CODEWORD:</div>
+        <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim); font-family: var(--font-mono);">ENTER STAMP OR CODEWORD:</div>
         <div class="input-row">
           <input type="text" id="unlockInput" class="key-input" placeholder="Enter code..." />
           <button type="button" class="btn-submit" onclick="playClick(); alert('Code submitted to verification engine.')">UNLOCK</button>
@@ -617,7 +786,7 @@
     </div>
 
     <!-- =======================================================
-         DECK 2: TRAIL (1984 SVG Corridor Map & Cache Specs)
+         DECK 2: TRAIL (SVG Map with Zoom & Cache Specs)
          ======================================================= -->
     <div class="deck-container" id="deckTrail" style="display: none;">
       
@@ -627,55 +796,62 @@
         <button type="button" class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
       </div>
 
-      <!-- Sub-View A: 1984 SVG Corridor Map -->
+      <!-- Sub-View A: SVG Corridor Map -->
       <div class="map-canvas-container" id="trailMapView">
         
         <div class="svg-map-wrapper">
-          <svg viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
-            <!-- Background canal ditch representation -->
-            <path d="M 20,40 Q 150,30 240,70 T 480,90" fill="none" class="map-canal-line" />
-            <text x="25" y="32" fill="#1b415a" font-family="monospace" font-size="9" font-weight="bold">LOGAN IRRIGATION CANAL</text>
+          <!-- 3-Tier Zoom Rocker -->
+          <div class="map-zoom-rocker">
+            <button type="button" class="btn-zoom" onclick="zoomMap(-1)" title="Zoom Out">-</button>
+            <span class="zoom-level-badge" id="zoomBadge">1×</span>
+            <button type="button" class="btn-zoom" onclick="zoomMap(1)" title="Zoom In">+</button>
+          </div>
 
-            <!-- Corridor Trail Path (Fence & Road Alignment) -->
+          <svg id="corridorSvg" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background canal ditch -->
+            <path d="M 20,40 Q 150,30 240,70 T 480,90" fill="none" class="map-canal-line" />
+            <text x="25" y="32" fill="var(--accent-dim)" font-family="monospace" font-size="9" font-weight="bold">LOGAN IRRIGATION CANAL</text>
+
+            <!-- Corridor Trail Path -->
             <path d="M 50,190 L 140,150 L 250,170 L 360,110 L 450,130" fill="none" class="map-trail-line" />
             <path d="M 50,190 L 140,150 L 250,170" fill="none" class="map-trail-active-line" />
 
             <!-- Active Target Pulsing Ring -->
-            <circle cx="250" cy="170" r="14" fill="none" stroke="#38ef7d" stroke-width="2" class="map-pulse" />
+            <circle cx="250" cy="170" r="14" fill="none" stroke="var(--accent)" stroke-width="2" class="map-pulse" />
 
             <!-- Stage 01 (Completed) -->
             <g class="map-node-target" onclick="inspectMapCache(1)">
-              <circle cx="50" cy="190" r="11" class="map-node-circle found" id="nodeCircle1" />
-              <text x="50" y="193" fill="#38ef7d" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
-              <text x="50" y="212" fill="#7da88d" font-family="monospace" font-size="9" text-anchor="middle">01</text>
+              <circle cx="50" cy="190" r="11" class="map-node-circle found" />
+              <text x="50" y="193" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
+              <text x="50" y="212" fill="var(--accent-dim)" font-family="monospace" font-size="9" text-anchor="middle">01</text>
             </g>
 
             <!-- Stage 02 (Completed) -->
             <g class="map-node-target" onclick="inspectMapCache(2)">
-              <circle cx="140" cy="150" r="11" class="map-node-circle found" id="nodeCircle2" />
-              <text x="140" y="153" fill="#38ef7d" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
-              <text x="140" y="132" fill="#7da88d" font-family="monospace" font-size="9" text-anchor="middle">02</text>
+              <circle cx="140" cy="150" r="11" class="map-node-circle found" />
+              <text x="140" y="153" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
+              <text x="140" y="132" fill="var(--accent-dim)" font-family="monospace" font-size="9" text-anchor="middle">02</text>
             </g>
 
             <!-- Stage 03 (Current Active GZ) -->
             <g class="map-node-target" onclick="inspectMapCache(3)">
-              <circle cx="250" cy="170" r="13" class="map-node-circle active-target" id="nodeCircle3" />
-              <text x="250" y="174" fill="#ffffff" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">03</text>
-              <text x="250" y="196" fill="#38ef7d" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">GZ</text>
+              <circle cx="250" cy="170" r="13" class="map-node-circle active-target" />
+              <text x="250" y="174" fill="var(--text-bright)" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">03</text>
+              <text x="250" y="196" fill="var(--accent)" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">GZ</text>
             </g>
 
             <!-- Stage 04 (Locked) -->
             <g class="map-node-target" onclick="inspectMapCache(4)">
-              <circle cx="360" cy="110" r="11" class="map-node-circle locked" id="nodeCircle4" />
-              <text x="360" y="113" fill="#5f7a68" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
-              <text x="360" y="92" fill="#5f7a68" font-family="monospace" font-size="9" text-anchor="middle">04</text>
+              <circle cx="360" cy="110" r="11" class="map-node-circle locked" />
+              <text x="360" y="113" fill="var(--text-dim)" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
+              <text x="360" y="92" fill="var(--text-dim)" font-family="monospace" font-size="9" text-anchor="middle">04</text>
             </g>
 
             <!-- Stage 05 (Locked) -->
             <g class="map-node-target" onclick="inspectMapCache(5)">
-              <circle cx="450" cy="130" r="11" class="map-node-circle locked" id="nodeCircle5" />
-              <text x="450" y="133" fill="#5f7a68" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
-              <text x="450" y="152" fill="#5f7a68" font-family="monospace" font-size="9" text-anchor="middle">05</text>
+              <circle cx="450" cy="130" r="11" class="map-node-circle locked" />
+              <text x="450" y="133" fill="var(--text-dim)" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
+              <text x="450" y="152" fill="var(--text-dim)" font-family="monospace" font-size="9" text-anchor="middle">05</text>
             </g>
           </svg>
         </div>
@@ -696,6 +872,7 @@
             <span id="inspDt">D 2.0 / T 1.5</span>
           </div>
 
+          <!-- GPS Launch Button (Contextually enabled/disabled) -->
           <button type="button" class="btn-gps-handoff" id="inspGpsBtn" onclick="launchPhoneGps()">
             🧭 OPEN IN PHONE GPS (WGS84)
           </button>
@@ -720,7 +897,7 @@
           </div>
           <div class="gc-box">
             <span class="gc-box-lbl">COORDINATES (WGS84)</span>
-            <span class="gc-box-val" style="font-size: 11px;">N 41° 44.820 W 111° 49.900</span>
+            <span class="gc-box-val" style="font-size: calc(11px * var(--font-scale));">N 41° 44.820 W 111° 49.900</span>
           </div>
         </div>
 
@@ -737,20 +914,20 @@
          ======================================================= -->
     <div class="deck-container" id="deckPack" style="display: none;">
       <div class="mission-card">
-        <div style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">FIELD INVENTORY</div>
+        <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim); font-family: var(--font-mono);">FIELD INVENTORY</div>
         <div class="mission-title">Cacher Trail Pack</div>
         <div class="mission-desc">
           Items, stamped washers, and corridor permits collected along the trail.
         </div>
         
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
-          <div style="background: #080d0a; border: 1px solid var(--border-green); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
+          <div style="background: var(--panel-inner); border: 1px solid var(--border-main); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
             <div style="font-weight: bold; color: var(--text-bright);">🏷️ Corridor Permit #01</div>
-            <div style="font-size: 11px; color: var(--text-dim);">Stamped Combo: 3-8-4 (Used at Cache 02)</div>
+            <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim);">Stamped Combo: 3-8-4 (Used at Cache 02)</div>
           </div>
-          <div style="background: #080d0a; border: 1px solid var(--border-green); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
+          <div style="background: var(--panel-inner); border: 1px solid var(--border-main); padding: 10px; border-radius: 4px; font-family: var(--font-mono);">
             <div style="font-weight: bold; color: var(--text-bright);">⚙️ Brass Washer #02</div>
-            <div style="font-size: 11px; color: var(--text-dim);">Stamped Word: "POST"</div>
+            <div style="font-size: calc(11px * var(--font-scale)); color: var(--text-dim);">Stamped Word: "POST"</div>
           </div>
         </div>
       </div>
@@ -759,7 +936,57 @@
   </div>
 
   <script>
-    // Audio System
+    // =======================================================
+    // 1. DISPLAY THEMES & FONT SCALING (Accessibility)
+    // =======================================================
+    function setTheme(themeKey) {
+      playClick();
+      document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
+      ['chipThemeCrt', 'chipThemeLight', 'chipThemeAmber', 'chipThemeHivis'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (themeKey === 'light') {
+        document.body.classList.add('theme-light');
+        document.getElementById('chipThemeLight').classList.add('active');
+      } else if (themeKey === 'amber') {
+        document.body.classList.add('theme-amber');
+        document.getElementById('chipThemeAmber').classList.add('active');
+      } else if (themeKey === 'hivis') {
+        document.body.classList.add('theme-hivis');
+        document.getElementById('chipThemeHivis').classList.add('active');
+      } else {
+        document.body.classList.add('theme-crt');
+        document.getElementById('chipThemeCrt').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_theme', themeKey); } catch (e) {}
+    }
+
+    function setFontSize(sizeKey) {
+      playClick();
+      document.body.classList.remove('font-regular', 'font-large', 'font-trailxl');
+      ['chipFontReg', 'chipFontLg', 'chipFontXl'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (sizeKey === 'large') {
+        document.body.classList.add('font-large');
+        document.getElementById('chipFontLg').classList.add('active');
+      } else if (sizeKey === 'trailxl') {
+        document.body.classList.add('font-trailxl');
+        document.getElementById('chipFontXl').classList.add('active');
+      } else {
+        document.body.classList.add('font-regular');
+        document.getElementById('chipFontReg').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
+    }
+
+    // =======================================================
+    // 2. AUDIO FEEDBACK
+    // =======================================================
     let soundActive = true;
     let audioCtx = null;
 
@@ -769,9 +996,7 @@
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           if (AudioContext) audioCtx = new AudioContext();
         }
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       } catch (err) {
         console.warn('Audio init bypassed:', err);
       }
@@ -804,18 +1029,14 @@
         e.preventDefault();
       }
       playClick();
-      const drawer = document.getElementById('menuDrawer');
-      drawer.classList.toggle('open');
+      document.getElementById('menuDrawer').classList.toggle('open');
     }
 
-    // Close menu when clicking outside
     document.addEventListener('click', function(e) {
       const toolbar = document.getElementById('cipherToolbar');
       const drawer = document.getElementById('menuDrawer');
       if (drawer && drawer.classList.contains('open')) {
-        if (!toolbar.contains(e.target)) {
-          drawer.classList.remove('open');
-        }
+        if (!toolbar.contains(e.target)) drawer.classList.remove('open');
       }
     });
 
@@ -833,7 +1054,9 @@
       }
     }
 
-    // Deck Switching
+    // =======================================================
+    // 3. DECK SWITCHING
+    // =======================================================
     function switchDeck(deckName) {
       playClick();
       const drawer = document.getElementById('menuDrawer');
@@ -862,10 +1085,7 @@
       } else if (deckName === 'trail') {
         btnTrail.classList.add('active');
         deckTrail.style.display = 'flex';
-        actionSlot.innerHTML = `
-          <button type="button" class="btn-context" onclick="playClick(); launchPhoneGps()">🧭 Navigate to GZ</button>
-          <button type="button" class="btn-context" onclick="playClick(); decryptHint()">💡 Decrypt Hint</button>
-        `;
+        updateTrailActionSlot();
       } else if (deckName === 'pack') {
         btnPack.classList.add('active');
         deckPack.style.display = 'flex';
@@ -875,7 +1095,6 @@
       }
     }
 
-    // Trail Sub-Tabs
     function switchTrailSubTab(subTab) {
       playClick();
       const tabMap = document.getElementById('subTabMap');
@@ -894,17 +1113,59 @@
         viewCache.style.display = 'flex';
         viewMap.style.display = 'none';
       }
+      updateTrailActionSlot();
+    }
+
+    function updateTrailActionSlot() {
+      const actionSlot = document.getElementById('contextActionsSlot');
+      const isMapView = document.getElementById('subTabMap').classList.contains('active');
+      const cache = MAP_CACHES[activeInspectedCache] || MAP_CACHES[3];
+
+      if (isMapView) {
+        if (cache.locked) {
+          actionSlot.innerHTML = `
+            <button type="button" class="btn-context" disabled>🔒 Stage Locked</button>
+          `;
+        } else {
+          actionSlot.innerHTML = `
+            <button type="button" class="btn-context" onclick="playClick(); launchPhoneGps()">🧭 Navigate to GZ</button>
+          `;
+        }
+      } else {
+        actionSlot.innerHTML = `
+          <button type="button" class="btn-context" onclick="playClick(); decryptHint()">💡 Decrypt Hint</button>
+        `;
+      }
     }
 
     // =======================================================
-    // CORRIDOR MAP INTERACTIVITY
+    // 4. MULTI-TIER SVG MAP ZOOM
+    // =======================================================
+    let currentZoomTier = 0; // 0: 1× (Full), 1: 2× (Sector), 2: 4× (GZ Tight)
+    const ZOOM_TIERS = [
+      { label: "1×", viewBox: "0 0 500 240" },
+      { label: "2×", viewBox: "100 80 300 144" },
+      { label: "4×", viewBox: "175 115 150 72" }
+    ];
+
+    function zoomMap(delta) {
+      playClick();
+      currentZoomTier = Math.max(0, Math.min(ZOOM_TIERS.length - 1, currentZoomTier + delta));
+      const tier = ZOOM_TIERS[currentZoomTier];
+      document.getElementById('corridorSvg').setAttribute('viewBox', tier.viewBox);
+      document.getElementById('zoomBadge').innerText = tier.label;
+    }
+
+    // =======================================================
+    // 5. MAP NODE INSPECTION & CONTEXTUAL BUTTON GUARD
     // =======================================================
     const MAP_CACHES = {
       1: {
         title: "Cache 01: Trailhead Pulloff",
         status: "FOUND [✓]",
         statusClass: "status-found",
-        comment: "\"First ammo can in the gravel turnaround. You signed it, you didn't steal the pen. Good start.\"",
+        locked: false,
+        comment: "\"First ammo can in the turnaround. You signed the scroll, you didn't steal the pen. Good start.\"",
         gc: "GC10001 // Ammo Can",
         dt: "D 1.5 / T 1.5",
         lat: "41.7380",
@@ -914,6 +1175,7 @@
         title: "Cache 02: Irrigation Crossing",
         status: "FOUND [✓]",
         statusClass: "status-found",
+        locked: false,
         comment: "\"Under the steel footbridge. Gasket is still seated tight against the canal mist.\"",
         gc: "GC10002 // Steel Lockbox",
         dt: "D 2.0 / T 2.0",
@@ -924,6 +1186,7 @@
         title: "Cache 03: The Milepost Marker",
         status: "ACTIVE GZ",
         statusClass: "status-current",
+        locked: false,
         comment: "\"Stop 3 is bolted to the cedar corner post. Mind the barbed wire and don't drop your pen in the nettles.\"",
         gc: "GC10003 // Regular Ammo Can",
         dt: "D 2.0 / T 1.5",
@@ -934,7 +1197,8 @@
         title: "Cache 04: Culvert Guard",
         status: "LOCKED 🔒",
         statusClass: "status-locked",
-        comment: "\"Chamber sealed behind 4-digit shackle combo. Solve Stage 03 to unlock corridor clearance.\"",
+        locked: true,
+        comment: "\"Chamber sealed behind a 4-digit shackle combination. Solve Stage 03 to unlock corridor clearance.\"",
         gc: "GC10004 // Heavy Steel Pipe",
         dt: "D 2.5 / T 2.0",
         lat: "41.7520",
@@ -944,6 +1208,7 @@
         title: "Cache 05: Wellsville Bench View",
         status: "LOCKED 🔒",
         statusClass: "status-locked",
+        locked: true,
         comment: "\"Elevated bench hide. Don't let your GPS batteries die in the mountain wind.\"",
         gc: "GC10005 // Ammo Can",
         dt: "D 3.0 / T 2.5",
@@ -969,10 +1234,22 @@
       document.getElementById('inspComment').innerText = cache.comment;
       document.getElementById('inspGc').innerText = cache.gc;
       document.getElementById('inspDt').innerText = cache.dt;
+
+      const gpsBtn = document.getElementById('inspGpsBtn');
+      if (cache.locked) {
+        gpsBtn.disabled = true;
+        gpsBtn.innerText = "🔒 LOCKED // SOLVE STAGE 03 FIRST";
+      } else {
+        gpsBtn.disabled = false;
+        gpsBtn.innerText = "🧭 OPEN IN PHONE GPS (WGS84)";
+      }
+
+      updateTrailActionSlot();
     }
 
     function launchPhoneGps() {
       const cache = MAP_CACHES[activeInspectedCache] || MAP_CACHES[3];
+      if (cache.locked) return;
       const url = `https://www.google.com/maps/dir/?api=1&destination=${cache.lat},${cache.lng}`;
       window.open(url, '_blank');
     }
@@ -989,6 +1266,14 @@
         hintDecrypted = false;
       }
     }
+
+    // Restore saved settings on load
+    try {
+      const savedTheme = localStorage.getItem('cipher_theme');
+      if (savedTheme) setTheme(savedTheme);
+      const savedFont = localStorage.getItem('cipher_font_size');
+      if (savedFont) setFontSize(savedFont);
+    } catch (e) {}
   </script>
 </body>
 </html>
