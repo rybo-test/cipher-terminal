@@ -440,12 +440,12 @@
 </head>
 <body>
 
-  <div class="app-shell" onclick="closeMenuIfOpen(event)">
+  <div class="app-shell">
 
     <!-- =======================================================
          UNIVERSAL TOP TOOLBAR
          ======================================================= -->
-    <div class="cipher-toolbar">
+    <div class="cipher-toolbar" id="cipherToolbar">
       
       <!-- Row 1: Hardware Identity & Status Placeholder -->
       <div class="tb-status-row">
@@ -456,16 +456,16 @@
 
       <!-- Row 2: 4 Primary Anchors -->
       <div class="tb-nav-row">
-        <button class="tb-btn active" id="btnNavMission" onclick="switchDeck('mission')">
+        <button type="button" class="tb-btn active" id="btnNavMission" onclick="switchDeck('mission')">
           🎯 MISSION
         </button>
-        <button class="tb-btn" id="btnNavTrail" onclick="switchDeck('trail')">
+        <button type="button" class="tb-btn" id="btnNavTrail" onclick="switchDeck('trail')">
           🗺️ TRAIL
         </button>
-        <button class="tb-btn" id="btnNavPack" onclick="switchDeck('pack')">
+        <button type="button" class="tb-btn" id="btnNavPack" onclick="switchDeck('pack')">
           🎒 PACK (2)
         </button>
-        <button class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
+        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
           ≡ MENU ▾
         </button>
       </div>
@@ -474,8 +474,8 @@
       <div class="tb-context-row">
         <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
-          <button class="btn-context" onclick="playClick(); jumpToUnlock()">🔓 Unlock Stage</button>
-          <button class="btn-context" onclick="playClick(); alert('Container Hint: Base of cedar post.')">💡 Lid Hint</button>
+          <button type="button" class="btn-context" onclick="playClick(); jumpToUnlock()">🔓 Unlock Stage</button>
+          <button type="button" class="btn-context" onclick="playClick(); alert('Container Hint: Base of cedar post.')">💡 Lid Hint</button>
         </div>
       </div>
 
@@ -521,7 +521,7 @@
         <div style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">ENTER STAMP OR CODEWORD:</div>
         <div class="input-row">
           <input type="text" id="unlockInput" class="key-input" placeholder="Enter code..." />
-          <button class="btn-submit" onclick="playClick(); alert('Code submitted to verification engine.')">UNLOCK</button>
+          <button type="button" class="btn-submit" onclick="playClick(); alert('Code submitted to verification engine.')">UNLOCK</button>
         </div>
       </div>
 
@@ -534,8 +534,8 @@
       
       <!-- Sub-Tabs: Map vs Cache Specs -->
       <div class="trail-sub-nav">
-        <button class="btn-sub-tab active" id="subTabMap" onclick="switchTrailSubTab('map')">🗺️ CORRIDOR MAP</button>
-        <button class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
+        <button type="button" class="btn-sub-tab active" id="subTabMap" onclick="switchTrailSubTab('map')">🗺️ CORRIDOR MAP</button>
+        <button type="button" class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
       </div>
 
       <!-- Sub-View A: Corridor Map -->
@@ -559,7 +559,7 @@
           </div>
         </div>
 
-        <button class="btn-gps-handoff" onclick="playClick(); window.open('https://maps.google.com/?q=41.7470,-111.8316', '_blank')">
+        <button type="button" class="btn-gps-handoff" onclick="playClick(); window.open('https://maps.google.com/?q=41.7470,-111.8316', '_blank')">
           🧭 OPEN IN PHONE GPS / COMPASS
         </button>
       </div>
@@ -625,45 +625,150 @@
     let audioCtx = null;
 
     function initAudio() {
-      if (!audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) audioCtx = new AudioContext();
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (err) {
+        console.warn('Audio init bypassed:', err);
       }
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     }
 
     function playClick() {
       if (!soundActive) return;
       initAudio();
       if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.04);
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (err) {
+        console.warn('Click audio error:', err);
+      }
     }
 
     function toggleMenu(e) {
-      if (e) e.stopPropagation();
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
       playClick();
-      document.getElementById('menuDrawer').classList.toggle('open');
+      const drawer = document.getElementById('menuDrawer');
+      drawer.classList.toggle('open');
     }
 
-    function closeMenuIfOpen() {
+    // Close menu only when tapping outside the toolbar
+    document.addEventListener('click', function(e) {
+      const toolbar = document.getElementById('cipherToolbar');
       const drawer = document.getElementById('menuDrawer');
-      if (drawer.classList.contains('open')) {
-        drawer.classList.remove('open');
-        playClick();
+      if (drawer && drawer.classList.contains('open')) {
+        if (!toolbar.contains(e.target)) {
+          drawer.classList.remove('open');
+        }
       }
-    }
+    });
 
     function toggleSound() {
       soundActive = !soundActive;
       playClick();
-      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound Effects: ON" : "🔇
+      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound Effects: ON" : "🔇 Sound Effects: OFF";
+    }
+
+    function jumpToUnlock() {
+      const input = document.getElementById('unlockInput');
+      if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    // Deck Switching
+    function switchDeck(deckName) {
+      playClick();
+      const drawer = document.getElementById('menuDrawer');
+      if (drawer) drawer.classList.remove('open');
+
+      const btnMission = document.getElementById('btnNavMission');
+      const btnTrail = document.getElementById('btnNavTrail');
+      const btnPack = document.getElementById('btnNavPack');
+
+      const deckMission = document.getElementById('deckMission');
+      const deckTrail = document.getElementById('deckTrail');
+      const deckPack = document.getElementById('deckPack');
+
+      [btnMission, btnTrail, btnPack].forEach(btn => btn && btn.classList.remove('active'));
+      [deckMission, deckTrail, deckPack].forEach(deck => deck && (deck.style.display = 'none'));
+
+      const actionSlot = document.getElementById('contextActionsSlot');
+
+      if (deckName === 'mission') {
+        btnMission.classList.add('active');
+        deckMission.style.display = 'flex';
+        actionSlot.innerHTML = `
+          <button type="button" class="btn-context" onclick="playClick(); jumpToUnlock()">🔓 Unlock Stage</button>
+          <button type="button" class="btn-context" onclick="playClick(); alert('Container Hint: Base of cedar post.')">💡 Lid Hint</button>
+        `;
+      } else if (deckName === 'trail') {
+        btnTrail.classList.add('active');
+        deckTrail.style.display = 'flex';
+        actionSlot.innerHTML = `
+          <button type="button" class="btn-context" onclick="playClick(); window.open('https://maps.google.com/?q=41.7470,-111.8316', '_blank')">🧭 Open Phone GPS</button>
+          <button type="button" class="btn-context" onclick="playClick(); decryptHint()">💡 Decrypt Hint</button>
+        `;
+      } else if (deckName === 'pack') {
+        btnPack.classList.add('active');
+        deckPack.style.display = 'flex';
+        actionSlot.innerHTML = `
+          <button type="button" class="btn-context" onclick="playClick(); alert('Trade Swag: Trade Equal or Trade Up')">🎁 Trade Swag</button>
+        `;
+      }
+    }
+
+    // Trail Sub-Tabs (Map vs Specs)
+    function switchTrailSubTab(subTab) {
+      playClick();
+      const tabMap = document.getElementById('subTabMap');
+      const tabCache = document.getElementById('subTabCache');
+      const viewMap = document.getElementById('trailMapView');
+      const viewCache = document.getElementById('trailCacheView');
+
+      if (subTab === 'map') {
+        tabMap.classList.add('active');
+        tabCache.classList.remove('active');
+        viewMap.style.display = 'flex';
+        viewCache.style.display = 'none';
+      } else {
+        tabCache.classList.add('active');
+        tabMap.classList.remove('active');
+        viewCache.style.display = 'flex';
+        viewMap.style.display = 'none';
+      }
+    }
+
+    // ROT-13 Decrypter
+    let hintDecrypted = false;
+    function decryptHint() {
+      const hintElem = document.getElementById('hintText');
+      if (!hintDecrypted) {
+        hintElem.innerText = "Base of cedar corner post under ground level stone.";
+        hintDecrypted = true;
+      } else {
+        hintElem.innerText = "Onfr bs prqne pbeare cbfg haqre tebhaq yriry fgbar.";
+        hintDecrypted = false;
+      }
+    }
+  </script>
+</body>
+</html>
