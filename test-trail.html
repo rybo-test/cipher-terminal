@@ -316,7 +316,7 @@
       cursor: pointer;
     }
 
-    /* Trail Deck (Map & Cache Listing) */
+    /* Trail Deck (Corridor Map & Cache Specs) */
     .trail-sub-nav {
       display: flex;
       background: #080d0a;
@@ -343,50 +343,139 @@
       background: #0e1a12;
     }
 
-    /* Corridor Map Visual */
-    .map-canvas-mock {
+    /* SVG Map Container */
+    .map-canvas-container {
       background: #050a07;
-      padding: 16px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    .corridor-path {
-      border: 1px dashed var(--border-green);
+    .svg-map-wrapper {
+      width: 100%;
+      background: #070d09;
+      border: 1px solid var(--border-green);
       border-radius: 6px;
-      padding: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .svg-map-wrapper svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* SVG Map Styling */
+    .map-trail-line {
+      stroke: #1b3824;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .map-trail-active-line {
+      stroke: var(--border-green);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 6 3;
+    }
+    .map-canal-line {
+      stroke: #102636;
+      stroke-width: 8;
+      stroke-linecap: round;
+    }
+
+    .map-node-target {
+      cursor: pointer;
+    }
+    .map-node-circle {
+      fill: #0c1810;
+      stroke: var(--border-green);
+      stroke-width: 2;
+      transition: all 0.2s ease;
+    }
+    .map-node-circle.found {
+      fill: #14281b;
+      stroke: var(--text-green);
+    }
+    .map-node-circle.active-target {
+      fill: #1f3d28;
+      stroke: var(--text-green);
+      stroke-width: 3;
+    }
+    .map-node-circle.locked {
+      fill: #080d0a;
+      stroke: #25382c;
+    }
+
+    .map-pulse {
+      animation: pulse-ring 2s infinite ease-out;
+      transform-origin: center;
+    }
+
+    @keyframes pulse-ring {
+      0% { r: 12; opacity: 0.8; }
+      100% { r: 24; opacity: 0; }
+    }
+
+    /* Map Inspector Drawer */
+    .map-inspector {
+      background: #080d0a;
+      border: 1px solid var(--border-green);
+      border-radius: 6px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
       font-family: var(--font-mono);
     }
 
-    .map-node {
+    .inspector-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 8px 10px;
-      background: #0a140d;
-      border: 1px solid var(--border-green);
-      border-radius: 4px;
-      font-size: 12px;
+      align-items: center;
+      border-bottom: 1px solid #14281b;
+      padding-bottom: 6px;
     }
 
-    .map-node.current {
-      border-color: var(--text-green);
-      background: #12281a;
-      box-shadow: 0 0 10px rgba(56, 239, 125, 0.2);
+    .inspector-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .inspector-status {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    .status-found { background: #14281b; color: var(--text-green); border: 1px solid var(--border-green); }
+    .status-current { background: var(--text-green); color: #030604; }
+    .status-locked { background: #1a1e1b; color: #5f7a68; border: 1px solid #25382c; }
+
+    .inspector-comment {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #cadbd0;
+    }
+
+    .inspector-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
     }
 
     .btn-gps-handoff {
-      background: #182b1f;
+      background: #142018;
       color: var(--text-bright);
       border: 1px solid var(--text-green);
-      padding: 12px;
-      border-radius: 6px;
+      padding: 10px;
+      border-radius: 4px;
       font-family: var(--font-mono);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: bold;
       text-align: center;
       cursor: pointer;
@@ -528,7 +617,7 @@
     </div>
 
     <!-- =======================================================
-         DECK 2: TRAIL (Corridor Map & Cache Specs)
+         DECK 2: TRAIL (1984 SVG Corridor Map & Cache Specs)
          ======================================================= -->
     <div class="deck-container" id="deckTrail" style="display: none;">
       
@@ -538,30 +627,80 @@
         <button type="button" class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
       </div>
 
-      <!-- Sub-View A: Corridor Map -->
-      <div class="map-canvas-mock" id="trailMapView">
-        <div class="corridor-path">
-          <div class="map-node" style="color: var(--text-dim);">
-            <span>✓ Cache 01: Trailhead Pulloff</span>
-            <span>[STAMPED]</span>
-          </div>
-          <div class="map-node" style="color: var(--text-dim);">
-            <span>✓ Cache 02: Irrigation Crossing</span>
-            <span>[STAMPED]</span>
-          </div>
-          <div class="map-node current">
-            <span style="color: var(--text-green); font-weight: bold;">▶ Cache 03: The Milepost Marker</span>
-            <span style="color: var(--amber);">[CURRENT GZ]</span>
-          </div>
-          <div class="map-node" style="color: #4a6854;">
-            <span>🔒 Cache 04: Culvert Guard</span>
-            <span>[LOCKED]</span>
-          </div>
+      <!-- Sub-View A: 1984 SVG Corridor Map -->
+      <div class="map-canvas-container" id="trailMapView">
+        
+        <div class="svg-map-wrapper">
+          <svg viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background canal ditch representation -->
+            <path d="M 20,40 Q 150,30 240,70 T 480,90" fill="none" class="map-canal-line" />
+            <text x="25" y="32" fill="#1b415a" font-family="monospace" font-size="9" font-weight="bold">LOGAN IRRIGATION CANAL</text>
+
+            <!-- Corridor Trail Path (Fence & Road Alignment) -->
+            <path d="M 50,190 L 140,150 L 250,170 L 360,110 L 450,130" fill="none" class="map-trail-line" />
+            <path d="M 50,190 L 140,150 L 250,170" fill="none" class="map-trail-active-line" />
+
+            <!-- Active Target Pulsing Ring -->
+            <circle cx="250" cy="170" r="14" fill="none" stroke="#38ef7d" stroke-width="2" class="map-pulse" />
+
+            <!-- Stage 01 (Completed) -->
+            <g class="map-node-target" onclick="inspectMapCache(1)">
+              <circle cx="50" cy="190" r="11" class="map-node-circle found" id="nodeCircle1" />
+              <text x="50" y="193" fill="#38ef7d" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
+              <text x="50" y="212" fill="#7da88d" font-family="monospace" font-size="9" text-anchor="middle">01</text>
+            </g>
+
+            <!-- Stage 02 (Completed) -->
+            <g class="map-node-target" onclick="inspectMapCache(2)">
+              <circle cx="140" cy="150" r="11" class="map-node-circle found" id="nodeCircle2" />
+              <text x="140" y="153" fill="#38ef7d" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">✓</text>
+              <text x="140" y="132" fill="#7da88d" font-family="monospace" font-size="9" text-anchor="middle">02</text>
+            </g>
+
+            <!-- Stage 03 (Current Active GZ) -->
+            <g class="map-node-target" onclick="inspectMapCache(3)">
+              <circle cx="250" cy="170" r="13" class="map-node-circle active-target" id="nodeCircle3" />
+              <text x="250" y="174" fill="#ffffff" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">03</text>
+              <text x="250" y="196" fill="#38ef7d" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">GZ</text>
+            </g>
+
+            <!-- Stage 04 (Locked) -->
+            <g class="map-node-target" onclick="inspectMapCache(4)">
+              <circle cx="360" cy="110" r="11" class="map-node-circle locked" id="nodeCircle4" />
+              <text x="360" y="113" fill="#5f7a68" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
+              <text x="360" y="92" fill="#5f7a68" font-family="monospace" font-size="9" text-anchor="middle">04</text>
+            </g>
+
+            <!-- Stage 05 (Locked) -->
+            <g class="map-node-target" onclick="inspectMapCache(5)">
+              <circle cx="450" cy="130" r="11" class="map-node-circle locked" id="nodeCircle5" />
+              <text x="450" y="133" fill="#5f7a68" font-family="monospace" font-size="8" text-anchor="middle">🔒</text>
+              <text x="450" y="152" fill="#5f7a68" font-family="monospace" font-size="9" text-anchor="middle">05</text>
+            </g>
+          </svg>
         </div>
 
-        <button type="button" class="btn-gps-handoff" onclick="playClick(); window.open('https://maps.google.com/?q=41.7470,-111.8316', '_blank')">
-          🧭 OPEN IN PHONE GPS / COMPASS
-        </button>
+        <!-- Interactive Map Cache Drawer -->
+        <div class="map-inspector" id="mapInspector">
+          <div class="inspector-header">
+            <span class="inspector-name" id="inspTitle">Cache 03: The Milepost Marker</span>
+            <span class="inspector-status status-current" id="inspStatus">ACTIVE GZ</span>
+          </div>
+
+          <div class="inspector-comment" id="inspComment">
+            "Stop 3 is bolted to the cedar corner post. Mind the barbed wire and don't drop your pen in the nettles."
+          </div>
+
+          <div class="inspector-meta">
+            <span id="inspGc">GC10003 // Regular Ammo Can</span>
+            <span id="inspDt">D 2.0 / T 1.5</span>
+          </div>
+
+          <button type="button" class="btn-gps-handoff" id="inspGpsBtn" onclick="launchPhoneGps()">
+            🧭 OPEN IN PHONE GPS (WGS84)
+          </button>
+        </div>
+
       </div>
 
       <!-- Sub-View B: Cache Listing Specs -->
@@ -669,7 +808,7 @@
       drawer.classList.toggle('open');
     }
 
-    // Close menu only when tapping outside the toolbar
+    // Close menu when clicking outside
     document.addEventListener('click', function(e) {
       const toolbar = document.getElementById('cipherToolbar');
       const drawer = document.getElementById('menuDrawer');
@@ -724,7 +863,7 @@
         btnTrail.classList.add('active');
         deckTrail.style.display = 'flex';
         actionSlot.innerHTML = `
-          <button type="button" class="btn-context" onclick="playClick(); window.open('https://maps.google.com/?q=41.7470,-111.8316', '_blank')">🧭 Open Phone GPS</button>
+          <button type="button" class="btn-context" onclick="playClick(); launchPhoneGps()">🧭 Navigate to GZ</button>
           <button type="button" class="btn-context" onclick="playClick(); decryptHint()">💡 Decrypt Hint</button>
         `;
       } else if (deckName === 'pack') {
@@ -736,7 +875,7 @@
       }
     }
 
-    // Trail Sub-Tabs (Map vs Specs)
+    // Trail Sub-Tabs
     function switchTrailSubTab(subTab) {
       playClick();
       const tabMap = document.getElementById('subTabMap');
@@ -755,6 +894,87 @@
         viewCache.style.display = 'flex';
         viewMap.style.display = 'none';
       }
+    }
+
+    // =======================================================
+    // CORRIDOR MAP INTERACTIVITY
+    // =======================================================
+    const MAP_CACHES = {
+      1: {
+        title: "Cache 01: Trailhead Pulloff",
+        status: "FOUND [✓]",
+        statusClass: "status-found",
+        comment: "\"First ammo can in the gravel turnaround. You signed it, you didn't steal the pen. Good start.\"",
+        gc: "GC10001 // Ammo Can",
+        dt: "D 1.5 / T 1.5",
+        lat: "41.7380",
+        lng: "-111.8410"
+      },
+      2: {
+        title: "Cache 02: Irrigation Crossing",
+        status: "FOUND [✓]",
+        statusClass: "status-found",
+        comment: "\"Under the steel footbridge. Gasket is still seated tight against the canal mist.\"",
+        gc: "GC10002 // Steel Lockbox",
+        dt: "D 2.0 / T 2.0",
+        lat: "41.7420",
+        lng: "-111.8360"
+      },
+      3: {
+        title: "Cache 03: The Milepost Marker",
+        status: "ACTIVE GZ",
+        statusClass: "status-current",
+        comment: "\"Stop 3 is bolted to the cedar corner post. Mind the barbed wire and don't drop your pen in the nettles.\"",
+        gc: "GC10003 // Regular Ammo Can",
+        dt: "D 2.0 / T 1.5",
+        lat: "41.7470",
+        lng: "-111.8316"
+      },
+      4: {
+        title: "Cache 04: Culvert Guard",
+        status: "LOCKED 🔒",
+        statusClass: "status-locked",
+        comment: "\"Chamber sealed behind 4-digit shackle combo. Solve Stage 03 to unlock corridor clearance.\"",
+        gc: "GC10004 // Heavy Steel Pipe",
+        dt: "D 2.5 / T 2.0",
+        lat: "41.7520",
+        lng: "-111.8250"
+      },
+      5: {
+        title: "Cache 05: Wellsville Bench View",
+        status: "LOCKED 🔒",
+        statusClass: "status-locked",
+        comment: "\"Elevated bench hide. Don't let your GPS batteries die in the mountain wind.\"",
+        gc: "GC10005 // Ammo Can",
+        dt: "D 3.0 / T 2.5",
+        lat: "41.7590",
+        lng: "-111.8190"
+      }
+    };
+
+    let activeInspectedCache = 3;
+
+    function inspectMapCache(stopNum) {
+      playClick();
+      const cache = MAP_CACHES[stopNum];
+      if (!cache) return;
+
+      activeInspectedCache = stopNum;
+
+      document.getElementById('inspTitle').innerText = cache.title;
+      const statusEl = document.getElementById('inspStatus');
+      statusEl.innerText = cache.status;
+      statusEl.className = `inspector-status ${cache.statusClass}`;
+
+      document.getElementById('inspComment').innerText = cache.comment;
+      document.getElementById('inspGc').innerText = cache.gc;
+      document.getElementById('inspDt').innerText = cache.dt;
+    }
+
+    function launchPhoneGps() {
+      const cache = MAP_CACHES[activeInspectedCache] || MAP_CACHES[3];
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${cache.lat},${cache.lng}`;
+      window.open(url, '_blank');
     }
 
     // ROT-13 Decrypter
