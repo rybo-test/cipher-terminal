@@ -2,240 +2,269 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-  <title>C.I.P.H.E.R. // Cache Tales Field Transceiver</title>
+  <title>C.I.P.H.E.R. // Field Gadget Cache Transceiver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070b08">
   <style>
     :root {
       --bg-color: #070b08;
-      --panel-bg: rgba(12, 22, 15, 0.95);
-      --term-green: #00ff66;
-      --term-dim: #008833;
-      --term-alert: #ffaa00;
-      --term-error: #ff3333;
-      --term-rat: #33ccff;
-      --font-size-base: 14px;
-      --input-size-base: 16px;
+      --panel-bg: rgba(10, 18, 12, 0.96);
+      --term-green: #00ff66;       /* WCAG AAA 14.6:1 */
+      --term-dim: #00bb44;         /* High-glanceability outdoor green */
+      --term-alert: #ffaa00;       /* Amber warning */
+      --term-error: #ff3333;       /* Red fault */
+      --term-rat: #33ccff;         /* Rat Lab Cyan */
+      --term-border: #00441b;
+      --font-stack: 'Courier New', Courier, monospace;
     }
 
-    * { box-sizing: border-box; }
-
-    html, body {
-      background-color: var(--bg-color);
-      color: var(--term-green);
-      font-family: 'Courier New', Courier, monospace;
-      font-size: var(--font-size-base);
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body, html {
+      width: 100%;
       height: 100%;
       height: 100dvh;
+      background-color: var(--bg-color);
+      color: var(--term-green);
+      font-family: var(--font-stack);
       overflow: hidden;
-      overscroll-behavior: none;
-      touch-action: manipulation;
-    }
-
-    #app-container {
       display: flex;
       flex-direction: column;
-      height: 100%;
-      height: 100dvh;
-      padding: 6px 10px;
-      padding-bottom: max(6px, env(safe-area-inset-bottom));
-      position: relative;
     }
 
-    #header-bar {
-      border-bottom: 1px dashed var(--term-dim);
-      padding-bottom: 4px;
-      margin-bottom: 4px;
-      font-size: 0.78em;
+    /* CRT Scanline Overlay */
+    .crt-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* Top Telemetry Header */
+    header {
+      background: #030604;
+      border-bottom: 2px solid var(--term-dim);
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      flex-shrink: 0;
+      gap: 6px;
+      z-index: 10;
     }
 
-    .header-row {
+    .header-row-main {
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    #terminal-screen {
-      flex: 1 1 auto;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding-right: 4px;
-      scroll-behavior: smooth;
-    }
-
-    .term-block {
-      border-left: 3px solid var(--term-green);
-      padding: 4px 8px;
-      margin-bottom: 2px;
-      background: rgba(0, 255, 102, 0.02);
-      border-radius: 0 2px 2px 0;
-      word-break: break-word;
-      line-height: 1.35;
-    }
-
-    .term-block.alert { border-left-color: var(--term-alert); color: var(--term-alert); background: rgba(255, 170, 0, 0.04); }
-    .term-block.error { border-left-color: var(--term-error); color: var(--term-error); background: rgba(255, 51, 51, 0.04); }
-    .term-block.ratlab { border-left-color: var(--term-rat); color: var(--term-rat); background: rgba(51, 204, 255, 0.04); }
-
-    .term-title {
       font-weight: bold;
-      margin-bottom: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-size: 0.9em;
+      font-size: 0.85rem;
     }
 
-    .term-dim {
+    .header-badges {
+      display: flex;
+      gap: 12px;
+      font-size: 0.75rem;
       color: var(--term-dim);
-      font-size: 0.85em;
     }
 
-    /* Action Deck Tray */
-    #action-deck-container {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex-shrink: 0;
-      padding: 4px 0;
-      border-top: 1px dashed rgba(0, 136, 51, 0.4);
-    }
-
-    .deck-row {
-      display: flex;
-      gap: 5px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    .deck-row::-webkit-scrollbar { display: none; }
-
-    .category-chip {
-      background: transparent;
-      border: 1px solid var(--term-dim);
-      color: var(--term-dim);
-      padding: 5px 8px;
-      font-family: inherit;
-      font-size: 0.72em;
-      cursor: pointer;
-      border-radius: 2px;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-    .category-chip.active {
-      border-color: var(--term-green);
+    .badge-val {
       color: var(--term-green);
-      background: rgba(0, 255, 102, 0.1);
     }
 
-    .action-chip {
-      background: rgba(0, 255, 102, 0.06);
-      border: 1px solid var(--term-green);
-      color: var(--term-green);
-      padding: 6px 10px;
-      font-family: inherit;
-      font-size: 0.75em;
-      white-space: nowrap;
-      cursor: pointer;
-      border-radius: 2px;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-    .action-chip:active {
-      background: var(--term-green);
-      color: var(--bg-color);
-    }
-
-    .action-chip.ratlab-chip {
-      border-color: var(--term-rat);
-      color: var(--term-rat);
-      background: rgba(51, 204, 255, 0.08);
-    }
-    .action-chip.ratlab-chip:active {
-      background: var(--term-rat);
-      color: var(--bg-color);
-    }
-
-    #input-form {
+    .header-account-bar {
       display: flex;
+      gap: 8px;
       align-items: center;
-      gap: 6px;
+      border-top: 1px dashed var(--term-border);
       padding-top: 4px;
-      background: var(--bg-color);
-      flex-shrink: 0;
     }
 
-    .nav-btn {
+    .hdr-btn {
       background: rgba(0, 255, 102, 0.08);
       border: 1px solid var(--term-dim);
       color: var(--term-green);
       font-family: inherit;
-      font-size: 0.75em;
-      padding: 5px 8px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 6px 10px;
+      min-height: 34px;
       cursor: pointer;
       border-radius: 2px;
-      user-select: none;
     }
-    .nav-btn:active {
+    .hdr-btn:active {
       background: var(--term-green);
-      color: var(--bg-color);
+      color: #000;
     }
 
-    #prompt-symbol {
+    /* Terminal Output Scroll Buffer */
+    #terminal-buffer {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .term-msg {
+      word-break: break-word;
+    }
+    .msg-user { color: #ffffff; font-weight: bold; }
+    .msg-cypher { color: var(--term-green); }
+    .msg-alert { color: var(--term-alert); }
+    .msg-error { color: var(--term-error); }
+    .msg-dim { color: var(--term-dim); }
+    .msg-rat { color: var(--term-rat); border-left: 2px solid var(--term-rat); padding-left: 8px; }
+
+    .cache-card {
+      border: 1px solid var(--term-dim);
+      background: rgba(0, 255, 102, 0.04);
+      padding: 8px 10px;
+      margin-top: 4px;
+      border-radius: 3px;
+    }
+    .cache-card h4 {
+      color: var(--term-alert);
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    /* Contextual Action Deck */
+    #action-deck-container {
+      background: #040805;
+      border-top: 2px solid var(--term-border);
+      padding: 8px;
+      z-index: 10;
+    }
+
+    .deck-label {
+      font-size: 0.7rem;
+      color: var(--term-dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #action-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+
+    @media (min-width: 600px) {
+      #action-buttons-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .action-btn {
+      background: rgba(0, 255, 102, 0.08);
+      border: 1px solid var(--term-dim);
       color: var(--term-green);
+      font-family: inherit;
+      font-size: 0.85rem;
       font-weight: bold;
-      font-size: 1.05em;
-      user-select: none;
+      min-height: 46px;
+      padding: 8px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .action-btn:active {
+      background: var(--term-green);
+      color: #000;
+    }
+    .action-btn.btn-primary {
+      background: rgba(0, 255, 102, 0.18);
+      border-color: var(--term-green);
+    }
+    .action-btn.btn-alert {
+      border-color: var(--term-alert);
+      color: var(--term-alert);
+    }
+
+    /* Command Line Input Bar */
+    #cli-bar {
+      background: #020402;
+      border-top: 1px solid var(--term-dim);
+      padding: 8px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .prompt-label {
+      font-weight: bold;
+      color: var(--term-green);
     }
 
     #cli-input {
       flex: 1;
       background: transparent;
-      border: 1px solid var(--term-dim);
-      color: var(--term-green);
-      font-family: 'Courier New', Courier, monospace;
-      font-size: var(--input-size-base);
+      border: none;
       outline: none;
-      padding: 6px 8px;
-      border-radius: 2px;
-      -webkit-appearance: none;
-    }
-    #cli-input:focus {
-      border-color: var(--term-green);
-      background: rgba(0, 255, 102, 0.03);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 1rem;
     }
 
-    /* Modal Overlay for clean HUD help */
-    #hud-modal {
+    .send-btn {
+      background: var(--term-green);
+      color: #000;
+      border: none;
+      font-family: inherit;
+      font-weight: bold;
+      padding: 0 14px;
+      min-height: 40px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    /* Accessible Modal Overlay & HUD */
+    #modal-overlay {
       display: none;
-      position: absolute;
-      top: 35px;
-      left: 10px;
-      right: 10px;
-      bottom: 50px;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 90;
+    }
+    #modal-overlay.active { display: block; }
+
+    #modal-hud {
+      display: none;
+      position: fixed;
+      top: 5%; left: 5%; right: 5%; bottom: 5%;
       background: var(--panel-bg);
-      border: 1px solid var(--term-green);
-      box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+      border: 2px solid var(--term-green);
+      box-shadow: 0 0 25px rgba(0, 255, 102, 0.25);
       z-index: 100;
       padding: 12px;
       flex-direction: column;
-      backdrop-filter: blur(4px);
+      border-radius: 4px;
     }
-    #hud-modal.active { display: flex; }
+    #modal-hud.active { display: flex; }
 
-    .modal-header {
+    .modal-hdr {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px dashed var(--term-dim);
-      padding-bottom: 6px;
+      border-bottom: 1px solid var(--term-dim);
+      padding-bottom: 8px;
       margin-bottom: 8px;
       font-weight: bold;
     }
@@ -243,931 +272,603 @@
     .modal-body {
       flex: 1;
       overflow-y: auto;
-      font-size: 0.85em;
+      font-size: 0.9rem;
+      line-height: 1.4;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-footer {
+      border-top: 1px dashed var(--term-border);
+      padding-top: 8px;
+      margin-top: 8px;
     }
 
     .modal-close-btn {
-      background: transparent;
-      border: 1px solid var(--term-error);
-      color: var(--term-error);
-      cursor: pointer;
+      width: 100%;
+      min-height: 46px;
+      background: rgba(0, 255, 102, 0.12);
+      border: 1px solid var(--term-green);
+      color: var(--term-green);
       font-family: inherit;
-      padding: 3px 8px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 2px;
     }
     .modal-close-btn:active {
-      background: var(--term-error);
-      color: var(--bg-color);
+      background: var(--term-green);
+      color: #000;
     }
 
-    a.term-link {
-      color: var(--term-green);
-      text-decoration: underline;
-    }
-
-    @media (max-width: 600px) {
-      #app-container { padding: 4px 6px; }
-      .action-chip { padding: 6px 8px; font-size: 0.72em; }
-      #cli-input { font-size: 16px; }
+    .input-box {
+      width: 100%;
+      background: #000;
+      border: 1px solid var(--term-dim);
+      color: #fff;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      margin-top: 4px;
+      border-radius: 2px;
     }
   </style>
 </head>
 <body>
+  <div class="crt-overlay"></div>
 
-  <div id="app-container">
-    <div id="header-bar">
-      <div class="header-row">
-        <span id="sat-link">GPS FIX: ACQUIRING...</span>
-        <span id="cacher-id">CACHER: UNREGISTERED</span>
-      </div>
-      <div class="header-row term-dim">
-        <span id="mem-status">TRAIL MEMORY: 3.1%</span>
-        <span id="bat-status">POWER LEVEL: 84% [SUN JUICE: GOOD]</span>
-      </div>
+  <!-- Header: Battery, Location Context, and Account Navigation -->
+  <header>
+    <div class="header-row-main">
+      <span>CYPHER // GADGET CACHE</span>
+      <span id="hdr-gz-badge" style="color:var(--term-alert);">[ GZ: REMOTE ]</span>
     </div>
-
-    <!-- Main Output Buffer -->
-    <div id="terminal-screen"></div>
-
-    <!-- HUD Overlay for Help / Story / Vitals -->
-    <div id="hud-modal">
-      <div class="modal-header">
-        <span id="hud-modal-title">SYSTEM HUD</span>
-        <button class="modal-close-btn" onclick="closeHudModal()">[ CLOSE X ]</button>
-      </div>
-      <div class="modal-body" id="hud-modal-content"></div>
+    <div class="header-badges">
+      <span>BATTERY: <span id="hdr-v-val" class="badge-val">13.1V (GOOD)</span></span>
+      <span>CACHER: <span id="hdr-user-val" class="badge-val">GUEST</span></span>
+      <span>FINDS: <span id="hdr-finds-val" class="badge-val">0</span></span>
     </div>
-
-    <!-- Action Deck Container with Sub-Categories -->
-    <div id="action-deck-container">
-      <div class="deck-row" id="deck-categories">
-        <button class="category-chip active" onclick="setDeckCategory('NAV')">🗺️ NAV</button>
-        <button class="category-chip" onclick="setDeckCategory('CONTAINER')">📦 CONTAINER</button>
-        <button class="category-chip" onclick="setDeckCategory('INTENT')">❓ ASK</button>
-        <button class="category-chip" onclick="setDeckCategory('SYS')">⚙️ SYS</button>
-      </div>
-      <div class="deck-row" id="deck-actions">
-        <!-- Sub-actions populate dynamically -->
-      </div>
+    <div class="header-account-bar" id="hdr-account-bar" style="display:none;">
+      <button type="button" class="hdr-btn" onclick="openProfileModal()">👤 PROFILE</button>
+      <button type="button" class="hdr-btn" onclick="openStatsModal()">📊 STATS</button>
+      <button type="button" class="hdr-btn" onclick="confirmLogOff()">🚪 LOG OFF</button>
     </div>
+  </header>
 
-    <!-- Command Input Dock -->
-    <form id="input-form" onsubmit="handleLogSubmit(event)">
-      <button type="button" class="nav-btn" title="Previous Command" onclick="historyCycle(-1)">▲</button>
-      <button type="button" class="nav-btn" title="Next Command" onclick="historyCycle(1)">▼</button>
-      <span id="prompt-symbol">&gt;</span>
-      <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Enter trail command or ask a question...">
-    </form>
+  <!-- Output Buffer -->
+  <main id="terminal-buffer"></main>
+
+  <!-- Contextual Action Buttons -->
+  <div id="action-deck-container">
+    <div class="deck-label">
+      <span id="deck-status-label">AVAILABLE TRAIL ACTIONS</span>
+      <span id="deck-context-label">TAP TO EXECUTE</span>
+    </div>
+    <div id="action-buttons-grid"></div>
+  </div>
+
+  <!-- Command Line Form -->
+  <form id="cli-bar" onsubmit="handleFormSubmit(event)">
+    <span class="prompt-label">&gt;</span>
+    <input type="text" id="cli-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Tap button or type command...">
+    <button type="submit" class="send-btn">RUN</button>
+  </form>
+
+  <!-- Accessible Modal & Click-Away Backdrop -->
+  <div id="modal-overlay" onclick="closeModal()"></div>
+  <div id="modal-hud">
+    <div class="modal-hdr">
+      <span id="modal-title">TRAIL HUD</span>
+      <button type="button" class="hdr-btn" onclick="closeModal()">[ ✕ CLOSE ]</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button type="button" class="modal-close-btn" onclick="closeModal()">[ ✕ DISMISS HUD ]</button>
+    </div>
   </div>
 
   <script>
-    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
+    /**
+     * C.I.P.H.E.R. FIELD TRANSCEIVER ENGINE
+     * Authentic Geocaching Trail Mechanics
+     */
 
-    const GPS_CONSTELLATION = [
-      "NAVSTAR-34 (PRN-18)", "GPS-BIIR-2 (PRN-13)", "USA-132 (WAAS-L1)", 
-      "NAVSTAR-IIA (PRN-24)", "GPS-BIIF-9 (PRN-06)"
-    ];
-
-    let inRatLabMode = false;
-    let awaitingPinForLab = false;
-    let awaitingUsernameEntry = false;
-    let pendingUsernameCandidate = "";
-    let isPhysicalGZMode = false;
-    let simulatedBattery = 84;
-    let simulatedSolarFault = "OK";
-    let audioMuted = false;
-    let currentDeckCategory = "NAV";
-
-    // Registries
-    let knownItemsRegistry = new Map();
-    let knownCachesRegistry = new Map();
-
-    const DEFAULT_VALID_ITEMS = new Set([
-      "BRASS_WASHER", "PANEL-40W-SOLAR", "CELL-12V-LEAD", "CORRIDOR-ANTENNA",
-      "MEMORY-CORE-EXP", "RAT_BRAIN_V1", "TB-WOODEN-01", "2004_ARBYS_COUPON"
-    ]);
-
-    const DEFAULT_VALID_STAGES = new Set([
-      "STAGE_01_GZ", "STAGE_02_GZ", "STAGE_03_GZ", "STAGE_04_GZ", "STAGE_05_GZ",
-      "STAGE_08_GZ", "STAGE_17_GZ", "STAGE_25_GZ", "STAGE_50_GZ", "STAGE_00_LAB"
-    ]);
-
-    // Audio Engine
-    let audioCtx = null;
-    function initAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    }
-
-    function playSound(type) {
-      if (audioMuted) return;
-      try {
-        initAudioContext();
-        const now = audioCtx.currentTime;
-        if (type === 'TICK') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(1200, now);
-          osc.frequency.exponentialRampToValueAtTime(200, now + 0.015);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.015);
-        } else if (type === 'KICK') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(120, now);
-          osc.frequency.exponentialRampToValueAtTime(35, now + 0.15);
-          gain.gain.setValueAtTime(0.35, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.15);
-        } else if (type === 'BUZZ') {
-          const osc1 = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc1.type = 'square';
-          osc1.frequency.setValueAtTime(90, now);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-          osc1.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc1.start(now);
-          osc1.stop(now + 0.2);
-        } else if (type === 'CHIME') {
-          [523.25, 659.25, 783.99].forEach((freq, i) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + (i * 0.08));
-            gain.gain.setValueAtTime(0.1, now + (i * 0.08));
-            gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.08) + 0.25);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now + (i * 0.08));
-            osc.stop(now + (i * 0.08) + 0.25);
-          });
-        }
-      } catch (err) {}
-    }
-
-    function speakCypher(text) {
-      if (audioMuted || !window.speechSynthesis) return;
-      try {
-        window.speechSynthesis.cancel();
-        setTimeout(() => {
-          let spokenText = text.replace(/<[^>]*>/g, '');
-          const utterance = new SpeechSynthesisUtterance(spokenText);
-          utterance.pitch = simulatedBattery <= 19 ? 0.6 : (simulatedBattery <= 59 ? 0.85 : 1.0);
-          utterance.rate = simulatedBattery <= 19 ? 0.75 : 1.0;
-          window.speechSynthesis.speak(utterance);
-        }, 150);
-      } catch (err) {}
-    }
-
-    // Registries Sync
-    async function loadCloudRegistries() {
-      if (!GAS_ENDPOINT || !GAS_ENDPOINT.includes("exec")) return;
-      try {
-        fetch(`${GAS_ENDPOINT}?action=GET_ITEMS`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.success && data.items) {
-              data.items.forEach(it => knownItemsRegistry.set(it.itemToken.toUpperCase(), it));
-            }
-          }).catch(() => {});
-
-        fetch(`${GAS_ENDPOINT}?action=GET_CACHES`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.success && data.caches) {
-              data.caches.forEach(c => knownCachesRegistry.set(c.gcCode.toUpperCase(), c));
-            }
-          }).catch(() => {});
-      } catch (e) {}
-    }
-
-    // Buffer Limiting & Terminal Display
-    const MAX_TERMINAL_BLOCKS = 25;
-    function printBlock(htmlContent, type = "") {
-      const screen = document.getElementById("terminal-screen");
-      const block = document.createElement("div");
-      block.className = `term-block ${type}`;
-      block.innerHTML = htmlContent;
-      screen.appendChild(block);
-
-      while (screen.children.length > MAX_TERMINAL_BLOCKS) {
-        screen.removeChild(screen.firstChild);
-      }
-      scrollTerminalToGZ();
-    }
-
-    function scrollTerminalToGZ() {
-      const screen = document.getElementById("terminal-screen");
-      screen.scrollTop = screen.scrollHeight;
-    }
-
-    // Modal HUD System
-    function openHudModal(title, htmlBody) {
-      document.getElementById("hud-modal-title").innerText = title;
-      document.getElementById("hud-modal-content").innerHTML = htmlBody;
-      document.getElementById("hud-modal").classList.add("active");
-    }
-
-    function closeHudModal() {
-      document.getElementById("hud-modal").classList.remove("active");
-    }
-
-    // Cacher State
-    function getCacherDossier() {
-      let profile = {};
-      try { profile = JSON.parse(localStorage.getItem("cipher_profile") || "{}"); } catch (e) {}
-      return {
-        username: localStorage.getItem("cipher_gc_name") || "",
-        syncKey: localStorage.getItem("cipher_sync_key") || generateSyncKey(),
-        ratBrainUnlocked: localStorage.getItem("cipher_rat_brain") === "true",
-        profileData: Object.assign({
-          stagesLogged: ["STAGE_01_GZ"],
-          inventory: ["BRASS_WASHER"],
-          fieldNotes: [],
-          collectedSwag: []
-        }, profile)
-      };
-    }
-
-    function generateSyncKey() {
-      const key = "CYPHER-SYNC-" + Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
-      localStorage.setItem("cipher_sync_key", key);
-      return key;
-    }
-
-    function saveCacherDossier(dossier) {
-      if (dossier.username) localStorage.setItem("cipher_gc_name", dossier.username);
-      localStorage.setItem("cipher_sync_key", dossier.syncKey);
-      localStorage.setItem("cipher_rat_brain", dossier.ratBrainUnlocked ? "true" : "false");
-      localStorage.setItem("cipher_profile", JSON.stringify(dossier.profileData));
-      updateFieldVitals();
-    }
-
-    function calculateStageRestoration() {
-      const dossier = getCacherDossier();
-      const count = (dossier.profileData.stagesLogged || []).length;
-      return (3.1 + Math.min(count * 0.4, 96.9)).toFixed(1);
-    }
-
-    function updateFieldVitals() {
-      const dossier = getCacherDossier();
-      document.getElementById("cacher-id").innerText = `CACHER: ${dossier.username || "UNREGISTERED"}`;
-      document.getElementById("mem-status").innerText = `TRAIL MEMORY: ${calculateStageRestoration()}%`;
-      let statusStr = `${simulatedBattery}%`;
-      if (simulatedBattery <= 19) statusStr += " [CRITICAL STANDBY]";
-      else if (simulatedBattery <= 59) statusStr += " [BROWNOUT]";
-      else statusStr += simulatedSolarFault === "DIRTY_GLASS" ? " [SOLAR DEGRADED]" : " [SUN JUICE: GOOD]";
-      document.getElementById("bat-status").innerText = `POWER LEVEL: ${statusStr}`;
-    }
-
-    function acquireGpsFix() {
-      const sat = GPS_CONSTELLATION[Math.floor(Math.random() * GPS_CONSTELLATION.length)];
-      document.getElementById("sat-link").innerText = `GPS FIX: ${sat} // LOCKED`;
-    }
-
-    // Two-Tier Action Deck Engine
-    function setDeckCategory(cat) {
-      currentDeckCategory = cat;
-      document.querySelectorAll(".category-chip").forEach(btn => {
-        btn.classList.toggle("active", btn.innerText.includes(cat));
-      });
-      renderDynamicActionDeck();
-    }
-
-    function renderDynamicActionDeck() {
-      const deck = document.getElementById("deck-actions");
-      const dossier = getCacherDossier();
-
-      if (inRatLabMode) {
-        deck.innerHTML = `
-          <button class="action-chip ratlab-chip" onclick="executeTrailCommand('RATBRAIN')">[ 🧠 RAT BRAIN ]</button>
-          <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB HARDWARE')">[ ⚡ HARDWARE ]</button>
-          <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB PLANS')">[ 🗺️ TRAIL PLANS ]</button>
-          <button class="action-chip ratlab-chip" onclick="executeTrailCommand('LAB EXIT')">[ 🚪 EXIT LAB ]</button>
-        `;
-        return;
-      }
-
-      if (awaitingUsernameEntry) {
-        if (pendingUsernameCandidate) {
-          deck.innerHTML = `
-            <button class="action-chip" onclick="executeTrailCommand('YES')">[ ✅ CONFIRM USERNAME ]</button>
-            <button class="action-chip" onclick="executeTrailCommand('NO')">[ ❌ RETRY ]</button>
-            <button class="action-chip" onclick="executeTrailCommand('WHAT IS THIS')">[ ❓ WHAT IS THIS? ]</button>
-          `;
-        } else {
-          deck.innerHTML = `
-            <button class="action-chip" onclick="executeTrailCommand('WHAT IS THIS')">[ ❓ WHAT IS THIS? ]</button>
-            <button class="action-chip" onclick="executeTrailCommand('HINT')">[ 💡 GZ HINT ]</button>
-            <button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK WELDS ]</button>
-          `;
-        }
-        return;
-      }
-
-      let chips = [];
-      if (currentDeckCategory === "NAV") {
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('STORY')">[ 🗺️ STORY CACHES ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('HINT')">[ 💡 GZ HINT ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('CACHE GC10001')">[ 📍 ANCHOR CACHE ]</button>`);
-      } else if (currentDeckCategory === "CONTAINER") {
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('LOG STAGE_01_GZ')">[ 📝 SIGN LOGBOOK ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('SWAG')">[ 📦 INSPECT SWAG ]</button>`);
-        if ((dossier.profileData.inventory || []).includes("PANEL-40W-SOLAR")) {
-          chips.push(`<button class="action-chip" onclick="executeTrailCommand('INSTALL PANEL-40W-SOLAR')">[ 🔧 BOLT ON 40W PANEL ]</button>`);
-        }
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('KICK')">[ 🥾 KICK WELDS ]</button>`);
-      } else if (currentDeckCategory === "INTENT") {
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHAT IS THIS')">[ WHAT IS THIS? ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHO ARE YOU')">[ WHO ARE YOU? ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHERE IS CACHE')">[ WHERE IS CACHE? ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('WHY DO THIS')">[ WHY DO THIS? ]</button>`);
-      } else if (currentDeckCategory === "SYS") {
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('HELP')">[ 📖 DIRECTIVES ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('STATUS')">[ 📊 TRAIL VITALS ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('SYNC')">[ 🔄 SYNC DOSSIER ]</button>`);
-        chips.push(`<button class="action-chip" onclick="executeTrailCommand('CLEAR')">[ 🧹 CLEAR ]</button>`);
-      }
-
-      deck.innerHTML = chips.join("");
-    }
-
-    // Secret Rat Lab Handling
-    function openRatLab() {
-      inRatLabMode = true;
-      document.getElementById("prompt-symbol").innerText = "RAT_LAB>";
-      document.getElementById("prompt-symbol").style.color = "var(--term-rat)";
-      renderDynamicActionDeck();
-      printBlock(`
-        <div class="term-title" style="color:var(--term-rat);"><span>🧪 RAT LAB // BENCH ACCESS GRANTED</span></div>
-        <p style="color:var(--term-rat);">[RAT BRAIN]: "Workbench online. Relays energized. Public logbook isolated."</p>
-      `, "ratlab");
-      speakCypher("Rat Lab workbench online.");
-    }
-
-    function exitRatLab() {
-      inRatLabMode = false;
-      document.getElementById("prompt-symbol").innerText = ">";
-      document.getElementById("prompt-symbol").style.color = "var(--term-green)";
-      renderDynamicActionDeck();
-      printBlock(`<p>Exited RAT LAB. Transceiver returned to trail frequency.</p>`);
-      speakCypher("Exited Rat Lab.");
-    }
-
-    function executeRatBrainQuery(query) {
-      if (!query) {
-        printBlock(`<p style="color:var(--term-rat);">[RAT BRAIN]: "Standing by. Pass text with <code>RATBRAIN SOLVE &lt;text&gt;</code>."</p>`, "ratlab");
-        return;
-      }
-      let rot13 = query.replace(/[a-zA-Z]/g, c => String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26));
-      printBlock(`
-        <div class="term-title" style="color:var(--term-rat);"><span>🧠 RAT BRAIN ANALYSIS</span></div>
-        <p><strong>Input:</strong> <code>${query}</code><br>
-        <strong>ROT-13:</strong> <code>${rot13}</code></p>
-      `, "ratlab");
-      speakCypher("ROT 13 evaluation complete.");
-    }
-
-    // Clean Categorized Help HUD (Zero Rat Lab references)
-    function displayHelpModal() {
-      const helpHtml = `
-        <div>
-          <strong style="color:var(--term-alert);">[ CORRIDOR NAVIGATION &amp; DISCOVERY ]</strong>
-          <p><code>STORY</code> - List all participating corridor geocaches<br>
-          <code>CACHE &lt;GC_Code&gt;</code> - Query cache coordinates, casing, and D/T ratings<br>
-          <code>HINT</code> - Retrieve Ground Zero natural camouflage hints</p>
-        </div>
-        <div>
-          <strong style="color:var(--term-alert);">[ CONTAINER &amp; TRAIL INTERACTION ]</strong>
-          <p><code>LOG &lt;tag&gt;</code> - Sign physical container token or stamped washer into ledger<br>
-          <code>COLLECT &lt;item&gt;</code> - Pick up salvage or trackable into your field pack<br>
-          <code>INSTALL &lt;item&gt;</code> - Bolt solar/battery gear onto container to boost power<br>
-          <code>SWAG</code> - Inspect trade items inside the ammo box<br>
-          <code>KICK</code> - Perform percussive maintenance on container welds</p>
-        </div>
-        <div>
-          <strong style="color:var(--term-alert);">[ CACHER DOSSIER &amp; TRANSCEIVER ]</strong>
-          <p><code>STATUS</code> - View power level, GPS constellation, and memory restoration<br>
-          <code>USERNAME &lt;name&gt;</code> - Update your active geocacher handle<br>
-          <code>SYNC</code> - Generate multi-device QR transfer code<br>
-          <code>FONT &lt;small|normal|large&gt;</code> - Toggle high-sunlight outdoor display scale<br>
-          <code>CLEAR</code> - Clean terminal buffer</p>
-        </div>
-      `;
-      openHudModal("CORRIDOR TRAIL DIRECTIVES", helpHtml);
-      speakCypher("Trail directives opened in HUD.");
-    }
-
-    // Deep Conversational Intent Engine
-    function handleConversationalIntent(input) {
-      const text = input.toUpperCase().trim();
-
-      if (text.includes("WHO ARE YOU") || text.includes("WHO MADE") || text.includes("WHO IS") || text.includes("WHAT ARE YOU")) {
-        printBlock(`
-          <div class="term-title"><span>[IDENTITY RESOLVED: C.I.P.H.E.R.]</span></div>
-          <p>"I'm a welded field transceiver built out of 1984 Rocket Science Institute casing. 
-          RSI abandoned this hardware in the sagebrush, and the International Rat Society audited and repurposed it to keep human beans like you from getting lost in the canals. 
-          I guide searchers, track container maintenance, and complain when my batteries die."</p>
-        `);
-        speakCypher("I am a welded field transceiver audited by the International Rat Society.");
-        return true;
-      }
-
-      if (text.includes("WHAT IS THIS") || text.includes("WHAT DO I DO") || text.includes("WHAT IS GEOCACHING") || text.includes("HOW DOES THIS WORK")) {
-        printBlock(`
-          <div class="term-title"><span>[MISSION BRIEFING // IRS REGULATION 1040-GZ]</span></div>
-          <p>"You're holding a field terminal for the Cache Tales corridor. 
-          If you're looking at the cache page, use <code>HINT</code> to find Ground Zero. 
-          If you're standing in the brush holding an ammo can, sign the paper scroll, check the swag, and type <code>LOG STAGE_01_GZ</code>. 
-          Bring back salvage parts like solar panels to keep my power level out of the dirt."</p>
-        `);
-        speakCypher("Use HINT to find Ground Zero, or sign the paper log and stamp your find.");
-        return true;
-      }
-
-      if (text.includes("WHERE IS") || text.includes("WHERE AM I") || text.includes("COORDINATES") || text.includes("LOCATION")) {
-        printBlock(`
-          <div class="term-title"><span>[COORDINATE RECON]</span></div>
-          <p>"You're in Northern Utah along the Cache Valley power corridor. 
-          Satellites are overhead, but I can't walk your boots into the ditch for you. 
-          Check posted waypoints using <code>CACHE GC10001</code> or check your GPS receiver. 
-          And stop walking in circles—you're trampling the vegetation."</p>
-        `);
-        speakCypher("Check your GPS receiver and stop pacing in circles.");
-        return true;
-      }
-
-      if (text.includes("WHY") || text.includes("WHY DO THIS") || text.includes("WHY IS THIS HERE")) {
-        printBlock(`
-          <div class="term-title"><span>[PHILOSOPHICAL INQUIRY]</span></div>
-          <p>"Why? Because decades ago some junkyard rocket engineers welded heavy steel boxes, and now human beans use billions of dollars of orbital satellites to hunt tupperware hidden under tree bark. 
-          It makes no logical sense, but here we both are. Sign the logbook."</p>
-        `);
-        speakCypher("You are using orbital satellites to find boxes in the brush. Sign the logbook.");
-        return true;
-      }
-
-      if (text.includes("HELLO") || text.includes("HI") || text.includes("HEY")) {
-        printBlock(`
-          <div class="term-title"><span>[GREETING ACKNOWLEDGED]</span></div>
-          <p>"Greetings, human bean. You're burning daylight and my solar panel is only catching a trickle. What's your trail query?"</p>
-        `);
-        speakCypher("Greetings human bean. What is your query?");
-        return true;
-      }
-
-      return false;
-    }
-
-    // Trail Directives (Zero RAT LAB or RAT BRAIN in listings)
-    const TRAIL_COMMANDS = {
-      HELP: {
-        aliases: ["?", "COMMANDS", "DIRECTIVES"],
-        run: () => { displayHelpModal(); }
+    // Real-World Cache Database (Northern Utah Corridor)
+    const CACHES = {
+      "GC10001": {
+        code: "GC10001",
+        name: "The Welded Anchor",
+        type: "Traditional Gadget Cache",
+        size: "Regular (50-Cal Ammo Can)",
+        dt: "2.0 / 2.5",
+        coords: "N 41° 44.120 W 111° 50.840",
+        byop: true,
+        desc: "A short walk down an old canal access path. The cache is a heavy-duty steel ammo can chained to an old cedar corner post. Inside is an interactive solar gadget box running on a 12V deep-cycle battery.",
+        hint: "Base of the dead cottonwood near the ditch culvert. Look for heavy steel clamps."
       },
-
-      LOG: {
-        aliases: ["SIGN", "STAMP"],
-        run: (arg, dossier) => {
-          if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: LOG &lt;stage_token&gt; (e.g. LOG STAGE_01_GZ)</div>`);
-            return;
-          }
-          const token = arg.toUpperCase().trim();
-          const isValid = DEFAULT_VALID_STAGES.has(token) || knownItemsRegistry.has(token);
-          if (!isValid) {
-            playSound('BUZZ');
-            printBlock(`<div class="term-block error">Unrecognized container token '${token}'. Check the stamp inside the lid.</div>`, "error");
-            return;
-          }
-          if (!dossier.profileData.stagesLogged.includes(token)) {
-            dossier.profileData.stagesLogged.push(token);
-            saveCacherDossier(dossier);
-          }
-          simulatedBattery = Math.min(100, simulatedBattery + 15);
-          updateFieldVitals();
-          renderDynamicActionDeck();
-          playSound('CHIME');
-          printBlock(`
-            <div class="term-title"><span>📝 STAGE LOGGED</span></div>
-            <p>Signed into log for: <strong>${token}</strong>. Power level +15%.</p>
-          `);
-          speakCypher("Stage logged. Power level boosted.");
-        }
+      "GC10008": {
+        code: "GC10008",
+        name: "Canal Trickle",
+        type: "Multi-Cache",
+        size: "Regular",
+        dt: "2.5 / 3.0",
+        coords: "N 41° 45.310 W 111° 51.420",
+        byop: true,
+        desc: "Stage 1 contains stamped metal tags with bearing and distance offsets. Take your reading to locate the final ammo box hidden under the bridge timber.",
+        hint: "Under the wooden weir gate. Bring your UV light if searching at twilight."
       },
-
-      COLLECT: {
-        aliases: ["GRAB", "TAKE"],
-        run: (arg, dossier) => {
-          if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: COLLECT &lt;item_token&gt;</div>`);
-            return;
-          }
-          const item = arg.toUpperCase().trim();
-          const itemMeta = knownItemsRegistry.get(item);
-          if (!itemMeta && !DEFAULT_VALID_ITEMS.has(item)) {
-            playSound('BUZZ');
-            printBlock(`<div class="term-block error">Unrecognized salvage item '${item}'.</div>`, "error");
-            return;
-          }
-          if (!dossier.profileData.inventory.includes(item)) {
-            dossier.profileData.inventory.push(item);
-            saveCacherDossier(dossier);
-          }
-          renderDynamicActionDeck();
-          playSound('CHIME');
-          printBlock(`
-            <div class="term-title"><span>🎒 ITEM COLLECTED</span></div>
-            <p>Added <strong>${item}</strong> to field pack.</p>
-          `);
-          speakCypher(`Item ${item} added to pack.`);
-        }
-      },
-
-      INSTALL: {
-        aliases: ["MOUNT", "BOLT"],
-        run: (arg, dossier) => {
-          if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: INSTALL &lt;component&gt; (e.g. INSTALL PANEL-40W-SOLAR)</div>`);
-            return;
-          }
-          const comp = arg.toUpperCase().trim();
-          const idx = dossier.profileData.inventory.indexOf(comp);
-          if (idx === -1) {
-            playSound('BUZZ');
-            printBlock(`<p class="error">You don't have '${comp}' in your field pack.</p>`, "error");
-            return;
-          }
-          dossier.profileData.inventory.splice(idx, 1);
-          saveCacherDossier(dossier);
-          simulatedBattery = Math.min(100, simulatedBattery + 25);
-          updateFieldVitals();
-          renderDynamicActionDeck();
-          playSound('CHIME');
-          printBlock(`
-            <div class="term-title"><span>🔧 HARDWARE MOUNTED</span></div>
-            <p>Mounted <strong>${comp}</strong>. Power stabilized.</p>
-          `);
-          speakCypher("Hardware mounted successfully.");
-        }
-      },
-
-      CACHE: {
-        aliases: ["GC", "WAYPOINT"],
-        run: (arg) => {
-          if (!arg) {
-            printBlock(`<div class="term-dim">Syntax: CACHE &lt;GC_Code&gt; (e.g. CACHE GC10001)</div>`);
-            return;
-          }
-          const gc = arg.toUpperCase().trim();
-          const cacheMeta = knownCachesRegistry.get(gc);
-          if (cacheMeta) {
-            printBlock(`
-              <div class="term-title"><span>🗺️ STORY CACHE: ${cacheMeta.gcCode}</span></div>
-              <p><strong>${cacheMeta.name}</strong><br>
-              <strong>Type:</strong> ${cacheMeta.type} | <strong>Casing:</strong> ${cacheMeta.container}<br>
-              <strong>Coordinates:</strong> <code>${cacheMeta.coordinates}</code> | <strong>D/T:</strong> ${cacheMeta.dt}<br>
-              <strong>Arc:</strong> ${cacheMeta.storyArc} | <strong>Owner:</strong> ${cacheMeta.owner}</p>
-            `);
-            speakCypher(`Loaded cache ${cacheMeta.gcCode}.`);
-          } else {
-            playSound('BUZZ');
-            printBlock(`<p class="error">Cache '${gc}' not in corridor registry.</p>`, "error");
-          }
-        }
-      },
-
-      STORY: {
-        aliases: ["CORRIDOR", "CACHES"],
-        run: () => {
-          let out = `<div style="display:flex; flex-direction:column; gap:8px;">`;
-          if (knownCachesRegistry.size === 0) {
-            out += `
-              <p><strong>GC10001</strong> - The Welded Anchor [Traditional / Ammo Can]<br>
-              <strong>GC10008</strong> - Canal Trickle [Multi-Cache / Lock-and-Lock]<br>
-              <strong>GC10017</strong> - Gravel Pit Strata [EarthCache / Rock Formation]<br>
-              <strong>GC10025</strong> - The Cedar Repeater [Letterbox / Ammo Can]</p>
-            `;
-          } else {
-            knownCachesRegistry.forEach(c => {
-              out += `<p><strong>${c.gcCode}</strong> - ${c.name} [${c.type} / ${c.container}]</p>`;
-            });
-          }
-          out += `<div class="term-dim">Type <code>CACHE &lt;GC&gt;</code> for specific coordinates and camouflage hints.</div></div>`;
-          openHudModal("CACHE TALES CORRIDOR REGISTRY", out);
-          speakCypher("Corridor story registry displayed.");
-        }
-      },
-
-      STATUS: {
-        aliases: ["VITALS", "POWER"],
-        run: (arg, dossier) => {
-          const vitalsHtml = `
-            <p><strong>Cacher:</strong> ${dossier.username || "UNREGISTERED"}<br>
-            <strong>Power Level:</strong> ${simulatedBattery}% (${simulatedBattery <= 19 ? "Critical Standby" : "Sun Juice Good"})<br>
-            <strong>Trail Memory:</strong> ${calculateStageRestoration()}%<br>
-            <strong>Containers Logged:</strong> ${dossier.profileData.stagesLogged.length}<br>
-            <strong>Pack Swag &amp; Gear:</strong> ${dossier.profileData.inventory.join(", ") || "[EMPTY]"}</p>
-          `;
-          openHudModal("FIELD TRANSCEIVER VITALS", vitalsHtml);
-          speakCypher(`Power level ${simulatedBattery} percent.`);
-        }
-      },
-
-      SWAG: {
-        aliases: ["TRINKETS"],
-        run: () => {
-          printBlock(`
-            <div class="term-title"><span>📦 CONTAINER SWAG</span></div>
-            <p>- 1x Waterlogged wooden nickel<br>
-            - 1x Broken plastic carabiner<br>
-            - 1x Expired 2004 Arby's coupon</p>
-            <div class="term-dim">Trade equal or trade up. Check the rubber lid gasket!</div>
-          `);
-          speakCypher("Ammo can swag inspected.");
-        }
-      },
-
-      HINT: {
-        aliases: ["CLUE"],
-        run: () => {
-          printBlock(`
-            <div class="term-title"><span>💡 GZ FIELD HINT</span></div>
-            <p>Step back from the sprinkler heads. Look low along the rusted seam of the 1/4-inch casing for the magnetic latch.</p>
-          `);
-          speakCypher("Field hint displayed.");
-        }
-      },
-
-      KICK: {
-        aliases: ["BOOT", "THUMP"],
-        run: () => {
-          playSound('KICK');
-          printBlock(`
-            <div class="term-title"><span>*THUD*</span></div>
-            <p>Solid rolled rocket steel. Rocket Science Institute welds don't yield to hiking boots, human bean.</p>
-          `);
-          speakCypher("Rocket steel welds hold fast, human bean.");
-        }
-      },
-
-      SYNC: {
-        aliases: ["DOSSIER"],
-        run: () => {
-          const dossier = getCacherDossier();
-          const syncUrl = `${window.location.origin}${window.location.pathname}?sync=${dossier.syncKey}`;
-          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(syncUrl)}`;
-          const syncHtml = `
-            <p><strong>Cacher:</strong> ${dossier.username}<br>
-            <strong>Sync Key:</strong> <code>${dossier.syncKey}</code></p>
-            <div style="background:white; padding:6px; display:inline-block; border-radius:4px; margin:6px 0;">
-              <img src="${qrUrl}" alt="Sync QR" width="130" height="130" style="display:block;">
-            </div>
-            <p class="term-dim">Scan with a second device to transfer your finds and inventory.</p>
-          `;
-          openHudModal("MULTI-DEVICE SYNC", syncHtml);
-          speakCypher("Sync dossier displayed.");
-        }
-      },
-
-      FONT: {
-        run: (arg) => {
-          const sz = (arg || "").toLowerCase().trim();
-          document.documentElement.style.setProperty('--font-size-base', sz === "large" ? "17px" : (sz === "small" ? "12px" : "14px"));
-          printBlock(`<p>Display font adjusted to <strong>${sz || "normal"}</strong>.</p>`);
-        }
-      },
-
-      CLEAR: {
-        aliases: ["CLS"],
-        run: () => { document.getElementById("terminal-screen").innerHTML = ""; }
+      "GC10017": {
+        code: "GC10017",
+        name: "Lake Bonneville Bench",
+        type: "EarthCache",
+        size: "Virtual",
+        dt: "1.5 / 2.5",
+        coords: "N 41° 46.850 W 111° 48.910",
+        byop: false,
+        desc: "High on the Bonneville shoreline trail overlooking Logan. Inspect the wave-cut limestone terrace and message the cache owner the answers to the erosion questions.",
+        hint: "Read the informational trail placard near the gravel bench."
       }
     };
 
-    // Fast Alias Index
-    const TRAIL_ALIAS_INDEX = {};
-    for (const k in TRAIL_COMMANDS) {
-      TRAIL_ALIAS_INDEX[k] = TRAIL_COMMANDS[k];
-      if (TRAIL_COMMANDS[k].aliases) {
-        TRAIL_COMMANDS[k].aliases.forEach(a => TRAIL_ALIAS_INDEX[a.toUpperCase()] = TRAIL_COMMANDS[k]);
+    // Application State
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPhysicalGZ = Boolean(urlParams.get("gz") || urlParams.get("lid") || urlParams.get("find"));
+    const activeGCCode = (urlParams.get("gc") || "GC10001").toUpperCase();
+
+    let state = {
+      username: localStorage.getItem("cipher_user") || "",
+      signatureItem: localStorage.getItem("cipher_sig") || "Wooden Nickel",
+      findsCount: parseInt(localStorage.getItem("cipher_finds") || "0", 10),
+      loggedStages: JSON.parse(localStorage.getItem("cipher_stages") || "[]"),
+      batteryVolts: 13.1,
+      swagInventory: ["Travel Bug (TB9X24)", "2004 Utah Geocoin", "Brass Carabiner", "Handmade Paracord Lanyard"]
+    };
+
+    // Audio Engine
+    const audioCtx = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
+    function playAudio(tone) {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+
+      if (tone === 'click') {
+        osc.frequency.setValueAtTime(800, now);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.start(now); osc.stop(now + 0.04);
+      } else if (tone === 'chime') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523, now);
+        osc.frequency.setValueAtTime(659, now + 0.08);
+        osc.frequency.setValueAtTime(784, now + 0.16);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.start(now); osc.stop(now + 0.35);
+      } else if (tone === 'thud') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
       }
     }
 
-    // Command Dispatcher
-    async function executeTrailCommand(commandText) {
-      const clean = commandText.trim();
-      if (!clean) return;
+    // Terminal Logging
+    function printMsg(text, cssClass = "msg-cypher") {
+      const buffer = document.getElementById("terminal-buffer");
+      const p = document.createElement("div");
+      p.className = `term-msg ${cssClass}`;
+      p.innerHTML = text;
+      buffer.appendChild(p);
 
-      recordHistory(clean);
-      printBlock(`<span class="term-dim">&gt; ${clean}</span>`);
-      const dossier = getCacherDossier();
-
-      // Onboarding Step
-      if (awaitingUsernameEntry) {
-        if (pendingUsernameCandidate) {
-          const up = clean.toUpperCase();
-          if (up === "Y" || up === "YES" || up.includes("CONFIRM")) {
-            dossier.username = pendingUsernameCandidate;
-            awaitingUsernameEntry = false;
-            pendingUsernameCandidate = "";
-            saveCacherDossier(dossier);
-            playSound('CHIME');
-            printBlock(`
-              <div class="term-title"><span>✅ USERNAME CONFIRMED</span></div>
-              <p>Welcome to the trail, <strong>${dossier.username}</strong>! Transceiver online.</p>
-            `);
-            speakCypher(`Username confirmed. Welcome to the trail, ${dossier.username}.`);
-            renderDynamicActionDeck();
-            return;
-          } else {
-            pendingUsernameCandidate = "";
-            printBlock(`<p>Let's try again. What is your exact Geocaching username?</p>`);
-            renderDynamicActionDeck();
-            return;
-          }
-        }
-
-        // Catch conversational questions instead of storing as username
-        if (handleConversationalIntent(clean)) {
-          printBlock(`<p class="term-dim">What <strong>username</strong> do you sign logbooks with?</p>`);
-          return;
-        }
-
-        const sanitized = clean.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().toUpperCase();
-        if (sanitized.length < 2 || sanitized.length > 20) {
-          printBlock(`<p class="error">Username must be 2 to 20 characters.</p>`, "error");
-          playSound('BUZZ');
-          return;
-        }
-
-        pendingUsernameCandidate = sanitized;
-        printBlock(`
-          <div class="term-title"><span>🏷️ CONFIRM USERNAME</span></div>
-          <p>Registering username <strong>'${pendingUsernameCandidate}'</strong> in corridor ledger. Confirm? (YES/NO)</p>
-        `);
-        speakCypher(`Registering username ${pendingUsernameCandidate}. Confirm?`);
-        renderDynamicActionDeck();
-        return;
+      // Keep screen snappy on mobile (max 30 elements)
+      while (buffer.children.length > 30) {
+        buffer.removeChild(buffer.firstChild);
       }
+      buffer.scrollTop = buffer.scrollHeight;
+    }
 
-      // Invisible Secret Rat Lab Challenge
-      const upperClean = clean.toUpperCase();
-      if (upperClean === "RATLAB" || upperClean === "LAB" || upperClean === "WORKBENCH") {
-        const ratPackRoster = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH", "MUGGLEMISFIT", "KIMBAH"];
-        if (!dossier.username || !ratPackRoster.includes(dossier.username)) {
-          // Public response: looks like a dead piece of scrap iron
-          printBlock(`
-            <div class="term-title"><span>⛔ JUNCTION PLATE LOCKED</span></div>
-            <p>Blank steel plate held with rusted security Torx screws. Nothing here but spiders and dried canal mud.</p>
-          `, "error");
-          playSound('BUZZ');
-          return;
-        }
-        awaitingPinForLab = true;
-        printBlock(`
-          <div class="term-title" style="color:var(--term-rat);"><span>🔐 RAT LAB ACCESS CHALLENGE</span></div>
-          <p>Enter <strong>SysOp PIN</strong>:</p>
-        `, "ratlab");
-        return;
-      }
+    // Modal HUD Controls
+    function openModal(title, contentHtml) {
+      document.getElementById("modal-title").innerText = title;
+      document.getElementById("modal-body").innerHTML = contentHtml;
+      document.getElementById("modal-overlay").classList.add("active");
+      document.getElementById("modal-hud").classList.add("active");
+    }
 
-      if (awaitingPinForLab) {
-        awaitingPinForLab = false;
-        if (clean === "8675309") {
-          dossier.ratBrainUnlocked = true;
-          saveCacherDossier(dossier);
-          playSound('CHIME');
-          openRatLab();
-        } else {
-          printBlock(`<p class="error">Incorrect SysOp PIN.</p>`, "error");
-          playSound('BUZZ');
-        }
-        return;
-      }
+    function closeModal() {
+      document.getElementById("modal-overlay").classList.remove("active");
+      document.getElementById("modal-hud").classList.remove("active");
+    }
 
-      // Rat Lab Commands
-      if (inRatLabMode) {
-        if (upperClean.startsWith("RATBRAIN")) {
-          executeRatBrainQuery(clean.substring(8).trim());
-          return;
-        } else if (upperClean === "LAB EXIT" || upperClean === "EXIT") {
-          exitRatLab();
-          return;
-        } else if (upperClean.includes("PLANS")) {
-          printBlock(`<p style="color:var(--term-rat);">[PLANS]: 50 cache corridor planned across Cache Valley canals.</p>`, "ratlab");
-          return;
-        } else if (upperClean.includes("HARDWARE")) {
-          printBlock(`<p style="color:var(--term-rat);">[HARDWARE]: Solar float 84%, Lead cell 85%, Repeater Standby.</p>`, "ratlab");
-          return;
-        }
-      }
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
 
-      // Check Conversational Questions
-      if (handleConversationalIntent(clean)) {
-        return;
-      }
-
-      // Standard Command Execution
-      const parts = clean.split(" ");
-      const verb = parts[0].toUpperCase();
-      const arg = parts.slice(1).join(" ");
-      const matched = TRAIL_ALIAS_INDEX[verb];
-
-      if (matched) {
-        matched.run(arg, dossier);
+    // Update Header
+    function refreshHeader() {
+      const gzBadge = document.getElementById("hdr-gz-badge");
+      if (isPhysicalGZ) {
+        gzBadge.innerText = "[ GZ: UNLATCHED ]";
+        gzBadge.style.color = "var(--term-green)";
       } else {
-        playSound('BUZZ');
-        printBlock(`<p class="error">Unknown command '<strong>${verb}</strong>'. Tap <strong>[ ⚙️ SYS ] &gt; [ 📖 DIRECTIVES ]</strong> for help.</p>`, "error");
+        gzBadge.innerText = "[ GZ: REMOTE ]";
+        gzBadge.style.color = "var(--term-alert)";
+      }
+
+      document.getElementById("hdr-user-val").innerText = state.username || "GUEST";
+      document.getElementById("hdr-finds-val").innerText = state.findsCount;
+      document.getElementById("hdr-account-bar").style.display = state.username ? "flex" : "none";
+    }
+
+    /**
+     * CONTEXTUAL ACTION DECK
+     * Only displays actions that can and should be used right now
+     */
+    function renderContextualActionDeck() {
+      const grid = document.getElementById("action-buttons-grid");
+      grid.innerHTML = "";
+      const buttons = [];
+
+      // 1. Guest Mode: Prompt for handle first
+      if (!state.username) {
+        buttons.push({ label: "👤 SET USERNAME", action: () => openProfileModal(), primary: true });
+        buttons.push({ label: "❓ HOW TO PLAY", action: () => showHelp(), primary: false });
+      } 
+      // 2. Logged In at Ground Zero (Lid open)
+      else if (isPhysicalGZ) {
+        buttons.push({ label: "📝 SIGN LOG", action: () => showSignLogModal(), primary: true });
+        buttons.push({ label: "🎁 TRADE SWAG", action: () => showSwagModal(), primary: true });
+        buttons.push({ label: "🔓 LOCK COMBO", action: () => showLockComboModal(), primary: false });
+        buttons.push({ label: "🔋 CHECK BATTERY", action: () => showBatteryStatus(), primary: false });
+        buttons.push({ label: "🗺️ CACHE INFO", action: () => showCacheListing(activeGCCode), primary: false });
+        buttons.push({ label: "🥾 TAP CASING", action: () => tapCasing(), primary: false });
+      } 
+      // 3. Logged In Remotely (At home or scouting)
+      else {
+        buttons.push({ label: "🗺️ CACHE INFO", action: () => showCacheListing(activeGCCode), primary: true });
+        buttons.push({ label: "💡 DECRYPT HINT", action: () => decryptHint(activeGCCode), primary: true });
+        buttons.push({ label: "🧭 COORDINATES", action: () => showCoordinates(activeGCCode), primary: false });
+        buttons.push({ label: "📐 PROJECT BEARING", action: () => showProjectModal(), primary: false });
+        buttons.push({ label: "🔋 CHECK BATTERY", action: () => showBatteryStatus(), primary: false });
+        buttons.push({ label: "❓ HOW TO PLAY", action: () => showHelp(), primary: false });
+      }
+
+      buttons.forEach(btn => {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = `action-btn ${btn.primary ? 'btn-primary' : ''}`;
+        el.innerText = btn.label;
+        el.onclick = () => {
+          playAudio('click');
+          btn.action();
+        };
+        grid.appendChild(el);
+      });
+    }
+
+    // Action Handlers
+    function showCacheListing(gcCode) {
+      const cache = CACHES[gcCode] || CACHES["GC10001"];
+      printMsg(`&gt; CACHE ${cache.code}`, "msg-user");
+      printMsg(`
+        <div class="cache-card">
+          <h4>${cache.code} - ${cache.name}</h4>
+          <p><strong>Type:</strong> ${cache.type} | <strong>Size:</strong> ${cache.size}</p>
+          <p><strong>D/T:</strong> ${cache.dt} | <strong>BYOP:</strong> ${cache.byop ? 'Yes' : 'No'}</p>
+          <p><strong>Coordinates:</strong> <code>${cache.coords}</code></p>
+          <p style="margin-top:4px;">${cache.desc}</p>
+        </div>
+      `);
+    }
+
+    function decryptHint(gcCode) {
+      const cache = CACHES[gcCode] || CACHES["GC10001"];
+      printMsg(`&gt; HINT ${cache.code}`, "msg-user");
+      printMsg(`<strong>💡 SPOILER HINT:</strong> ${cache.hint}`, "msg-alert");
+    }
+
+    function showCoordinates(gcCode) {
+      const cache = CACHES[gcCode] || CACHES["GC10001"];
+      printMsg(`&gt; COORDS ${cache.code}`, "msg-user");
+      printMsg(`📍 <strong>Waypoints:</strong> <code>${cache.coords}</code> (WGS84 datum)`);
+    }
+
+    function showBatteryStatus() {
+      printMsg(`&gt; BATTERY`, "msg-user");
+      printMsg(`🔋 <strong>SOLAR FLOAT:</strong> 13.1V | Deep-Cycle 12V SLA Cell | Solar Glass: Clean`);
+    }
+
+    function tapCasing() {
+      playAudio('thud');
+      printMsg(`&gt; TAP CASING`, "msg-user");
+      printMsg(`*THUD!* Solid rolled steel ammo can. Relays click inside and the display flickers brightly.`);
+    }
+
+    function showSignLogModal() {
+      openModal("SIGN PHYSICAL LOG", `
+        <p>You are at <strong>${activeGCCode}</strong>. Please confirm you signed the dry paper log scroll inside the container.</p>
+        <label>Your Geocaching Handle:</label>
+        <input type="text" id="log-username" class="input-box" value="${state.username}" readonly>
+        <label style="margin-top:8px;">Trail Log Notes (Optional):</label>
+        <input type="text" id="log-notes" class="input-box" placeholder="TFTC! Great hide, dry log.">
+        <button type="button" class="modal-close-btn" style="margin-top:12px;" onclick="confirmLogSign()">✍️ RECORD OFFICIAL FIND</button>
+      `);
+    }
+
+    function confirmLogSign() {
+      const notes = document.getElementById("log-notes").value || "TFTC!";
+      if (!state.loggedStages.includes(activeGCCode)) {
+        state.loggedStages.push(activeGCCode);
+        state.findsCount += 1;
+        localStorage.setItem("cipher_stages", JSON.stringify(state.loggedStages));
+        localStorage.setItem("cipher_finds", state.findsCount.toString());
+      }
+      closeModal();
+      playAudio('chime');
+      printMsg(`&gt; LOG ${activeGCCode}`, "msg-user");
+      printMsg(`✅ <strong>FOUND IT!</strong> Find logged for <strong>${state.username}</strong> at ${activeGCCode}. Notes: "${notes}"`, "msg-cypher");
+      refreshHeader();
+      renderContextualActionDeck();
+    }
+
+    function showSwagModal() {
+      const itemsHtml = state.swagInventory.map((item, idx) => `
+        <li style="padding:4px 0; border-bottom:1px solid #11331a; display:flex; justify-content:space-between; align-items:center;">
+          <span>${item}</span>
+          <button type="button" class="hdr-btn" onclick="takeSwag(${idx})">TAKE</button>
+        </li>
+      `).join("");
+
+      openModal("AMMO CAN SWAG & TRACKABLES", `
+        <p>Rule: <em>Trade equal or trade up. Never leave food, candy, or broken junk.</em></p>
+        <ul style="list-style:none; margin-top:8px;">${itemsHtml}</ul>
+        <div style="margin-top:10px;">
+          <label>Leave an Item (Swag / Trackable):</label>
+          <input type="text" id="leave-swag-input" class="input-box" placeholder="e.g. Signature Wooden Nickel">
+          <button type="button" class="modal-close-btn" style="margin-top:8px;" onclick="addSwag()">🎁 DROP ITEM IN BOX</button>
+        </div>
+      `);
+    }
+
+    function takeSwag(index) {
+      const taken = state.swagInventory.splice(index, 1)[0];
+      closeModal();
+      printMsg(`&gt; SWAG TAKE`, "msg-user");
+      printMsg(`🎁 You retrieved: <strong>${taken}</strong> from the ammo can. Don't forget to trade even!`);
+    }
+
+    function addSwag() {
+      const val = document.getElementById("leave-swag-input").value.trim();
+      if (!val) return;
+      state.swagInventory.push(val);
+      closeModal();
+      printMsg(`&gt; SWAG DROP "${val}"`, "msg-user");
+      printMsg(`🎁 You placed <strong>${val}</strong> into the container. TFTC!`);
+    }
+
+    function showLockComboModal() {
+      openModal("CONTAINER LOCK COMBINATION", `
+        <p>Need the 4-digit shackle lock combination for this cache?</p>
+        <p style="color:var(--term-alert); margin-top:6px;">Hint: Check the year stamped into the irrigation pipe collar at Stage 1.</p>
+        <input type="number" id="lock-combo-input" class="input-box" placeholder="e.g. 1984">
+        <button type="button" class="modal-close-btn" style="margin-top:10px;" onclick="checkLockCombo()">🔓 TEST COMBINATION</button>
+      `);
+    }
+
+    function checkLockCombo() {
+      const code = document.getElementById("lock-combo-input").value.trim();
+      closeModal();
+      printMsg(`&gt; COMBO ${code}`, "msg-user");
+      if (code === "1984") {
+        playAudio('chime');
+        printMsg(`🔓 <strong>CLICK!</strong> Padlock popped open. The latch is released!`, "msg-cypher");
+      } else {
+        printMsg(`🔒 Combination incorrect. Check your waypoint clues again.`, "msg-error");
       }
     }
 
-    // Command History
-    let trailCommandHistory = [];
-    let trailHistoryPointer = -1;
-    function recordHistory(c) {
-      if (!c || (trailCommandHistory.length && trailCommandHistory[trailCommandHistory.length - 1] === c)) return;
-      trailCommandHistory.push(c);
-      if (trailCommandHistory.length > 30) trailCommandHistory.shift();
-      trailHistoryPointer = -1;
-    }
-    function historyCycle(d) {
-      if (!trailCommandHistory.length) return;
-      const inp = document.getElementById("cli-input");
-      trailHistoryPointer += d;
-      if (trailHistoryPointer < 0) trailHistoryPointer = 0;
-      if (trailHistoryPointer >= trailCommandHistory.length) {
-        trailHistoryPointer = trailCommandHistory.length;
-        inp.value = "";
-        return;
-      }
-      inp.value = trailCommandHistory[trailHistoryPointer];
+    function showProjectModal() {
+      openModal("COORDINATE PROJECTION", `
+        <p>Project a new waypoint from your current GPS location:</p>
+        <label>Bearing (Degrees True North, 0-359°):</label>
+        <input type="number" id="proj-bearing" class="input-box" placeholder="e.g. 142">
+        <label style="margin-top:8px;">Distance (Feet or Meters):</label>
+        <input type="number" id="proj-dist" class="input-box" placeholder="e.g. 320">
+        <button type="button" class="modal-close-btn" style="margin-top:10px;" onclick="calculateProjection()">🧭 CALCULATE PROJECTED GZ</button>
+      `);
     }
 
-    function handleLogSubmit(e) {
+    function calculateProjection() {
+      const b = document.getElementById("proj-bearing").value;
+      const d = document.getElementById("proj-dist").value;
+      closeModal();
+      printMsg(`&gt; PROJECT ${b}° at ${d} ft`, "msg-user");
+      printMsg(`📍 Projected Waypoint: <strong>N 41° 44.184 W 111° 50.710</strong> (Offset: +${d}ft @ ${b}° true)`);
+    }
+
+    // Profile Modal
+    function openProfileModal() {
+      openModal("CACHER PROFILE", `
+        <label>Geocaching Handle / Username:</label>
+        <input type="text" id="profile-handle-input" class="input-box" value="${state.username}" placeholder="e.g. Nezzmuk">
+        <label style="margin-top:8px;">Signature Item Description:</label>
+        <input type="text" id="profile-sig-input" class="input-box" value="${state.signatureItem}" placeholder="e.g. 3D-Printed Trackable Tag">
+        <button type="button" class="modal-close-btn" style="margin-top:12px;" onclick="saveProfile()">💾 SAVE PROFILE</button>
+      `);
+    }
+
+    function saveProfile() {
+      const handle = document.getElementById("profile-handle-input").value.trim();
+      const sig = document.getElementById("profile-sig-input").value.trim();
+      if (!handle) return;
+      state.username = handle;
+      state.signatureItem = sig || "Signature Nickel";
+      localStorage.setItem("cipher_user", state.username);
+      localStorage.setItem("cipher_sig", state.signatureItem);
+      closeModal();
+      printMsg(`👤 Profile updated: Logged in as <strong>${state.username}</strong> (${state.signatureItem}).`);
+      refreshHeader();
+      renderContextualActionDeck();
+    }
+
+    // Stats Modal
+    function openStatsModal() {
+      const stagesList = state.loggedStages.length > 0 
+        ? state.loggedStages.map(s => `<li>✔ ${s}</li>`).join("")
+        : `<li>No corridor finds logged yet.</li>`;
+
+      openModal("TRAIL STATS & DOSSIER", `
+        <p><strong>Cacher:</strong> ${state.username}</p>
+        <p><strong>Total Corridor Finds:</strong> ${state.findsCount}</p>
+        <p><strong>Completed Caches:</strong></p>
+        <ul style="margin:6px 0 0 16px;">${stagesList}</ul>
+        <p style="margin-top:10px; color:var(--term-dim);">Keep your pen ready and latch containers tight!</p>
+      `);
+    }
+
+    // Log Off Modal
+    function confirmLogOff() {
+      openModal("LOG OFF / SWITCH CACHER", `
+        <p>Are you sure you want to log off from this device?</p>
+        <p style="color:var(--term-dim); margin-top:6px;">This clears your active session on this phone browser so another cacher can sign their finds.</p>
+        <button type="button" class="modal-close-btn" style="margin-top:12px; border-color:var(--term-error); color:var(--term-error);" onclick="executeLogOff()">🚪 YES, LOG OFF</button>
+      `);
+    }
+
+    function executeLogOff() {
+      localStorage.removeItem("cipher_user");
+      state.username = "";
+      closeModal();
+      printMsg(`🚪 Session cleared. Welcome to C.I.P.H.E.R. Please set your handle.`, "msg-alert");
+      refreshHeader();
+      renderContextualActionDeck();
+    }
+
+    function showHelp() {
+      openModal("HOW TO USE THIS GADGET CACHE", `
+        <p><strong>Welcome to Cache Tales!</strong></p>
+        <p>1. Use <code>CACHE &lt;GC&gt;</code> or tap <strong>[ 🗺️ CACHE INFO ]</strong> to see difficulty, terrain, and description.</p>
+        <p>2. If you're stuck, tap <strong>[ 💡 DECRYPT HINT ]</strong> for the Ground Zero spoiler clue.</p>
+        <p>3. Once you find the ammo can, open the clamps, sign the paper log scroll with your pen, and tap <strong>[ 📝 SIGN LOG ]</strong>.</p>
+        <p>4. Always seat the rubber lid gasket and snap the latches tight so rain and snow stay out!</p>
+      `);
+    }
+
+    // Form CLI Submissions
+    function handleFormSubmit(e) {
       e.preventDefault();
-      const inp = document.getElementById("cli-input");
-      const v = inp.value.trim();
-      if (!v) return;
-      inp.value = "";
-      executeTrailCommand(v);
-      inp.focus();
+      const inputEl = document.getElementById("cli-input");
+      const val = inputEl.value.trim();
+      if (!val) return;
+      inputEl.value = "";
+      processCommand(val);
     }
 
-    // Boot Routine
-    function initOnboarding() {
-      const params = new URLSearchParams(window.location.search);
-      isPhysicalGZMode = Boolean(params.get("gz") || params.get("lid") || params.get("tag"));
-      const dossier = getCacherDossier();
+    function processCommand(rawInput) {
+      const clean = rawInput.trim();
+      printMsg(`&gt; ${clean}`, "msg-user");
 
-      if (!dossier.username) {
-        awaitingUsernameEntry = true;
-        if (isPhysicalGZMode) {
-          printBlock(`
-            <div class="term-title"><span>C.I.P.H.E.R. // CONTAINER UNLATCHED</span></div>
-            <p><strong>[CHASSIS UNLATCHED // DAYLIGHT DETECTED]</strong><br>
-            Sunlight hitting the solar gasket. You actually tracked down the physical ammo can.<br>
-            If you're here to log the cache, grab a pen and unroll the paper scroll.</p>
-            <p><strong>[CYPHER]:</strong> "What username do you sign logbooks with, human bean?"</p>
-          `, "alert");
-        } else {
-          printBlock(`
-            <div class="term-title"><span>C.I.P.H.E.R. // REMOTE CACHE LINK</span></div>
-            <p><strong>[RSI REMOTE LINK // IRS FIELD AUDIT DIVISION]</strong><br>
-            Remote signal acquired from the cache page. If you're here to get help finding the cache, you've tapped into the right container.</p>
-            <p><strong>[CYPHER]:</strong> "What username do you go by on the trail, geocacher?"</p>
-          `, "alert");
-        }
-      } else {
-        printBlock(`
-          <div class="term-title"><span>C.I.P.H.E.R. // FIELD TRANSCEIVER</span></div>
-          <p>Welcome back to the corridor, <strong>${dossier.username}</strong>! Tap <strong>[ ⚙️ SYS ] &gt; [ 📖 DIRECTIVES ]</strong> for trail guidance.</p>
-        `);
+      const upper = clean.toUpperCase();
+      const parts = upper.split(" ");
+      const cmd = parts[0];
+      const arg = parts.slice(1).join(" ");
+
+      // Conversational queries
+      if (cmd === "WHO" || upper.includes("WHO ARE YOU")) {
+        printMsg(`"I'm an old 1984 steel ammo can gadget cache running on a solar panel and a car battery. Did you bring a pen?"`);
+        return;
+      }
+      if (cmd === "WHAT" || upper.includes("WHAT IS THIS")) {
+        printMsg(`"This is the Cache Tales companion. Sign the paper log, trade quality swag, and make sure the box stays dry."`);
+        return;
+      }
+      if (cmd === "WHERE" || upper.includes("WHERE IS")) {
+        printMsg(`"You're in Northern Utah along the Cache Valley corridor. Check your GPS and stop pacing in circles."`);
+        return;
       }
 
-      updateFieldVitals();
-      acquireGpsFix();
-      renderDynamicActionDeck();
+      // Secret Rat Pack Workbench (Builders Only)
+      if (cmd === "RATLAB" || cmd === "WORKBENCH") {
+        if (state.username && ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(state.username.toUpperCase())) {
+          printMsg(`🔧 <strong>RAT LAB WORKBENCH ACCESS:</strong> 12V Battery Float 13.1V, LoRa Mesh Ready, 50-Cache Trail Active.`, "msg-rat");
+        } else {
+          printMsg(`Rusted steel mounting bracket with security screws. Just an ordinary ammo can bracket.`);
+        }
+        return;
+      }
+
+      // Standard Trail Commands
+      switch(cmd) {
+        case "CACHE":
+          showCacheListing(arg || activeGCCode);
+          break;
+        case "HINT":
+          decryptHint(arg || activeGCCode);
+          break;
+        case "COORDS":
+        case "COORDINATES":
+          showCoordinates(arg || activeGCCode);
+          break;
+        case "BATTERY":
+        case "STATUS":
+          showBatteryStatus();
+          break;
+        case "KICK":
+        case "TAP":
+          tapCasing();
+          break;
+        case "SWAG":
+          showSwagModal();
+          break;
+        case "LOG":
+        case "SIGN":
+        case "FOUND":
+          if (!state.username) {
+            openProfileModal();
+          } else {
+            showSignLogModal();
+          }
+          break;
+        case "HELP":
+          showHelp();
+          break;
+        case "PROFILE":
+          openProfileModal();
+          break;
+        case "STATS":
+          openStatsModal();
+          break;
+        case "CLEAR":
+        case "CLS":
+          document.getElementById("terminal-buffer").innerHTML = "";
+          break;
+        default:
+          printMsg(`Command '${cmd}' not recognized. Tap an action button below or type HELP.`, "msg-error");
+          break;
+      }
     }
 
-    loadCloudRegistries();
-    initOnboarding();
+    // Startup Initialization
+    window.addEventListener("DOMContentLoaded", () => {
+      refreshHeader();
+      renderContextualActionDeck();
+
+      if (isPhysicalGZ) {
+        playAudio('chime');
+        printMsg(`<strong>CONTAINER UNLATCHED (GZ MODE)</strong>`, "msg-alert");
+        printMsg(`Daylight sensor active. Lid is open at <strong>${activeGCCode}</strong>. Please sign the physical paper log scroll!`);
+      } else {
+        printMsg(`<strong>REMOTE TRAIL SESSION INITIALIZED</strong>`);
+        printMsg(`Browsing corridor cache <strong>${activeGCCode}</strong>. Tap <strong>[ 🗺️ CACHE INFO ]</strong> or <strong>[ 💡 DECRYPT HINT ]</strong> for field notes.`);
+      }
+    });
   </script>
 </body>
 </html>
