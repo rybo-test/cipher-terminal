@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>C.I.P.H.E.R. // Operator Profile & Sync</title>
+  <style>
+    /* --------------------------------------------------------
+       THEME PROFILES (Display Modes)
+       -------------------------------------------------------- */
+    :root {
+      --content-scale: 1;
+      --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      /* CRT Green (Default) */
+      --bg-dark: #0a0f0d;
+      --panel-bg: #121a15;
+      --panel-inner: #080d0a;
+      --border-main: #2a5a3a;
+      --border-accent: #38ef7d;
+      --accent: #38ef7d;
+      --accent-dim: #7da88d;
+      --text-bright: #ffffff;
+      --text-main: #38ef7d;
+      --text-dim: #7da88d;
+      --warning: #f7b731;
+      --danger: #eb3b5a;
+    }
+
+    /* Theme: Paper Log (Ultra High-Contrast for Bright Sunlight) */
+    body.theme-light {
+      --bg-dark: #d8ded9;
+      --panel-bg: #f4f6f4;
+      --panel-inner: #e6eae6;
+      --border-main: #405747;
+      --border-accent: #174223;
+      --accent: #144724;
+      --accent-dim: #254d33;
+      --text-bright: #050a06;
+      --text-main: #050a06;
+      --text-dim: #1f3626;
+      --warning: #874b00;
+      --danger: #a81320;
+    }
+
+    /* Theme: Amber Phosphor */
+    body.theme-amber {
+      --bg-dark: #120b00;
+      --panel-bg: #1f1402;
+      --panel-inner: #0f0a00;
+      --border-main: #5c3f0d;
+      --border-accent: #ffb000;
+      --accent: #ffb000;
+      --accent-dim: #ba8829;
+      --text-bright: #ffffff;
+      --text-main: #ffb000;
+      --text-dim: #ba8829;
+      --warning: #ffcf66;
+      --danger: #ff4d4d;
+    }
+
+    /* Theme: Hi-Vis (Color-Blind Safe Blue/Yellow) */
+    body.theme-hivis {
+      --bg-dark: #0a0e14;
+      --panel-bg: #131924;
+      --panel-inner: #0d121c;
+      --border-main: #2b456b;
+      --border-accent: #4ba3ff;
+      --accent: #4ba3ff;
+      --accent-dim: #8ab6e9;
+      --text-bright: #ffffff;
+      --text-main: #4ba3ff;
+      --text-dim: #8ab6e9;
+      --warning: #ffd13b;
+      --danger: #ff5252;
+    }
+
+    /* --------------------------------------------------------
+       FONT SIZE TIERS
+       -------------------------------------------------------- */
+    body.font-regular { --content-scale: 1; }
+    body.font-large { --content-scale: 1.18; }
+    body.font-trailxl { --content-scale: 1.38; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 650px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    /* =======================================================
+       UNIVERSAL TOP TOOLBAR (STABLE CHROME)
+       ======================================================= */
+    .cipher-toolbar {
+      background: var(--panel-inner);
+      border: 2px solid var(--border-main);
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tb-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--panel-inner);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .tb-status-badge {
+      background: var(--panel-bg);
+      color: var(--accent);
+      border: 1px solid var(--border-main);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .tb-nav-row {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
+      gap: 4px;
+      padding: 6px;
+      background: var(--panel-bg);
+    }
+
+    .tb-btn {
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      color: var(--text-dim);
+      padding: 8px 3px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+    }
+    .tb-btn:active { background: var(--border-main); }
+    .tb-btn.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
+    }
+
+    .tb-context-row {
+      padding: 6px 8px;
+      background: var(--panel-inner);
+      border-top: 1px dashed var(--border-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .tb-context-label {
+      color: var(--warning);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .tb-context-actions {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .btn-context {
+      background: var(--panel-bg);
+      color: var(--text-bright);
+      border: 1px solid var(--border-main);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      white-space: nowrap;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-context:active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Menu Drawer */
+    .tb-menu-drawer {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 6px;
+      width: 290px;
+      background: var(--panel-inner);
+      border: 2px solid var(--border-accent);
+      border-radius: 6px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+      z-index: 100;
+      padding: 8px 0;
+      font-family: var(--font-mono);
+    }
+    .tb-menu-drawer.open { display: block; }
+
+    .tb-menu-header {
+      padding: 4px 12px;
+      font-size: 10px;
+      color: var(--warning);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .tb-menu-item {
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-bright);
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
+
+    .tb-menu-controls {
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .control-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .btn-control-chip {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
+      color: var(--text-dim);
+      padding: 6px 2px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      text-align: center;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .btn-control-chip.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
+    }
+
+    .tb-menu-divider {
+      height: 1px;
+      background: var(--border-main);
+      margin: 5px 0;
+    }
+
+    /* =======================================================
+       DECK CONTAINER & PROFILE PANELS
+       ======================================================= */
+    .deck-container {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-main);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-card {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-main);
+      background: var(--panel-inner);
+    }
+
+    .profile-avatar-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .profile-avatar {
+      width: 52px;
+      height: 52px;
+      background: var(--panel-bg);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .profile-name-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .profile-handle {
+      font-size: calc(20px * var(--content-scale));
+      font-weight: 800;
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      letter-spacing: 0.5px;
+    }
+
+    .profile-role {
+      font-size: calc(11px * var(--content-scale));
+      color: var(--warning);
+      font-family: var(--font-mono);
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 14px;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .stat-box {
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      border-radius: 4px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      text-align: center;
+      font-family: var(--font-mono);
+    }
+
+    .stat-val {
+      font-size: calc(18px * var(--content-scale));
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .stat-lbl {
+      font-size: 9px;
+      color: var(--text-dim);
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Passkey & Form Sections */
+    .section-card {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .section-title {
+      font-size: calc(12px * var(--content-scale));
+      color: var(--warning);
+      font-family: var(--font-mono);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .field-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .field-input {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-main);
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      font-size: calc(13px * var(--content-scale));
+      padding: 9px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+      outline: none;
+    }
+    .field-input:focus { border-color: var(--accent); }
+
+    .sync-key-display {
+      background: var(--panel-inner);
+      border: 1px dashed var(--accent);
+      padding: 10px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .btn-copy {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
+      color: var(--text-bright);
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-copy:active { background: var(--accent); color: var(--bg-dark); }
+
+    .btn-save {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border: none;
+      font-family: var(--font-mono);
+      font-size: calc(13px * var(--content-scale));
+      font-weight: 800;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-save:active { opacity: 0.85; }
+  </style>
+</head>
+<body class="theme-crt font-regular">
+
+  <div class="app-shell">
+
+    <!-- =======================================================
+         UNIVERSAL TOP TOOLBAR (STABLE CHROME)
+         ======================================================= -->
+    <div class="cipher-toolbar" id="cipherToolbar">
+      
+      <!-- Row 1: Hardware Identity & Version Stamping -->
+      <div class="tb-status-row">
+        <div>
+          <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
+          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+        </div>
+        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
+        <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
+      </div>
+
+      <!-- Row 2: 4 Primary Anchors (Inter-Page Navigation) -->
+      <div class="tb-nav-row">
+        <a href="mission.html" class="tb-btn" id="btnNavMission">
+          🎯 MISSION
+        </a>
+        <a href="trail.html" class="tb-btn" id="btnNavTrail">
+          🗺️ TRAIL
+        </a>
+        <a href="pack.html" class="tb-btn" id="btnNavPack">
+          <span id="packNavLabel">🎒 PACK (1)</span>
+        </a>
+        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
+          ≡ MENU ▾
+        </button>
+      </div>
+
+      <!-- Row 3: Dynamic Contextual Action Bar -->
+      <div class="tb-context-row">
+        <span class="tb-context-label">> ACTION:</span>
+        <div class="tb-context-actions" id="contextActionsSlot">
+          <button type="button" class="btn-context" onclick="copySyncKey()">📋 Copy Passkey</button>
+          <a href="mission.html" class="btn-context">🎯 Active Mission</a>
+          <a href="trail.html" class="btn-context">🗺️ Corridor Map</a>
+        </div>
+      </div>
+
+      <!-- Dropdown Drawer -->
+      <div class="tb-menu-drawer" id="menuDrawer">
+        <div class="tb-menu-header">FIELD PROGRESS</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Corridor Challenges')">🎯 Challenges</div>
+        
+        <div class="tb-menu-divider"></div>
+        
+        <div class="tb-menu-header">THEME / SUN</div>
+        <div class="tb-menu-controls">
+          <div class="control-grid-4">
+            <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
+            <button type="button" class="btn-control-chip" id="chipThemeLight" onclick="setTheme('light')">PAPER</button>
+            <button type="button" class="btn-control-chip" id="chipThemeAmber" onclick="setTheme('amber')">AMBER</button>
+            <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-header">TEXT SIZE</div>
+        <div class="tb-menu-controls">
+          <div class="control-grid">
+            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
+            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
+            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">XL</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-divider"></div>
+
+        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
+        <a href="terminal.html" class="tb-menu-item" onclick="playClick();">👤 Gateway Login</a>
+        <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 BYOP Manual</div>
+        <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
+        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
+        <a href="terminal.html" class="tb-menu-item" onclick="playClick();" style="color: var(--danger);">🚪 Log Off</a>
+      </div>
+
+    </div>
+
+    <!-- =======================================================
+         PROFILE & DOSSIER DECK
+         ======================================================= -->
+    <div class="deck-container" id="deckProfile">
+      
+      <!-- Operator Card -->
+      <div class="profile-card">
+        <div class="profile-avatar-row">
+          <div class="profile-avatar" id="avatarBox">👤</div>
+          <div class="profile-name-group">
+            <div class="profile-handle" id="dossierUsername">NEZZMUK</div>
+            <div class="profile-role" id="dossierRole">CORRIDOR MASTER // RAT PACK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Corridor Progress Stats -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val" id="statCompletedCount">0 / 5</div>
+          <div class="stat-lbl">Finds Logged</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statPercent">0%</div>
+          <div class="stat-lbl">Corridor Clear</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statActiveStage">01</div>
+          <div class="stat-lbl">Active Stage</div>
+        </div>
+      </div>
+
+      <!-- Passkey & Cloud Identity -->
+      <div class="section-card">
+        <div class="section-title">🔑 CLOUD SYNC PASSKEY</div>
+        <div class="sync-key-display">
+          <span id="syncKeyVal">CT-NEZZ-5909</span>
+          <button type="button" class="btn-copy" onclick="copySyncKey()">COPY</button>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); line-height: 1.4;">
+          Keep this key. It restores your finds, pack items, and verified corridor standing on any device or new field session.
+        </div>
+      </div>
+
+      <!-- Operator Signature Configuration -->
+      <div class="section-card">
+        <div class="section-title">⚙️ FIELD CONFIGURATION</div>
+        <div class="field-group">
+          <label class="field-label">SIGNATURE SWAG ITEM:</label>
+          <input type="text" id="inputSigItem" class="field-input" placeholder="e.g. 3D Printed Nickel" />
+        </div>
+        <button type="button" class="btn-save" onclick="saveProfileChanges()">
+          SAVE PREFERENCES ➔
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // =======================================================
+    // 0. ACTIVE STATE MANAGEMENT
+    // =======================================================
+    let activeUser = "Nezzmuk";
+    let activeSyncKey = "CT-NEZZ-5909";
+    let activeSig = "Signature Wooden Nickel";
+    let currentStage = 1;
+    let completedStages = [];
+    let packCount = 1;
+
+    function loadProfile() {
+      try {
+        const user = localStorage.getItem('ct_cacher_user');
+        if (user) activeUser = user;
+
+        const key = localStorage.getItem('ct_cacher_key');
+        if (key) activeSyncKey = key;
+
+        const sig = localStorage.getItem('ct_cacher_sig');
+        if (sig) activeSig = sig;
+
+        const stage = localStorage.getItem('cipher_active_stage');
+        if (stage) currentStage = parseInt(stage, 10);
+
+        const completed = localStorage.getItem('cipher_completed_stages');
+        if (completed) completedStages = JSON.parse(completed);
+
+        const pack = localStorage.getItem('cipher_pack_items');
+        if (pack) packCount = JSON.parse(pack).length;
+      } catch (e) {
+        console.warn('Profile read error:', e);
+      }
+
+      // Populate UI
+      document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
+      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packCount})`;
+      document.getElementById('dossierUsername').textContent = activeUser.toUpperCase();
+      document.getElementById('syncKeyVal').textContent = activeSyncKey || "NO PASSKEY";
+      document.getElementById('inputSigItem').value = activeSig;
+
+      // Check admin status
+      const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(activeUser.toUpperCase());
+      document.getElementById('dossierRole').textContent = isAdmin ? "CORRIDOR MASTER // RAT PACK" : "FIELD OPERATOR // AUDITOR";
+      document.getElementById('avatarBox').textContent = isAdmin ? "🤠" : "👤";
+
+      // Stats
+      const finds = completedStages.length;
+      document.getElementById('statCompletedCount').textContent = `${finds} / 5`;
+      document.getElementById('statPercent').textContent = `${Math.round((finds / 5) * 100)}%`;
+      document.getElementById('statActiveStage').textContent = completedStages.includes(5) ? "DONE" : `0${currentStage}`;
+    }
+
+    function saveProfileChanges() {
+      playClick();
+      const newSig = document.getElementById('inputSigItem').value.trim();
+      if (newSig) {
+        localStorage.setItem('ct_cacher_sig', newSig);
+        playChime();
+        alert("Field preferences saved.");
+      }
+    }
+
+    function copySyncKey() {
+      playClick();
+      if (!activeSyncKey) return;
+      navigator.clipboard.writeText(activeSyncKey).then(() => {
+        alert(`Passkey copied to clipboard:\n${activeSyncKey}`);
+      }).catch(() => {
+        alert(`Your passkey is: ${activeSyncKey}`);
+      });
+    }
+
+    function resetDemoProgress() {
+      if (!confirm("Reset all corridor progress back to Stage 01?")) return;
+      localStorage.setItem('cipher_active_stage', '1');
+      localStorage.setItem('cipher_completed_stages', JSON.stringify([]));
+      localStorage.setItem('cipher_pack_items', JSON.stringify([
+        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
+      ]));
+      loadProfile();
+      playClick();
+      alert("Corridor progress reset.");
+    }
+
+    function toggleMenu(e) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      playClick();
+      document.getElementById('menuDrawer').classList.toggle('open');
+    }
+
+    document.addEventListener('click', function(e) {
+      const toolbar = document.getElementById('cipherToolbar');
+      const drawer = document.getElementById('menuDrawer');
+      if (drawer && drawer.classList.contains('open')) {
+        if (!toolbar.contains(e.target)) drawer.classList.remove('open');
+      }
+    });
+
+    // =======================================================
+    // 1. AUDIO SYNTHESIZER
+    // =======================================================
+    let soundActive = true;
+    let audioCtx = null;
+
+    function initAudio() {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (err) {}
+    }
+
+    function playClick() {
+      if (!soundActive) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (err) {}
+    }
+
+    function playChime() {
+      if (!soundActive) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'square';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now);
+        osc1.frequency.setValueAtTime(880, now + 0.08);
+        osc2.frequency.setValueAtTime(1174.66, now);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
+      } catch (err) {}
+    }
+
+    function toggleSound() {
+      soundActive = !soundActive;
+      playClick();
+      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+    }
+
+    // Theme & Font Sizing
+    function setTheme(themeKey) {
+      playClick();
+      document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
+      ['chipThemeCrt', 'chipThemeLight', 'chipThemeAmber', 'chipThemeHivis'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (themeKey === 'light') {
+        document.body.classList.add('theme-light');
+        document.getElementById('chipThemeLight').classList.add('active');
+      } else if (themeKey === 'amber') {
+        document.body.classList.add('theme-amber');
+        document.getElementById('chipThemeAmber').classList.add('active');
+      } else if (themeKey === 'hivis') {
+        document.body.classList.add('theme-hivis');
+        document.getElementById('chipThemeHivis').classList.add('active');
+      } else {
+        document.body.classList.add('theme-crt');
+        document.getElementById('chipThemeCrt').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_theme', themeKey); } catch (e) {}
+    }
+
+    function setFontSize(sizeKey) {
+      playClick();
+      document.body.classList.remove('font-regular', 'font-large', 'font-trailxl');
+      ['chipFontReg', 'chipFontLg', 'chipFontXl'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (sizeKey === 'large') {
+        document.body.classList.add('font-large');
+        document.getElementById('chipFontLg').classList.add('active');
+      } else if (sizeKey === 'trailxl') {
+        document.body.classList.add('font-trailxl');
+        document.getElementById('chipFontXl').classList.add('active');
+      } else {
+        document.body.classList.add('font-regular');
+        document.getElementById('chipFontReg').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
+    }
+
+    // Page Load Init
+    window.addEventListener('DOMContentLoaded', () => {
+      loadProfile();
+      try {
+        const savedTheme = localStorage.getItem('cipher_theme');
+        if (savedTheme) setTheme(savedTheme);
+        const savedFont = localStorage.getItem('cipher_font_size');
+        if (savedFont) setFontSize(savedFont);
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>
