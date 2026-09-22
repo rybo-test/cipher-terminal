@@ -426,8 +426,8 @@
     // =========================================================
     // CONFIGURATION & PERSISTENCE
     // =========================================================
-    // Replace with your Google Apps Script Web App URL:
-    const API_URL = "https://script.google.com/macros/s/AKfycbw9e3JqXQ1s7H_89K2-fQx_Lz4p6O6VqF3t0j/exec";
+    // Replace with your Google Apps Script Web App URL ending in /exec:
+    const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
     // Application State
     const AppState = {
@@ -457,7 +457,7 @@
     }
 
     // =========================================================
-    // INITIALIZATION & NETWORKING
+    // INITIALIZATION & CORS-SAFE NETWORKING
     // =========================================================
     window.addEventListener("DOMContentLoaded", () => {
       fetchCorridorData();
@@ -468,27 +468,33 @@
     });
 
     async function fetchCorridorData() {
-      if (!API_URL || API_URL.includes("macros/s/...")) {
-        printScreen("[SYS] Offline simulator active. Add API_URL to sync live Google Sheet.", "warn");
+      if (!API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) {
+        printScreen("[SYS] Offline simulator active. Add your live Web App URL to API_URL.", "warn");
         return;
       }
 
       try {
-        const resp = await fetch(`${API_URL}?action=getCorridorData`);
+        const resp = await fetch(`${API_URL}?action=getCorridorData`, {
+          method: "GET",
+          redirect: "follow"
+        });
         const data = await resp.json();
         if (data.status === "success") {
           AppState.caches = data.caches || [];
           AppState.swag = data.swag || [];
           printScreen(`[NETWORK] Synced ${AppState.caches.length} corridor caches.`);
           updateSwagSelect();
+        } else {
+          printScreen(`[NETWORK WARN] ${data.message}`, "warn");
         }
       } catch (err) {
+        console.error(err);
         printScreen("[NETWORK] Corridor radio weak. Operating from offline buffer.", "warn");
       }
     }
 
     async function syncProfileWithBackend(verbose = true) {
-      if (!AppState.user || !API_URL) return;
+      if (!AppState.user || !API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) return;
 
       try {
         const payload = {
@@ -501,6 +507,8 @@
 
         const resp = await fetch(API_URL, {
           method: "POST",
+          redirect: "follow",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
         const data = await resp.json();
@@ -515,7 +523,8 @@
           if (verbose) printScreen(`[SYNC WARN] ${data.message}`, "warn");
         }
       } catch (err) {
-        if (verbose) printScreen("[SYNC] Offline. Changes saved locally.", "warn");
+        console.error(err);
+        if (verbose) printScreen("[SYNC] Offline. Saved locally.", "warn");
       }
       updateUI();
     }
@@ -597,7 +606,7 @@
     function decryptCurrentHint() {
       const c = AppState.caches.find(x => x.GC_Code === AppState.activeGC);
       if (!c || !c.Hint) {
-        printScreen(`[HINT] No spoiler hint logged for ${AppState.activeGC}. Look for disturbed rocks or culverts.`);
+        printScreen(`[HINT] No spoiler hint logged for ${AppState.activeGC}. Check for false irrigation plates.`);
         return;
       }
       printScreen(`[DECRYPTED HINT] ${c.Hint}`);
@@ -663,13 +672,13 @@
       printScreen(`[TRANSMITTING] Logging ${action} for ${AppState.activeGC}...`);
       closeModal("signModal");
 
-      // Save locally
+      // Record locally in cacher profile
       if (!AppState.profileData.stagesLogged.includes(AppState.activeGC)) {
         AppState.profileData.stagesLogged.push(AppState.activeGC);
         localStorage.setItem("ct_cacher_json", JSON.stringify(AppState.profileData));
       }
 
-      if (!API_URL) {
+      if (!API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) {
         printScreen(`[LOGGED OFFLINE] ${action} recorded in local memory.`);
         return;
       }
@@ -685,6 +694,8 @@
 
         const resp = await fetch(API_URL, {
           method: "POST",
+          redirect: "follow",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
         const data = await resp.json();
@@ -695,6 +706,7 @@
           printScreen(`[ERROR] ${data.message}`, "warn");
         }
       } catch (err) {
+        console.error(err);
         printScreen("[BUFFERED] Could not reach corridor server. Stored for auto-sync.", "warn");
       }
     }
@@ -715,6 +727,11 @@
       if (dropped) AppState.profileData.inventory.push(dropped);
       localStorage.setItem("ct_cacher_json", JSON.stringify(AppState.profileData));
 
+      if (!API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) {
+        printScreen("[SWAG] Recorded in local offline memory.", "warn");
+        return;
+      }
+
       try {
         const payload = {
           action: "tradeSwag",
@@ -727,6 +744,8 @@
 
         const resp = await fetch(API_URL, {
           method: "POST",
+          redirect: "follow",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
         const data = await resp.json();
@@ -734,8 +753,11 @@
         if (data.status === "success") {
           printScreen(`[SWAG CONFIRMED] Trade logged. Trade equal or trade up!`);
           fetchCorridorData();
+        } else {
+          printScreen(`[SWAG WARN] ${data.message}`, "warn");
         }
       } catch (err) {
+        console.error(err);
         printScreen("[SWAG] Recorded in local offline memory.", "warn");
       }
     }
