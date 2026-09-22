@@ -1,11 +1,11 @@
 // ========================================================
-// C.I.P.H.E.R. // MASTER STATE, TOOLBAR & VERSION CONTROLLER
+// C.I.P.H.E.R. // MASTER STATE, TOOLBAR & LEDGER SYNC CONTROLLER
 // ========================================================
 const CipherCore = (function() {
   // Shared System Version stamped across all pages after "C.I.P.H.E.R. //"
   const SYSTEM_VERSION = "v2.6-RSI";
 
-  // Google Apps Script Web App Deployment URL:
+  // Google Apps Script Web App Deployment URL (Replace with your live Web App URL)
   const API_URL = "https://script.google.com/macros/s/AKfycbw9e3JqXQ1s7H_89K2-fQx_Lz4p6O6VqF3t0j/exec";
 
   const AppState = {
@@ -93,6 +93,9 @@ const CipherCore = (function() {
     const currentFont = localStorage.getItem("cipher_font_size") || "regular";
     document.getElementById(`chipTheme${currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}`)?.classList.add("active");
     document.getElementById(`chipFont${currentFont.charAt(0).toUpperCase() + currentFont.slice(1)}`)?.classList.add("active");
+
+    // 6. Check and flush any queued offline logs if connection is available
+    flushOfflineQueue();
   }
 
   function toggleMenu(e) {
@@ -114,13 +117,84 @@ const CipherCore = (function() {
     }
   });
 
+  // ========================================================
+  // GOOGLE SHEET LEDGER SYNC & OFFLINE RESILIENCE
+  // ========================================================
+  async function syncFindToLedger(stageNumber, stageData) {
+    const payload = {
+      action: "logFind",
+      username: AppState.user,
+      syncKey: AppState.syncKey,
+      gc: stageData.gc,
+      status: "Found It",
+      notes: `Stage ${stageNumber} unlocked via code: ${stageData.unlockCode}`,
+      timestamp: new Date().toISOString()
+    };
+
+    updateStatusBadge("[ 🟡 SYNCING... ]");
+
+    try {
+      // Use text/plain to avoid CORS preflight failures on mobile
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      console.log("☁️ LEDGER SYNC CONFIRMED:", result);
+      updateStatusBadge("[ 🟢 ONLINE // GZ ]");
+      return result;
+    } catch (err) {
+      console.warn("⚠️ Signal dropped at GZ. Queuing log locally...", err);
+      updateStatusBadge("[ 🟠 SAVED OFFLINE ]");
+      
+      let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
+      queue.push(payload);
+      localStorage.setItem("cipher_offline_queue", JSON.stringify(queue));
+    }
+  }
+
+  async function flushOfflineQueue() {
+    let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
+    if (queue.length === 0) return;
+
+    console.log(`📡 Back in range. Flushing ${queue.length} offline log(s)...`);
+    updateStatusBadge(`[ 🟡 SYNCING (${queue.length}) ]`);
+
+    const remainingQueue = [];
+
+    for (const item of queue) {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(item)
+        });
+      } catch (err) {
+        remainingQueue.push(item);
+      }
+    }
+
+    localStorage.setItem("cipher_offline_queue", JSON.stringify(remainingQueue));
+    updateStatusBadge(remainingQueue.length === 0 ? "[ 🟢 ONLINE // GZ ]" : "[ 🟠 OFFLINE QUEUE ]");
+  }
+
+  function updateStatusBadge(statusText) {
+    const badge = document.getElementById("statusPlaceholder");
+    if (badge) badge.textContent = statusText;
+  }
+
   return {
     version: SYSTEM_VERSION,
+    apiUrl: API_URL,
     state: AppState,
     saveState,
     initToolbar,
     setTheme,
     setFontSize,
-    toggleMenu
+    toggleMenu,
+    syncFindToLedger,
+    flushOfflineQueue
   };
 })();
