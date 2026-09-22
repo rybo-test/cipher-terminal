@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>C.I.P.H.E.R. // Active Mission Briefing</title>
+  <style>
+    /* --------------------------------------------------------
+       THEME PROFILES (Display Modes)
+       -------------------------------------------------------- */
+    :root {
+      --content-scale: 1;
+      --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      /* CRT Green (Default) */
+      --bg-dark: #0a0f0d;
+      --panel-bg: #121a15;
+      --panel-inner: #080d0a;
+      --border-main: #2a5a3a;
+      --border-accent: #38ef7d;
+      --accent: #38ef7d;
+      --accent-dim: #7da88d;
+      --text-bright: #ffffff;
+      --text-main: #38ef7d;
+      --text-dim: #7da88d;
+      --warning: #f7b731;
+      --danger: #eb3b5a;
+    }
+
+    /* Theme: Paper Log (Ultra High-Contrast for Bright Sunlight) */
+    body.theme-light {
+      --bg-dark: #d8ded9;
+      --panel-bg: #f4f6f4;
+      --panel-inner: #e6eae6;
+      --border-main: #405747;
+      --border-accent: #174223;
+      --accent: #144724;
+      --accent-dim: #254d33;
+      --text-bright: #050a06;
+      --text-main: #050a06;
+      --text-dim: #1f3626;
+      --warning: #874b00;
+      --danger: #a81320;
+    }
+
+    /* Theme: Amber Phosphor */
+    body.theme-amber {
+      --bg-dark: #120b00;
+      --panel-bg: #1f1402;
+      --panel-inner: #0f0a00;
+      --border-main: #5c3f0d;
+      --border-accent: #ffb000;
+      --accent: #ffb000;
+      --accent-dim: #ba8829;
+      --text-bright: #ffffff;
+      --text-main: #ffb000;
+      --text-dim: #ba8829;
+      --warning: #ffcf66;
+      --danger: #ff4d4d;
+    }
+
+    /* Theme: Hi-Vis (Color-Blind Safe Blue/Yellow) */
+    body.theme-hivis {
+      --bg-dark: #0a0e14;
+      --panel-bg: #131924;
+      --panel-inner: #0d121c;
+      --border-main: #2b456b;
+      --border-accent: #4ba3ff;
+      --accent: #4ba3ff;
+      --accent-dim: #8ab6e9;
+      --text-bright: #ffffff;
+      --text-main: #4ba3ff;
+      --text-dim: #8ab6e9;
+      --warning: #ffd13b;
+      --danger: #ff5252;
+    }
+
+    /* --------------------------------------------------------
+       FONT SIZE TIERS
+       -------------------------------------------------------- */
+    body.font-regular { --content-scale: 1; }
+    body.font-large { --content-scale: 1.18; }
+    body.font-trailxl { --content-scale: 1.38; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 650px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    /* =======================================================
+       UNIVERSAL TOP TOOLBAR (STABLE CHROME)
+       ======================================================= */
+    .cipher-toolbar {
+      background: var(--panel-inner);
+      border: 2px solid var(--border-main);
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tb-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--panel-inner);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .tb-status-badge {
+      background: var(--panel-bg);
+      color: var(--accent);
+      border: 1px solid var(--border-main);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .tb-nav-row {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
+      gap: 4px;
+      padding: 6px;
+      background: var(--panel-bg);
+    }
+
+    .tb-btn {
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      color: var(--text-dim);
+      padding: 8px 3px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+    }
+    .tb-btn:active { background: var(--border-main); }
+    .tb-btn.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
+    }
+
+    .tb-context-row {
+      padding: 6px 8px;
+      background: var(--panel-inner);
+      border-top: 1px dashed var(--border-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .tb-context-label {
+      color: var(--warning);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .tb-context-actions {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .btn-context {
+      background: var(--panel-bg);
+      color: var(--text-bright);
+      border: 1px solid var(--border-main);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      white-space: nowrap;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-context:active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-context:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+
+    /* Menu Drawer */
+    .tb-menu-drawer {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 6px;
+      width: 290px;
+      background: var(--panel-inner);
+      border: 2px solid var(--border-accent);
+      border-radius: 6px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+      z-index: 100;
+      padding: 8px 0;
+      font-family: var(--font-mono);
+    }
+    .tb-menu-drawer.open { display: block; }
+
+    .tb-menu-header {
+      padding: 4px 12px;
+      font-size: 10px;
+      color: var(--warning);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .tb-menu-item {
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-bright);
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
+
+    .tb-menu-controls {
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .control-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .btn-control-chip {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
+      color: var(--text-dim);
+      padding: 6px 2px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      text-align: center;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .btn-control-chip.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
+    }
+
+    .tb-menu-divider {
+      height: 1px;
+      background: var(--border-main);
+      margin: 5px 0;
+    }
+
+    /* =======================================================
+       DECK CONTAINER & MISSION SPECIFIC CARDS
+       ======================================================= */
+    .deck-container {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-main);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dialogue-card {
+      padding: 14px;
+      background: var(--panel-inner);
+      border-bottom: 1px solid var(--border-main);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .terminal-avatar {
+      width: 42px;
+      height: 42px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .terminal-speech {
+      font-family: var(--font-mono);
+      font-size: calc(15px * var(--content-scale));
+      line-height: 1.45;
+      color: var(--text-bright);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .mission-card {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mission-meta {
+      font-size: calc(12px * var(--content-scale));
+      color: var(--warning);
+      font-family: var(--font-mono);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .mission-title {
+      font-size: calc(18px * var(--content-scale));
+      font-weight: 800;
+      color: var(--text-bright);
+    }
+
+    .mission-desc {
+      font-size: calc(16px * var(--content-scale));
+      line-height: 1.45;
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .unlock-dock {
+      background: var(--panel-inner);
+      border-top: 1px solid var(--border-main);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-row { display: flex; gap: 8px; }
+
+    .key-input {
+      flex: 1;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-main);
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      font-size: calc(16px * var(--content-scale));
+      padding: 10px 12px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 1px;
+      outline: none;
+    }
+    .key-input:focus { border-color: var(--accent); }
+
+    .btn-submit {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border: none;
+      font-weight: 800;
+      font-size: calc(14px * var(--content-scale));
+      padding: 0 18px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .quick-status-box {
+      margin-top: 6px;
+      padding: 10px;
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body class="theme-crt font-regular">
+
+  <div class="app-shell">
+
+    <!-- =======================================================
+         UNIVERSAL TOP TOOLBAR (STABLE CHROME)
+         ======================================================= -->
+    <div class="cipher-toolbar" id="cipherToolbar">
+      
+      <!-- Row 1: Hardware Identity & Version Stamping -->
+      <div class="tb-status-row">
+        <div>
+          <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
+          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+        </div>
+        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
+        <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
+      </div>
+
+      <!-- Row 2: 4 Primary Anchors (Inter-Page Navigation) -->
+      <div class="tb-nav-row">
+        <a href="mission.html" class="tb-btn active" id="btnNavMission">
+          🎯 MISSION
+        </a>
+        <a href="trail.html" class="tb-btn" id="btnNavTrail">
+          🗺️ TRAIL
+        </a>
+        <a href="pack.html" class="tb-btn" id="btnNavPack">
+          <span id="packNavLabel">🎒 PACK (1)</span>
+        </a>
+        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
+          ≡ MENU ▾
+        </button>
+      </div>
+
+      <!-- Row 3: Dynamic Contextual Action Bar -->
+      <div class="tb-context-row">
+        <span class="tb-context-label">> ACTION:</span>
+        <div class="tb-context-actions" id="contextActionsSlot">
+          <button type="button" class="btn-context" onclick="playClick(); jumpToUnlock()">🔓 Jump to Code</button>
+          <button type="button" class="btn-context" id="btnToggleHint" onclick="revealHint()">💡 Show Hint</button>
+          <a href="trail.html" class="btn-context" style="text-decoration:none;">🗺️ View Corridor</a>
+        </div>
+      </div>
+
+      <!-- Dropdown Drawer -->
+      <div class="tb-menu-drawer" id="menuDrawer">
+        <div class="tb-menu-header">FIELD PROGRESS</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Corridor Challenges')">🎯 Challenges</div>
+        
+        <div class="tb-menu-divider"></div>
+        
+        <div class="tb-menu-header">THEME / SUN</div>
+        <div class="tb-menu-controls">
+          <div class="control-grid-4">
+            <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
+            <button type="button" class="btn-control-chip" id="chipThemeLight" onclick="setTheme('light')">PAPER</button>
+            <button type="button" class="btn-control-chip" id="chipThemeAmber" onclick="setTheme('amber')">AMBER</button>
+            <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-header">TEXT SIZE</div>
+        <div class="tb-menu-controls">
+          <div class="control-grid">
+            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
+            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
+            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">XL</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-divider"></div>
+
+        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
+        <a href="terminal.html" class="tb-menu-item" onclick="playClick();">👤 Gateway Login</a>
+        <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 BYOP Manual</div>
+        <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
+        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
+        <a href="terminal.html" class="tb-menu-item" onclick="playClick();" style="color: var(--danger);">🚪 Log Off</a>
+      </div>
+
+    </div>
+
+    <!-- =======================================================
+         MISSION DECK (Dynamic Objective & Unlock Dock)
+         ======================================================= -->
+    <div class="deck-container" id="deckMission">
+      
+      <!-- Avatar Dialogue Card -->
+      <div class="dialogue-card">
+        <div class="terminal-avatar">📟</div>
+        <div class="terminal-speech" id="cypherSpeechText">
+          "Daylight detected. 12.6 volts on the bus. Ready for field operations."
+        </div>
+      </div>
+
+      <!-- Mission Briefing Details -->
+      <div class="mission-card">
+        <div class="mission-meta" id="missionMetaText">STAGE 01 / 50</div>
+        <div class="mission-title" id="missionTitleText">Stop 1: Trailhead Pulloff</div>
+        <div class="mission-desc" id="missionDescText">
+          Inspect the gravel pulloff container. Locate the code stamped on the lid.
+        </div>
+
+        <div class="quick-status-box">
+          <span id="boxGcLabel" style="color: var(--accent); font-weight: bold;">GC10001 // Ammo Can</span>
+          <span id="boxDtLabel" style="color: var(--text-dim);">D 1.5 / T 1.5</span>
+        </div>
+      </div>
+
+      <!-- Field Code Input Dock -->
+      <div class="unlock-dock">
+        <div style="font-size: calc(13px * var(--content-scale)); color: var(--text-dim); font-family: var(--font-mono); font-weight: 800;">ENTER CODE:</div>
+        <div class="input-row">
+          <input type="text" id="unlockInput" class="key-input" placeholder="CODE..." autocomplete="off" />
+          <button type="button" class="btn-submit" id="btnUnlockSubmit" onclick="submitUnlockCode()">UNLOCK</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // =======================================================
+    // 0. ACTIVE BACKEND ENDPOINT
+    // =======================================================
+    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
+
+    // =======================================================
+    // 1. GAME MASTER DATA (CORRIDOR STAGES 01 - 05)
+    // =======================================================
+    const CORRIDOR_DATA = {
+      1: {
+        id: 1,
+        title: "Stop 1: Trailhead Pulloff",
+        gc: "GC10001",
+        container: "Ammo Can",
+        dt: "D 1.5 / T 1.5",
+        hintDec: "Under the large gravel road turnaround boulder.",
+        missionDesc: "Locate the 50-cal ammo can secured at the trailhead turnaround. Inspect the inside lid for the stamped verification code.",
+        unlockCode: "ANCHOR",
+        speechActive: "\"Daylight detected. 12.6V on the lead-acid bus. Stop 1 is in the gravel turnaround. Don't lose your pen in the weeds.\"",
+        speechCompleted: "\"Stop 1 verified. You signed the scroll and closed the lid tight. Proceed northeast to the canal footbridge.\"",
+        reward: {
+          icon: "🏷️",
+          title: "Corridor Permit #01",
+          desc: "Stamped Shackle Combo: 3-8-4 (Needed for Cache 02)"
+        }
+      },
+      2: {
+        id: 2,
+        title: "Stop 2: Irrigation Crossing",
+        gc: "GC10002",
+        container: "Steel Lockbox",
+        dt: "D 2.0 / T 2.0",
+        hintDec: "Magnetically anchored under the south steel cross-beam.",
+        missionDesc: "Cross the irrigation ditch. Locate the locked steel box under the bridge. Use Permit #01 combo (3-8-4) to open and find the stamped code.",
+        unlockCode: "384",
+        speechActive: "\"Moisture sensor reads 84% near the ditch. Watch your footing on the steel bridge and enter the padlock combination.\"",
+        speechCompleted: "\"Padlock cracked. EPDM gasket held up against the canal spray. Stamped Washer #02 is in your pack.\"",
+        reward: {
+          icon: "⚙️",
+          title: "Brass Washer #02",
+          desc: "Stamped Word: POST (Needed for Cache 03)"
+        }
+      },
+      3: {
+        id: 3,
+        title: "Stop 3: The Milepost Marker",
+        gc: "GC10003",
+        container: "Regular Ammo Can",
+        dt: "D 2.0 / T 1.5",
+        hintDec: "Base of cedar corner post under ground level flat stone.",
+        missionDesc: "Inspect the cedar corner post at GZ. Verify the codeword stamped on the ammo can lid, or check Washer #02 in your pack.",
+        unlockCode: "POST",
+        speechActive: "\"Stop 3 is bolted to the cedar corner post. Mind the barbed wire and enter the code stamped on the lid.\"",
+        speechCompleted: "\"Verified. Ratwaffles stamped that washer at 2 AM in his garage. Head towards the culvert guard.\"",
+        reward: {
+          icon: "⚙️",
+          title: "Brass Washer #03",
+          desc: "Stamped Word: VALVE (Needed for Cache 04)"
+        }
+      },
+      4: {
+        id: 4,
+        title: "Stop 4: Culvert Guard",
+        gc: "GC10004",
+        container: "Heavy Steel Pipe",
+        dt: "D 2.5 / T 2.0",
+        hintDec: "Interior rim of 36-inch RSI drainage culvert.",
+        missionDesc: "Approach the railway drainage culvert. Enter the stamped word from Washer #03 to unlock the steel pipe chamber.",
+        unlockCode: "VALVE",
+        speechActive: "\"RSI installed that drainage culvert back in 1984. Enter the word from Washer #03 to clear the chamber.\"",
+        speechCompleted: "\"Chamber cleared. You've earned elevation clearance up to the mountain bench view.\"",
+        reward: {
+          icon: "🏷️",
+          title: "Corridor Permit #05",
+          desc: "Elevation Waypoint Clearance Tag (GC10005)"
+        }
+      },
+      5: {
+        id: 5,
+        title: "Stop 5: Wellsville Bench View",
+        gc: "GC10005",
+        container: "Ammo Can",
+        dt: "D 3.0 / T 2.5",
+        hintDec: "Found in hollowed juniper roots on boulder shelf.",
+        missionDesc: "Climb the bench trail. Locate the ammo can overlooking the valley. Enter the final verification code from the paper log scroll.",
+        unlockCode: "BONNEVILLE",
+        speechActive: "\"Mountain wind detected. Don't let your GPS batteries die in the cold. Enter the code from the log scroll.\"",
+        speechCompleted: "\"CORRIDOR CLUSTER CLEARED! You audited all 5 caches without losing your pen. The Rat Pack approves.\"",
+        reward: {
+          icon: "🏆",
+          title: "Corridor Finisher Coin",
+          desc: "Cache Tales 2026 Trail Cluster Master"
+        }
+      }
+    };
+
+    // =======================================================
+    // 2. STATE SYNCHRONIZATION
+    // =======================================================
+    let currentStage = 1;
+    let completedStages = [];
+    let packItems = [];
+    let activeUser = "Nezzmuk";
+    let activeSyncKey = "CT-NEZZ-5909";
+
+    function loadGameState() {
+      try {
+        const savedStage = localStorage.getItem('cipher_active_stage');
+        if (savedStage) currentStage = parseInt(savedStage, 10);
+
+        const savedCompleted = localStorage.getItem('cipher_completed_stages');
+        if (savedCompleted) completedStages = JSON.parse(savedCompleted);
+
+        const savedPack = localStorage.getItem('cipher_pack_items');
+        if (savedPack) {
+          packItems = JSON.parse(savedPack);
+        } else {
+          packItems = [
+            { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
+          ];
+        }
+
+        const user = localStorage.getItem('ct_cacher_user');
+        if (user) activeUser = user;
+
+        const key = localStorage.getItem('ct_cacher_key');
+        if (key) activeSyncKey = key;
+      } catch (e) {
+        console.warn('Local state read error:', e);
+      }
+
+      document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
+      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
+    }
+
+    function saveGameState() {
+      try {
+        localStorage.setItem('cipher_active_stage', currentStage);
+        localStorage.setItem('cipher_completed_stages', JSON.stringify(completedStages));
+        localStorage.setItem('cipher_pack_items', JSON.stringify(packItems));
+      } catch (e) {
+        console.warn('Could not save state to localStorage:', e);
+      }
+    }
+
+    // =======================================================
+    // 3. GOOGLE APPS SCRIPT SYNC & OFFLINE QUEUE
+    // =======================================================
+    async function syncFindToGoogleSheet(stageNumber, stageData) {
+      const badge = document.getElementById("statusPlaceholder");
+      if (badge) badge.textContent = "[ 🟡 SYNCING... ]";
+
+      const params = new URLSearchParams({
+        action: "logFind",
+        username: activeUser,
+        syncKey: activeSyncKey,
+        gc: stageData.gc,
+        status: "Found It",
+        notes: `Stage ${stageNumber} unlocked via code: ${stageData.unlockCode}`
+      });
+
+      try {
+        const response = await fetch(`${GOOGLE_SCRIPT_API_URL}?${params.toString()}`, {
+          method: "GET",
+          mode: "cors"
+        });
+
+        const result = await response.json();
+        console.log("☁️ GOOGLE SHEET SYNC CONFIRMED:", result);
+        if (badge) badge.textContent = "[ 🟢 ONLINE // GZ ]";
+      } catch (err) {
+        console.warn("⚠️ Sync encounter issue, saving offline:", err);
+        if (badge) badge.textContent = "[ 🟠 SAVED OFFLINE ]";
+        
+        let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
+        queue.push(params.toString());
+        localStorage.setItem("cipher_offline_queue", JSON.stringify(queue));
+      }
+    }
+
+    async function flushOfflineQueue() {
+      let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
+      if (queue.length === 0) return;
+
+      const badge = document.getElementById("statusPlaceholder");
+      if (badge) badge.textContent = `[ 🟡 SYNCING (${queue.length}) ]`;
+
+      const remainingQueue = [];
+
+      for (const queryString of queue) {
+        try {
+          await fetch(`${GOOGLE_SCRIPT_API_URL}?${queryString}`, {
+            method: "GET",
+            mode: "cors"
+          });
+        } catch (err) {
+          remainingQueue.push(queryString);
+        }
+      }
+
+      localStorage.setItem("cipher_offline_queue", JSON.stringify(remainingQueue));
+      if (badge) badge.textContent = remainingQueue.length === 0 ? "[ 🟢 ONLINE // GZ ]" : "[ 🟠 OFFLINE QUEUE ]";
+    }
+
+    // =======================================================
+    // 4. UNLOCK & STAGE ENGINE
+    // =======================================================
+    function submitUnlockCode() {
+      playClick();
+      const inputEl = document.getElementById('unlockInput');
+      const enteredCode = inputEl.value.trim().toUpperCase();
+      const stage = CORRIDOR_DATA[currentStage];
+
+      if (!stage) {
+        alert("Corridor cluster complete!");
+        return;
+      }
+
+      if (enteredCode === stage.unlockCode.toUpperCase()) {
+        playChime();
+
+        if (!completedStages.includes(currentStage)) {
+          completedStages.push(currentStage);
+        }
+
+        if (stage.reward && !packItems.some(item => item.title === stage.reward.title)) {
+          packItems.push(stage.reward);
+        }
+
+        inputEl.value = "";
+
+        // Push find to Google Apps Script
+        syncFindToGoogleSheet(currentStage, stage);
+
+        if (currentStage < 5) {
+          currentStage += 1;
+          saveGameState();
+          renderMission();
+          document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
+          alert(`STAGE ${stage.id} UNLOCKED!\nNew waypoint unlocked. Log sent to cloud ledger.`);
+        } else {
+          saveGameState();
+          renderMission();
+          alert("🎉 CONGRATULATIONS! You have cleared all 5 caches in the corridor cluster!");
+        }
+      } else {
+        playErrorBuzz();
+        alert(`ACCESS DENIED: "${enteredCode}" is incorrect.\nHint: ${stage.hintDec}`);
+      }
+    }
+
+    function renderMission() {
+      const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[5];
+      const isComplete = completedStages.includes(5);
+
+      document.getElementById('missionMetaText').innerText = isComplete ? "CORRIDOR COMPLETE // 5 OF 5 FOUND" : `STAGE 0${currentStage} / 50`;
+      document.getElementById('missionTitleText').innerText = stage.title;
+      document.getElementById('missionDescText').innerText = stage.missionDesc;
+      document.getElementById('cypherSpeechText').innerText = isComplete ? stage.speechCompleted : stage.speechActive;
+      document.getElementById('boxGcLabel').innerText = `${stage.gc} // ${stage.container}`;
+      document.getElementById('boxDtLabel').innerText = stage.dt;
+
+      const unlockInput = document.getElementById('unlockInput');
+      const unlockBtn = document.getElementById('btnUnlockSubmit');
+
+      if (isComplete) {
+        unlockInput.disabled = true;
+        unlockInput.placeholder = "CLUSTER COMPLETE";
+        unlockBtn.disabled = true;
+      } else {
+        unlockInput.disabled = false;
+        unlockInput.placeholder = "CODE...";
+        unlockBtn.disabled = false;
+      }
+    }
+
+    function revealHint() {
+      playClick();
+      const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[1];
+      alert(`STAGE 0${currentStage} HINT:\n${stage.hintDec}`);
+    }
+
+    function jumpToUnlock() {
+      const input = document.getElementById('unlockInput');
+      if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function resetDemoProgress() {
+      if (!confirm("Reset demo progress back to Stage 01?")) return;
+      currentStage = 1;
+      completedStages = [];
+      packItems = [
+        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
+      ];
+      saveGameState();
+      renderMission();
+      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
+      playClick();
+      alert("Demo reset to Stage 01.");
+    }
+
+    function toggleMenu(e) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      playClick();
+      document.getElementById('menuDrawer').classList.toggle('open');
+    }
+
+    document.addEventListener('click', function(e) {
+      const toolbar = document.getElementById('cipherToolbar');
+      const drawer = document.getElementById('menuDrawer');
+      if (drawer && drawer.classList.contains('open')) {
+        if (!toolbar.contains(e.target)) drawer.classList.remove('open');
+      }
+    });
+
+    // =======================================================
+    // 5. AUDIO SYNTHESIZER
+    // =======================================================
+    let soundActive = true;
+    let audioCtx = null;
+
+    function initAudio() {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (err) {}
+    }
+
+    function playClick() {
+      if (!soundActive) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (err) {}
+    }
+
+    function playChime() {
+      if (!soundActive) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'square';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now); // D5
+        osc1.frequency.setValueAtTime(880, now + 0.08); // A5
+        osc2.frequency.setValueAtTime(1174.66, now); // D6
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
+      } catch (err) {}
+    }
+
+    function playErrorBuzz() {
+      if (!soundActive) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.setValueAtTime(95, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      } catch (err) {}
+    }
+
+    function toggleSound() {
+      soundActive = !soundActive;
+      playClick();
+      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+    }
+
+    // Theme & Font Sizing
+    function setTheme(themeKey) {
+      playClick();
+      document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
+      ['chipThemeCrt', 'chipThemeLight', 'chipThemeAmber', 'chipThemeHivis'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (themeKey === 'light') {
+        document.body.classList.add('theme-light');
+        document.getElementById('chipThemeLight').classList.add('active');
+      } else if (themeKey === 'amber') {
+        document.body.classList.add('theme-amber');
+        document.getElementById('chipThemeAmber').classList.add('active');
+      } else if (themeKey === 'hivis') {
+        document.body.classList.add('theme-hivis');
+        document.getElementById('chipThemeHivis').classList.add('active');
+      } else {
+        document.body.classList.add('theme-crt');
+        document.getElementById('chipThemeCrt').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_theme', themeKey); } catch (e) {}
+    }
+
+    function setFontSize(sizeKey) {
+      playClick();
+      document.body.classList.remove('font-regular', 'font-large', 'font-trailxl');
+      ['chipFontReg', 'chipFontLg', 'chipFontXl'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (sizeKey === 'large') {
+        document.body.classList.add('font-large');
+        document.getElementById('chipFontLg').classList.add('active');
+      } else if (sizeKey === 'trailxl') {
+        document.body.classList.add('font-trailxl');
+        document.getElementById('chipFontXl').classList.add('active');
+      } else {
+        document.body.classList.add('font-regular');
+        document.getElementById('chipFontReg').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
+    }
+
+    // Page Load Init
+    window.addEventListener('DOMContentLoaded', () => {
+      loadGameState();
+      try {
+        const savedTheme = localStorage.getItem('cipher_theme');
+        if (savedTheme) setTheme(savedTheme);
+        const savedFont = localStorage.getItem('cipher_font_size');
+        if (savedFont) setFontSize(savedFont);
+      } catch (e) {}
+      renderMission();
+      flushOfflineQueue();
+    });
+  </script>
+</body>
+</html>
