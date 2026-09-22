@@ -294,11 +294,6 @@
       flex-direction: column;
       gap: 5px;
     }
-    .control-label {
-      font-size: 10px;
-      color: var(--text-dim);
-      font-weight: bold;
-    }
     .control-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -731,11 +726,14 @@
          ======================================================= -->
     <div class="cipher-toolbar" id="cipherToolbar">
       
-      <!-- Row 1: Hardware Identity & Status Placeholder -->
+      <!-- Row 1: Hardware Identity & Version Stamping -->
       <div class="tb-status-row">
-        <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
+        <div>
+          <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
+          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+        </div>
         <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
-        <span style="color: var(--text-bright); font-weight: bold;">NEZZMUK 👤</span>
+        <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
       </div>
 
       <!-- Row 2: 4 Primary Anchors -->
@@ -793,11 +791,11 @@
         <div class="tb-menu-divider"></div>
 
         <div class="tb-menu-header">OPERATOR & HARDWARE</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Cacher Profile')">👤 Profile</div>
+        <div class="tb-menu-item" onclick="playClick(); window.location.href='terminal.html'">👤 Gateway Login</div>
         <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 BYOP Manual</div>
         <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
         <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Session Cleared.')" style="color: var(--danger);">🚪 Log Off</div>
+        <div class="tb-menu-item" onclick="playClick(); window.location.href='terminal.html'" style="color: var(--danger);">🚪 Log Off</div>
       </div>
 
     </div>
@@ -837,17 +835,14 @@
          ======================================================= -->
     <div class="deck-container" id="deckTrail" style="display: none;">
       
-      <!-- Sub-Tabs: Map vs Cache Specs -->
       <div class="trail-sub-nav">
         <button type="button" class="btn-sub-tab active" id="subTabMap" onclick="switchTrailSubTab('map')">🗺️ CORRIDOR MAP</button>
         <button type="button" class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
       </div>
 
-      <!-- Sub-View A: Enriched SVG Corridor Map -->
       <div class="map-canvas-container" id="trailMapView">
         
         <div class="svg-map-wrapper">
-          <!-- 3-Tier Zoom Rocker -->
           <div class="map-zoom-rocker">
             <button type="button" class="btn-zoom" onclick="zoomMap(-1)" title="Zoom Out">-</button>
             <span class="zoom-level-badge" id="zoomBadge">1×</span>
@@ -913,7 +908,7 @@
             <!-- Active Target Pulsing Ring -->
             <circle id="mapPulseRing" cx="50" cy="185" r="14" fill="none" stroke="var(--accent)" stroke-width="2" class="map-pulse" />
 
-            <!-- Dynamic Node Group (Populated by JS) -->
+            <!-- Dynamic Node Group -->
             <g id="mapNodesGroup"></g>
           </svg>
         </div>
@@ -1138,6 +1133,7 @@
     let packItems = [];
     let activeInspectedCache = 1;
     let hintDecrypted = false;
+    let activeUser = "Nezzmuk";
 
     function loadGameState() {
       try {
@@ -1155,10 +1151,14 @@
             { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
           ];
         }
+
+        const user = localStorage.getItem('ct_cacher_user');
+        if (user) activeUser = user;
       } catch (e) {
         console.warn('Local state error, using defaults:', e);
       }
       activeInspectedCache = currentStage;
+      document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
     }
 
     function saveGameState() {
@@ -1200,15 +1200,12 @@
       }
 
       if (enteredCode === stage.unlockCode.toUpperCase()) {
-        // Success Chime
         playChime();
 
-        // Mark Completed
         if (!completedStages.includes(currentStage)) {
           completedStages.push(currentStage);
         }
 
-        // Add reward to pack
         if (stage.reward && !packItems.some(item => item.title === stage.reward.title)) {
           packItems.push(stage.reward);
         }
@@ -1274,14 +1271,12 @@
       const activeStage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[5];
       const pulseRing = document.getElementById('mapPulseRing');
 
-      // Position pulsing ring on active cache
       if (pulseRing) {
         pulseRing.setAttribute('cx', activeStage.cx);
         pulseRing.setAttribute('cy', activeStage.cy);
         pulseRing.style.display = completedStages.includes(5) ? 'none' : 'block';
       }
 
-      // Draw active corridor path segments
       const activePathEl = document.getElementById('mapTrailActivePath');
       let activePathStr = `M ${CORRIDOR_DATA[1].cx},${CORRIDOR_DATA[1].cy}`;
       for (let i = 2; i <= currentStage; i++) {
@@ -1289,7 +1284,6 @@
       }
       activePathEl.setAttribute('d', activePathStr);
 
-      // Render the 5 Cache Nodes
       for (let i = 1; i <= 5; i++) {
         const c = CORRIDOR_DATA[i];
         const isFound = completedStages.includes(i);
@@ -1488,7 +1482,6 @@
 
         osc1.frequency.setValueAtTime(587.33, now); // D5
         osc1.frequency.setValueAtTime(880, now + 0.08); // A5
-
         osc2.frequency.setValueAtTime(1174.66, now); // D6
 
         gain.gain.setValueAtTime(0.15, now);
@@ -1637,7 +1630,6 @@
       }
     }
 
-    // 3-Tier SVG Zoom Rocker
     let currentZoomTier = 0;
     const ZOOM_TIERS = [
       { label: "1×", viewBox: "0 0 500 240" },
@@ -1653,7 +1645,6 @@
       document.getElementById('zoomBadge').innerText = tier.label;
     }
 
-    // Theme & Font Selectors
     function setTheme(themeKey) {
       playClick();
       document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
@@ -1699,7 +1690,6 @@
       try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
     }
 
-    // Init on Page Load
     window.addEventListener('DOMContentLoaded', () => {
       loadGameState();
       try {
