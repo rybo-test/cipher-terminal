@@ -1,18 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>C.I.P.H.E.R. // Model RSI-1984 Trail Terminal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>C.I.P.H.E.R. // Model RSI-1984 Boot Gateway</title>
   <style>
     :root {
-      --crt-green: #33ff33;
-      --crt-dim: #1e991e;
-      --crt-glow: rgba(51, 255, 51, 0.4);
-      --crt-bg: #061106;
-      --panel-border: #1a441a;
-      --amber-alert: #ffb000;
-      --font-stack: "Courier New", Courier, monospace, "VT323";
+      --content-scale: 1;
+      --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      /* CRT Green (Default) */
+      --bg-dark: #0a0f0d;
+      --panel-bg: #121a15;
+      --panel-inner: #080d0a;
+      --border-main: #2a5a3a;
+      --border-accent: #38ef7d;
+      --accent: #38ef7d;
+      --accent-dim: #7da88d;
+      --text-bright: #ffffff;
+      --text-main: #38ef7d;
+      --text-dim: #7da88d;
+      --warning: #f7b731;
+      --danger: #eb3b5a;
+    }
+
+    /* Paper Log Theme */
+    body.theme-light {
+      --bg-dark: #d8ded9;
+      --panel-bg: #f4f6f4;
+      --panel-inner: #e6eae6;
+      --border-main: #405747;
+      --border-accent: #174223;
+      --accent: #144724;
+      --accent-dim: #254d33;
+      --text-bright: #050a06;
+      --text-main: #050a06;
+      --text-dim: #1f3626;
+      --warning: #874b00;
+      --danger: #a81320;
+    }
+
+    /* Amber Phosphor Theme */
+    body.theme-amber {
+      --bg-dark: #120b00;
+      --panel-bg: #1f1402;
+      --panel-inner: #0f0a00;
+      --border-main: #5c3f0d;
+      --border-accent: #ffb000;
+      --accent: #ffb000;
+      --accent-dim: #ba8829;
+      --text-bright: #ffffff;
+      --text-main: #ffb000;
+      --text-dim: #ba8829;
+      --warning: #ffcf66;
+      --danger: #ff4d4d;
+    }
+
+    /* Hi-Vis Theme */
+    body.theme-hivis {
+      --bg-dark: #0a0e14;
+      --panel-bg: #131924;
+      --panel-inner: #0d121c;
+      --border-main: #2b456b;
+      --border-accent: #4ba3ff;
+      --accent: #4ba3ff;
+      --accent-dim: #8ab6e9;
+      --text-bright: #ffffff;
+      --text-main: #4ba3ff;
+      --text-dim: #8ab6e9;
+      --warning: #ffd13b;
+      --danger: #ff5252;
     }
 
     * {
@@ -23,871 +81,447 @@
     }
 
     body {
-      background-color: #020602;
-      color: var(--crt-green);
-      font-family: var(--font-stack);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      font-size: 14px;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      justify-content: center;
+      align-items: flex-start;
       padding: 10px;
     }
 
-    /* Ammo Can Chassis Enclosure */
-    .chassis {
+    .app-shell {
       width: 100%;
-      max-width: 600px;
-      background: #0d1a0d;
-      border: 3px solid #2b522b;
-      border-radius: 8px;
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.9), inset 0 0 10px rgba(0, 30, 0, 0.8);
-      overflow: hidden;
+      max-width: 650px;
       display: flex;
       flex-direction: column;
+      gap: 12px;
+      margin-bottom: 40px;
     }
 
-    .stamped-header {
-      background: #142814;
-      padding: 8px 12px;
-      border-bottom: 2px solid #2b522b;
-      font-size: 0.8rem;
-      letter-spacing: 1px;
+    /* Steel Chassis Shell */
+    .boot-chassis {
+      background: var(--panel-inner);
+      border: 2px solid var(--border-main);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .boot-header {
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border-main);
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: #7ab87a;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
     }
 
-    .status-led {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--crt-green);
-      box-shadow: 0 0 6px var(--crt-green);
-      margin-right: 6px;
+    .status-badge {
+      background: var(--panel-inner);
+      color: var(--accent);
+      border: 1px solid var(--border-main);
+      padding: 3px 8px;
+      border-radius: 3px;
     }
 
-    /* Screen Area */
-    .screen-bezel {
-      padding: 12px;
-      background: #020702;
-    }
-
-    .screen {
-      background: var(--crt-bg);
-      border: 2px solid var(--panel-border);
-      border-radius: 4px;
-      padding: 12px;
+    /* Screen Console */
+    .console-screen {
+      background: var(--bg-dark);
+      padding: 16px;
       min-height: 220px;
-      max-height: 280px;
+      max-height: 320px;
       overflow-y: auto;
-      font-size: 0.92rem;
-      line-height: 1.4;
-      text-shadow: 0 0 4px var(--crt-glow);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-bottom: 1px solid var(--border-main);
     }
 
-    .screen p {
-      margin-bottom: 8px;
+    .console-line {
       word-break: break-word;
     }
+    .console-line.sys { color: var(--accent-dim); }
+    .console-line.bright { color: var(--text-bright); font-weight: bold; }
+    .console-line.warn { color: var(--warning); }
+    .console-line.alert { color: var(--danger); }
 
-    .screen .sys {
-      color: #6edc6e;
-    }
-
-    .screen .warn {
-      color: var(--amber-alert);
-      text-shadow: 0 0 4px rgba(255, 176, 0, 0.4);
-    }
-
-    .screen .prompt-line {
-      display: flex;
-      align-items: center;
-      margin-top: 6px;
-    }
-
-    /* Persistent Header Navigation */
-    .nav-bar {
-      display: flex;
-      gap: 6px;
-      padding: 8px 12px;
-      background: #081408;
-      border-top: 1px solid #1a381a;
-      border-bottom: 1px solid #1a381a;
-    }
-
-    .nav-btn {
-      flex: 1;
-      padding: 8px 4px;
-      background: #0d220d;
-      border: 1px solid #285428;
-      color: var(--crt-green);
-      font-family: inherit;
-      font-size: 0.78rem;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-      border-radius: 3px;
-    }
-
-    .nav-btn:active {
-      background: var(--crt-dim);
-      color: #000;
-    }
-
-    /* Contextual Action Deck */
-    .deck-section {
-      padding: 12px;
-      background: #0a160a;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .action-btn {
-      min-height: 48px;
-      padding: 10px;
-      background: #112811;
-      border: 2px solid #2d6b2d;
-      border-radius: 4px;
-      color: #8cff8c;
-      font-family: inherit;
-      font-size: 0.88rem;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      box-shadow: 0 3px 0 #091709;
-    }
-
-    .action-btn.primary {
-      border-color: var(--crt-green);
-      color: #ffffff;
-      background: #194019;
-      grid-column: span 2;
-    }
-
-    .action-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 1px 0 #091709;
-      background: var(--crt-green);
-      color: #051005;
-    }
-
-    /* Command Line Input */
-    .cli-bar {
-      padding: 10px 12px 14px 12px;
-      background: #060e06;
-      border-top: 1px solid #1a381a;
-      display: flex;
-      gap: 6px;
-    }
-
-    .cli-input {
-      flex: 1;
-      background: #020702;
-      border: 1px solid #2d6b2d;
-      color: var(--crt-green);
-      font-family: inherit;
-      font-size: 1rem;
-      padding: 8px 10px;
-      outline: none;
-      border-radius: 3px;
-    }
-
-    .cli-submit {
-      padding: 8px 16px;
-      background: #194019;
-      border: 1px solid var(--crt-green);
-      color: #fff;
-      font-family: inherit;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 3px;
-    }
-
-    /* Modal Overlay */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.85);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      padding: 15px;
-    }
-
-    .modal-box {
-      background: #0a170a;
-      border: 2px solid var(--crt-green);
-      border-radius: 6px;
-      width: 100%;
-      max-width: 480px;
-      max-height: 85vh;
-      overflow-y: auto;
+    /* Auth Airlock Deck */
+    .auth-deck {
       padding: 16px;
-      box-shadow: 0 0 20px var(--crt-glow);
+      background: var(--panel-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    .modal-box h3 {
-      border-bottom: 1px solid #2d6b2d;
-      padding-bottom: 6px;
-      margin-bottom: 12px;
-      font-size: 1.1rem;
-      color: #a4ffa4;
-    }
-
-    .modal-field {
-      margin-bottom: 12px;
-    }
-
-    .modal-field label {
-      display: block;
-      font-size: 0.8rem;
-      margin-bottom: 4px;
-      color: #74b874;
-    }
-
-    .modal-field input, .modal-field textarea, .modal-field select {
-      width: 100%;
-      background: #030803;
-      border: 1px solid #2d6b2d;
-      color: var(--crt-green);
-      font-family: inherit;
-      padding: 8px;
-      border-radius: 3px;
-      outline: none;
-    }
-
-    .modal-actions {
+    .auth-toggle-row {
       display: flex;
       gap: 8px;
-      margin-top: 14px;
+      background: var(--panel-inner);
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border-main);
     }
 
-    .modal-actions button {
+    .btn-toggle-auth {
       flex: 1;
-      padding: 10px;
-      font-family: inherit;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 12px;
       font-weight: bold;
       cursor: pointer;
-      border-radius: 3px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .btn-toggle-auth.active {
+      background: var(--accent);
+      color: var(--bg-dark);
     }
 
-    .btn-save {
-      background: #1b4b1b;
-      border: 1px solid var(--crt-green);
-      color: #fff;
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: var(--font-mono);
     }
 
-    .btn-close {
-      background: #182218;
-      border: 1px solid #3d5e3d;
-      color: #8cff8c;
+    .field-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .auth-input {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-main);
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-weight: 700;
+      outline: none;
+    }
+    .auth-input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-engage {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 800;
+      padding: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.4);
+      letter-spacing: 0.5px;
+    }
+    .btn-engage:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.4);
+    }
+    .btn-engage:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .guest-skip {
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      text-decoration: underline;
+      cursor: pointer;
+      margin-top: 4px;
     }
   </style>
 </head>
-<body>
+<body class="theme-crt font-regular">
 
-  <div class="chassis">
-    <!-- Steel Chassis Header -->
-    <div class="stamped-header">
-      <div><span class="status-led"></span>C.I.P.H.E.R. // RSI-1984</div>
-      <div id="voltageDisplay">12.8V FLOAT</div>
+  <div class="app-shell">
+
+    <div class="boot-chassis">
+      
+      <!-- Stamped Hardware Header -->
+      <div class="boot-header">
+        <div><span>C.I.P.H.E.R. //</span> <span style="color: var(--text-dim);">RSI-1984 GATEWAY</span></div>
+        <div class="status-badge" id="busVoltageBadge">12.6V FLOAT</div>
+      </div>
+
+      <!-- Retro Console Screen Output -->
+      <div class="console-screen" id="consoleScreen">
+        <div class="console-line sys">[BOOT] RSI-1984 LEAD-ACID BUS ONLINE.</div>
+        <div class="console-line sys">[SOLAR] FLOAT CHARGE HARVESTING NOMINAL.</div>
+        <div class="console-line warn">[OPTICS] Daylight detected on lid seal.</div>
+        <div class="console-line bright">"Did you bring a pen, or are you just a human bean standing in the cold?"</div>
+      </div>
+
+      <!-- Auth Airlock Deck -->
+      <div class="auth-deck">
+        
+        <!-- Toggle: New vs Returning -->
+        <div class="auth-toggle-row">
+          <button type="button" class="btn-toggle-auth active" id="btnModeNew" onclick="setAuthMode('new')">
+            🆕 NEW CACHER
+          </button>
+          <button type="button" class="btn-toggle-auth" id="btnModeReturn" onclick="setAuthMode('return')">
+            🔑 RETURNING (SYNC)
+          </button>
+        </div>
+
+        <!-- Dynamic Form Fields -->
+        <div class="field-group">
+          <label class="field-label" id="lblHandle">GEOCACHING USERNAME (PAPER LOG NAME):</label>
+          <input type="text" id="inputUsername" class="auth-input" placeholder="e.g. Nezzmuk" autocomplete="off" />
+        </div>
+
+        <div class="field-group" id="groupSigItem">
+          <label class="field-label">SIGNATURE ITEM (SWAG LEFTOVER):</label>
+          <input type="text" id="inputSigItem" class="auth-input" placeholder="e.g. 3D Wooden Nickel, Stamped Tag" autocomplete="off" />
+        </div>
+
+        <div class="field-group" id="groupSyncKey" style="display: none;">
+          <label class="field-label">CORRIDOR PASSKEY (SyncKey):</label>
+          <input type="text" id="inputSyncKey" class="auth-input" placeholder="CT-XXXX-XXXX" autocomplete="off" />
+        </div>
+
+        <button type="button" class="btn-engage" id="btnEngage" onclick="processAirlock()">
+          INITIALIZE TRAIL SESSION ➔
+        </button>
+
+        <div class="guest-skip" onclick="enterAsGuest()">
+          Or scout corridor as guest (read-only mode)
+        </div>
+
+      </div>
+
     </div>
 
-    <!-- Screen Bezel -->
-    <div class="screen-bezel">
-      <div class="screen" id="terminalScreen">
-        <p class="sys">[BOOT] RSI-1984 JUNCTION RELAYS CLOSED.</p>
-        <p class="sys">[SOLAR] FLOAT HARVESTING 12.8V LEAD-ACID NOMINAL.</p>
-        <p>Daylight detected. Open the lid, human bean.</p>
-      </div>
-    </div>
-
-    <!-- Persistent Header Navigation -->
-    <div class="nav-bar" id="headerNav" style="display: none;">
-      <button class="nav-btn" onclick="openProfileModal()">👤 PROFILE</button>
-      <button class="nav-btn" onclick="openStatsModal()">📊 STATS</button>
-      <button class="nav-btn" onclick="logoutCacher()">🚪 LOG OFF</button>
-    </div>
-
-    <!-- Contextual Action Deck -->
-    <div class="deck-section" id="actionDeck">
-      <!-- Injected by renderActionDeck() based on state -->
-    </div>
-
-    <!-- CLI Input -->
-    <form class="cli-bar" onsubmit="handleCliSubmit(event)">
-      <input type="text" id="cliInput" class="cli-input" placeholder="ENTER COMMAND..." autocomplete="off">
-      <button type="submit" class="cli-submit">SEND</button>
-    </form>
-  </div>
-
-  <!-- MODAL: PROFILE & SYNC -->
-  <div class="modal-overlay" id="profileModal">
-    <div class="modal-box">
-      <h3>👤 CACHER DOSSIER & SYNC</h3>
-      <div class="modal-field">
-        <label>GEOCACHING HANDLE (PAPER SCROLL NAME):</label>
-        <input type="text" id="profUsername" placeholder="e.g. Nezzmuk">
-      </div>
-      <div class="modal-field">
-        <label>CUSTOM SIGNATURE ITEM:</label>
-        <input type="text" id="profSigItem" placeholder="e.g. 3D Wooden Nickel, Stamped Washer">
-      </div>
-      <div class="modal-field">
-        <label>SYNCHRONIZATION PASSKEY (SyncKey):</label>
-        <input type="text" id="profSyncKey" placeholder="CT-XXXX-XXXX">
-      </div>
-      <div class="modal-actions">
-        <button class="btn-save" onclick="saveProfileModal()">SYNC TO CORRIDOR</button>
-        <button class="btn-close" onclick="closeModal('profileModal')">CLOSE</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: SIGN PHYSICAL LOG -->
-  <div class="modal-overlay" id="signModal">
-    <div class="modal-box">
-      <h3>📝 CONFIRM PAPER LOG SIGNATURE</h3>
-      <p style="font-size:0.85rem; margin-bottom:10px; color:#a2dca2;">
-        Absolute rule: You must sign the physical Rite-in-the-Rain log scroll with ink before recording.
-      </p>
-      <div class="modal-field">
-        <label>LOG TYPE:</label>
-        <select id="logActionSelect">
-          <option value="Found It">Found It (Signed Scroll)</option>
-          <option value="DNF">Did Not Find (Searched GZ)</option>
-          <option value="Needs Maintenance">Needs Maintenance (Wet Log/Gasket Leak)</option>
-        </select>
-      </div>
-      <div class="modal-field">
-        <label>TRAIL LOG NOTES:</label>
-        <textarea id="logNotes" rows="3" placeholder="TFTC! Replaced lid securely..."></textarea>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-save" onclick="submitFieldLog()">CONFIRM & LOG</button>
-        <button class="btn-close" onclick="closeModal('signModal')">CANCEL</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: SWAG TRADING -->
-  <div class="modal-overlay" id="swagModal">
-    <div class="modal-box">
-      <h3>🎁 SWAG & TRACKABLE EXCHANGE</h3>
-      <p style="font-size:0.82rem; margin-bottom:8px; color:#8cd88c;">Standard: Trade equal or trade up. No junk.</p>
-      <div class="modal-field">
-        <label>CONTAINER INVENTORY (TAKE ITEM):</label>
-        <select id="takeSwagSelect">
-          <option value="">-- None (Drop Only) --</option>
-        </select>
-      </div>
-      <div class="modal-field">
-        <label>ITEM DROPPED IN CACHE:</label>
-        <input type="text" id="dropSwagName" placeholder="e.g. Travel Bug, Clean Carabiner">
-      </div>
-      <div class="modal-field">
-        <label>ITEM TYPE:</label>
-        <select id="dropSwagType">
-          <option value="Swag">Swag</option>
-          <option value="Trackable">Trackable / Bug</option>
-          <option value="Geocoin">Geocoin</option>
-          <option value="Signature Item">Signature Item</option>
-        </select>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-save" onclick="submitSwagTrade()">EXECUTE TRADE</button>
-        <button class="btn-close" onclick="closeModal('swagModal')">CLOSE</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: STATS & CORRIDOR CHECKLIST -->
-  <div class="modal-overlay" id="statsModal">
-    <div class="modal-box">
-      <h3>📊 CORRIDOR PROGRESS</h3>
-      <div id="statsContent" style="font-size:0.88rem; line-height:1.5;"></div>
-      <div class="modal-actions">
-        <button class="btn-close" onclick="closeModal('statsModal')">CLOSE</button>
-      </div>
-    </div>
   </div>
 
   <script>
-    // =========================================================
-    // CONFIGURATION & PERSISTENCE
-    // =========================================================
-    // Replace with your Google Apps Script Web App URL ending in /exec:
-    const API_URL = "https://script.google.com/macros/s/AKfycby19PaTlJJGeSlRyYhOjHnbL5px5JoKqzOuUQku9m_Pt_vy1n_X1RoiUpITqm_K37TH/exec";
+    // =======================================================
+    // 1. AUDIO CHIRP SYNTHESIZER (Matching test-trail.html)
+    // =======================================================
+    let audioCtx = null;
 
-    // Application State
-    const AppState = {
-      user: localStorage.getItem("ct_cacher_user") || "",
-      signatureItem: localStorage.getItem("ct_cacher_sig") || "",
-      syncKey: localStorage.getItem("ct_cacher_key") || "",
-      isAdmin: localStorage.getItem("ct_cacher_admin") === "true",
-      activeGC: "GC10001",
-      isAtGZ: false,
-      caches: [],
-      swag: [],
-      profileData: {
-        stagesLogged: [],
-        inventory: ["BRASS_WASHER"],
-        fieldNotes: [],
-        collectedSwag: [],
-        unlockedTools: []
-      }
-    };
-
-    // Load cached profile data JSON
-    try {
-      const storedJson = localStorage.getItem("ct_cacher_json");
-      if (storedJson) AppState.profileData = JSON.parse(storedJson);
-    } catch (e) {
-      console.warn("Could not parse cached profileDataJSON", e);
-    }
-
-    // =========================================================
-    // INITIALIZATION & CORS-SAFE NETWORKING
-    // =========================================================
-    window.addEventListener("DOMContentLoaded", () => {
-      fetchCorridorData();
-      if (AppState.user) {
-        syncProfileWithBackend(false);
-      }
-      updateUI();
-    });
-
-    async function fetchCorridorData() {
-      if (!API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) {
-        printScreen("[SYS] Offline simulator active. Add your live Web App URL to API_URL.", "warn");
-        return;
-      }
-
+    function initAudio() {
       try {
-        const resp = await fetch(`${API_URL}?action=getCorridorData`, {
-          method: "GET",
-          redirect: "follow"
-        });
-        const data = await resp.json();
-        if (data.status === "success") {
-          AppState.caches = data.caches || [];
-          AppState.swag = data.swag || [];
-          printScreen(`[NETWORK] Synced ${AppState.caches.length} corridor caches.`);
-          updateSwagSelect();
-        } else {
-          printScreen(`[NETWORK WARN] ${data.message}`, "warn");
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
         }
-      } catch (err) {
-        console.error(err);
-        printScreen("[NETWORK] Corridor radio weak. Operating from offline buffer.", "warn");
-      }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (err) {}
     }
 
-    async function syncProfileWithBackend(verbose = true) {
-      if (!AppState.user || !API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) return;
-
+    function playClick() {
+      initAudio();
+      if (!audioCtx) return;
       try {
-        const payload = {
-          action: "syncProfile",
-          username: AppState.user,
-          signatureItem: AppState.signatureItem,
-          syncKey: AppState.syncKey,
-          profileDataJSON: JSON.stringify(AppState.profileData)
-        };
-
-        const resp = await fetch(API_URL, {
-          method: "POST",
-          redirect: "follow",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-        const data = await resp.json();
-
-        if (data.status === "success") {
-          AppState.syncKey = data.syncKey || AppState.syncKey;
-          AppState.isAdmin = !!data.isAdmin;
-          localStorage.setItem("ct_cacher_key", AppState.syncKey);
-          localStorage.setItem("ct_cacher_admin", AppState.isAdmin);
-          if (verbose) printScreen(`[SYNC] Dossier synchronized. SyncKey: ${AppState.syncKey}`);
-        } else {
-          if (verbose) printScreen(`[SYNC WARN] ${data.message}`, "warn");
-        }
-      } catch (err) {
-        console.error(err);
-        if (verbose) printScreen("[SYNC] Offline. Saved locally.", "warn");
-      }
-      updateUI();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (err) {}
     }
 
-    // =========================================================
-    // UI RENDERING & ACTION BUTTON SPECIFICATION
-    // =========================================================
-    function updateUI() {
-      const headerNav = document.getElementById("headerNav");
-      const actionDeck = document.getElementById("actionDeck");
-
-      if (AppState.user) {
-        headerNav.style.display = "flex";
-      } else {
-        headerNav.style.display = "none";
-      }
-
-      actionDeck.innerHTML = "";
-
-      // STATE 1: GUEST / FIRST TIME
-      if (!AppState.user) {
-        actionDeck.innerHTML = `
-          <button class="action-btn primary" onclick="openProfileModal()">👤 SET USERNAME</button>
-          <button class="action-btn" onclick="showHowToPlay()">❓ HOW TO PLAY</button>
-          <button class="action-btn" onclick="checkBattery()">🔋 CHECK BATTERY</button>
-        `;
-        return;
-      }
-
-      // STATE 3: AT GROUND ZERO (Lid Open)
-      if (AppState.isAtGZ) {
-        actionDeck.innerHTML = `
-          <button class="action-btn primary" onclick="openSignModal()">📝 SIGN LOG</button>
-          <button class="action-btn primary" onclick="openSwagModal()">🎁 TRADE SWAG</button>
-          <button class="action-btn" onclick="openLockComboTool()">🔓 LOCK COMBO</button>
-          <button class="action-btn" onclick="toggleGZState()">🌲 CLOSE LID</button>
-          <button class="action-btn" onclick="showCurrentCacheInfo()">🗺️ CACHE INFO</button>
-          <button class="action-btn" onclick="tapCasing()">🥾 TAP CASING</button>
-        `;
-        return;
-      }
-
-      // STATE 2: REMOTE SCOUTING / AT HOME
-      actionDeck.innerHTML = `
-        <button class="action-btn primary" onclick="showCurrentCacheInfo()">🗺️ CACHE INFO</button>
-        <button class="action-btn primary" onclick="decryptCurrentHint()">💡 DECRYPT HINT</button>
-        <button class="action-btn" onclick="displayCoordinates()">🧭 COORDINATES</button>
-        <button class="action-btn" onclick="openProjectBearingTool()">📐 PROJECT BEARING</button>
-        <button class="action-btn" onclick="toggleGZState()">🧰 OPEN LID (AT GZ)</button>
-        <button class="action-btn" onclick="checkBattery()">🔋 CHECK BATTERY</button>
-      `;
+    function playChime() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'square';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now); // D5
+        osc1.frequency.setValueAtTime(880, now + 0.08); // A5
+        osc2.frequency.setValueAtTime(1174.66, now); // D6
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
+      } catch (err) {}
     }
 
-    function printScreen(msg, cssClass = "") {
-      const screen = document.getElementById("terminalScreen");
-      const p = document.createElement("p");
-      if (cssClass) p.className = cssClass;
-      p.textContent = msg;
-      screen.appendChild(p);
+    function logConsole(msg, type = "sys") {
+      const screen = document.getElementById("consoleScreen");
+      const div = document.createElement("div");
+      div.className = `console-line ${type}`;
+      div.textContent = msg;
+      screen.appendChild(div);
       screen.scrollTop = screen.scrollHeight;
     }
 
-    // =========================================================
-    // BUTTON ACTIONS & TOOLS
-    // =========================================================
-    function showCurrentCacheInfo() {
-      const c = AppState.caches.find(x => x.GC_Code === AppState.activeGC);
-      if (!c) {
-        printScreen(`[CACHE] Active Target: ${AppState.activeGC}. (Fetch pending)`);
-        return;
-      }
-      printScreen(`--- [${c.GC_Code}] ${c.CacheName} ---`);
-      printScreen(`TYPE: ${c.CacheType} | CONTAINER: ${c.ContainerSize}`);
-      printScreen(`DIFFICULTY: ${c.Difficulty} / TERRAIN: ${c.Terrain}`);
-      printScreen(`COORDS: ${c.Coordinates || "Not Posted"} | STATUS: ${c.Status}`);
-      printScreen(`BYOP: Bring your own pen. Sign physical scroll.`);
-    }
+    // =======================================================
+    // 2. AUTHENTICATION & SESSION PERSISTENCE
+    // =======================================================
+    let currentMode = "new";
 
-    function decryptCurrentHint() {
-      const c = AppState.caches.find(x => x.GC_Code === AppState.activeGC);
-      if (!c || !c.Hint) {
-        printScreen(`[HINT] No spoiler hint logged for ${AppState.activeGC}. Check for false irrigation plates.`);
-        return;
-      }
-      printScreen(`[DECRYPTED HINT] ${c.Hint}`);
-    }
+    function setAuthMode(mode) {
+      playClick();
+      currentMode = mode;
+      const btnNew = document.getElementById("btnModeNew");
+      const btnReturn = document.getElementById("btnModeReturn");
+      const groupSig = document.getElementById("groupSigItem");
+      const groupSync = document.getElementById("groupSyncKey");
+      const btnEngage = document.getElementById("btnEngage");
 
-    function displayCoordinates() {
-      const c = AppState.caches.find(x => x.GC_Code === AppState.activeGC);
-      const coords = (c && c.Coordinates) ? c.Coordinates : "N 41° 44.120 W 111° 50.340";
-      printScreen(`[GPS WGS84] ${coords}`);
-    }
-
-    function checkBattery() {
-      printScreen("[SOLAR/SLA] 12.8V Float Nominal. Lead-acid cells balanced. Ready for field logging.");
-    }
-
-    function tapCasing() {
-      printScreen("*CLANK* Percussive maintenance executed. Relays seated tight. Screen static cleared.");
-    }
-
-    function toggleGZState() {
-      AppState.isAtGZ = !AppState.isAtGZ;
-      if (AppState.isAtGZ) {
-        printScreen("[OPTICS] Ammo can lid unlatched. Welcome to Ground Zero.", "sys");
+      if (mode === "new") {
+        btnNew.classList.add("active");
+        btnReturn.classList.remove("active");
+        groupSig.style.display = "flex";
+        groupSync.style.display = "none";
+        btnEngage.textContent = "INITIALIZE TRAIL SESSION ➔";
+        logConsole("[CONFIG] New cacher registration armed.");
       } else {
-        printScreen("[OPTICS] Container lid closed tight. Rubber gasket sealed.", "sys");
-      }
-      updateUI();
-    }
-
-    function showHowToPlay() {
-      printScreen("--- FIELD GUIDELINES ---");
-      printScreen("1. Find physical container at coordinates.");
-      printScreen("2. Unlatch heavy steel lid.");
-      printScreen("3. Sign paper scroll with ink (BYOP).");
-      printScreen("4. Trade equal or trade up. Reseat EPDM gasket.");
-    }
-
-    function openProjectBearingTool() {
-      const bearing = prompt("Enter bearing in degrees True North (0-359):", "180");
-      if (bearing === null) return;
-      const dist = prompt("Enter distance in feet:", "150");
-      if (dist === null) return;
-      printScreen(`[CALC] Projected waypoint: Offset ${dist}ft @ ${bearing}° True North.`);
-    }
-
-    function openLockComboTool() {
-      const code = prompt("Enter 4-digit shackle padlock combination:", "1984");
-      if (code === null) return;
-      if (code === "1984" || code === "1040") {
-        printScreen(`[SOLENOID] Click! Inner lock chamber unlocked.`);
-      } else {
-        printScreen(`[LOCK] Tumbler resists. Incorrect shackle code.`, "warn");
+        btnReturn.classList.add("active");
+        btnNew.classList.remove("active");
+        groupSig.style.display = "none";
+        groupSync.style.display = "flex";
+        btnEngage.textContent = "VERIFY PASSKEY & RESTORE ➔";
+        logConsole("[CONFIG] Cloud restoration passkey mode armed.");
       }
     }
 
-    // =========================================================
-    // FIELD LOGGING & SWAG DISPATCH
-    // =========================================================
-    async function submitFieldLog() {
-      const action = document.getElementById("logActionSelect").value;
-      const notes = document.getElementById("logNotes").value.trim();
+    function generateSyncKey(username) {
+      const clean = username.replace(/[^A-Z0-9]/gi, "").substring(0, 4).toUpperCase() || "CASH";
+      const random = Math.floor(1000 + Math.random() * 9000);
+      return `CT-${clean}-${random}`;
+    }
 
-      printScreen(`[TRANSMITTING] Logging ${action} for ${AppState.activeGC}...`);
-      closeModal("signModal");
+    function processAirlock() {
+      playClick();
+      const usernameInput = document.getElementById("inputUsername").value.trim();
 
-      // Record locally in cacher profile
-      if (!AppState.profileData.stagesLogged.includes(AppState.activeGC)) {
-        AppState.profileData.stagesLogged.push(AppState.activeGC);
-        localStorage.setItem("ct_cacher_json", JSON.stringify(AppState.profileData));
-      }
-
-      if (!API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) {
-        printScreen(`[LOGGED OFFLINE] ${action} recorded in local memory.`);
+      if (!usernameInput) {
+        logConsole("[ERROR] Handle required. You cannot sign Rite-in-the-Rain logs anonymously.", "alert");
+        alert("Enter your geocaching handle used to sign paper scrolls.");
         return;
       }
 
+      if (currentMode === "new") {
+        const sigItem = document.getElementById("inputSigItem").value.trim() || "Signature Wooden Nickel";
+        const newKey = generateSyncKey(usernameInput);
+
+        localStorage.setItem("ct_cacher_user", usernameInput);
+        localStorage.setItem("ct_cacher_sig", sigItem);
+        localStorage.setItem("ct_cacher_key", newKey);
+
+        // Check if Nezzmuk/Rat Pack admin
+        const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(usernameInput.toUpperCase());
+        localStorage.setItem("ct_cacher_admin", isAdmin ? "true" : "false");
+
+        // Initialize clean state if not present
+        if (!localStorage.getItem("cipher_active_stage")) {
+          localStorage.setItem("cipher_active_stage", "1");
+          localStorage.setItem("cipher_completed_stages", JSON.stringify([]));
+          localStorage.setItem("cipher_pack_items", JSON.stringify([
+            { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
+          ]));
+        }
+
+        playChime();
+        logConsole(`[REGISTERED] Session generated for ${usernameInput}.`, "bright");
+        logConsole(`[PASSKEY] Your SyncKey: ${newKey}`, "warn");
+        logConsole("[TRANSFER] Flipping to Corridor Trail interface in 1s...", "sys");
+
+        setTimeout(() => {
+          // Transitions to the live trail game page
+          window.location.href = "test-trail.html";
+        }, 1200);
+
+      } else {
+        // Returning mode
+        const syncKeyInput = document.getElementById("inputSyncKey").value.trim().toUpperCase();
+        if (!syncKeyInput) {
+          logConsole("[ERROR] Passkey missing. Enter your SyncKey or switch to New Cacher.", "alert");
+          alert("Enter your SyncKey (e.g. CT-XXXX-XXXX).");
+          return;
+        }
+
+        localStorage.setItem("ct_cacher_user", usernameInput);
+        localStorage.setItem("ct_cacher_key", syncKeyInput);
+
+        const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(usernameInput.toUpperCase());
+        localStorage.setItem("ct_cacher_admin", isAdmin ? "true" : "false");
+
+        playChime();
+        logConsole(`[VERIFIED] SyncKey accepted. Restoring corridor records...`, "bright");
+
+        setTimeout(() => {
+          window.location.href = "test-trail.html";
+        }, 1000);
+      }
+    }
+
+    function enterAsGuest() {
+      playClick();
+      localStorage.setItem("ct_cacher_user", "Guest");
+      localStorage.setItem("ct_cacher_key", "GUEST-SCOUT");
+      localStorage.setItem("ct_cacher_admin", "false");
+      logConsole("[BYPASS] Entering corridor in Guest mode...", "warn");
+      setTimeout(() => {
+        window.location.href = "test-trail.html";
+      }, 500);
+    }
+
+    // =======================================================
+    // 3. AUTO-LOGIN CHECK ON LOAD
+    // =======================================================
+    window.addEventListener("DOMContentLoaded", () => {
+      const existingUser = localStorage.getItem("ct_cacher_user");
+      const existingKey = localStorage.getItem("ct_cacher_key");
+
+      // Inherit saved theme if present
       try {
-        const payload = {
-          action: "signLog",
-          username: AppState.user,
-          gccode: AppState.activeGC,
-          logAction: action,
-          notes: notes
-        };
+        const savedTheme = localStorage.getItem("cipher_theme");
+        if (savedTheme) document.body.className = `theme-${savedTheme} font-regular`;
+      } catch (e) {}
 
-        const resp = await fetch(API_URL, {
-          method: "POST",
-          redirect: "follow",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-        const data = await resp.json();
-
-        if (data.status === "success") {
-          printScreen(`[VERIFIED] Log confirmed in corridor database. Total Finds: ${data.totalFinds}`);
-        } else {
-          printScreen(`[ERROR] ${data.message}`, "warn");
+      if (existingUser && existingUser !== "Guest") {
+        document.getElementById("inputUsername").value = existingUser;
+        if (existingKey) {
+          document.getElementById("inputSyncKey").value = existingKey;
+          setAuthMode("return");
         }
-      } catch (err) {
-        console.error(err);
-        printScreen("[BUFFERED] Could not reach corridor server. Stored for auto-sync.", "warn");
+        logConsole(`[MEMORY] Active session found for cacher: ${existingUser}`, "bright");
+        logConsole(`[READY] Tap button to resume corridor trail or edit handle.`, "sys");
       }
-    }
-
-    async function submitSwagTrade() {
-      const taken = document.getElementById("takeSwagSelect").value;
-      const dropped = document.getElementById("dropSwagName").value.trim();
-      const dropType = document.getElementById("dropSwagType").value;
-
-      if (!taken && !dropped) {
-        alert("Please select an item to take or enter an item to leave.");
-        return;
-      }
-
-      closeModal("swagModal");
-      printScreen(`[SWAG TRADE] Exchanging at ${AppState.activeGC}...`);
-
-      if (dropped) AppState.profileData.inventory.push(dropped);
-      localStorage.setItem("ct_cacher_json", JSON.stringify(AppState.profileData));
-
-      if (!API_URL || API_URL.includes("YOUR_DEPLOYMENT_ID")) {
-        printScreen("[SWAG] Recorded in local offline memory.", "warn");
-        return;
-      }
-
-      try {
-        const payload = {
-          action: "tradeSwag",
-          gccode: AppState.activeGC,
-          takenItem: taken,
-          leftItem: dropped,
-          leftType: dropType,
-          leftCondition: "Good"
-        };
-
-        const resp = await fetch(API_URL, {
-          method: "POST",
-          redirect: "follow",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-        const data = await resp.json();
-
-        if (data.status === "success") {
-          printScreen(`[SWAG CONFIRMED] Trade logged. Trade equal or trade up!`);
-          fetchCorridorData();
-        } else {
-          printScreen(`[SWAG WARN] ${data.message}`, "warn");
-        }
-      } catch (err) {
-        console.error(err);
-        printScreen("[SWAG] Recorded in local offline memory.", "warn");
-      }
-    }
-
-    function updateSwagSelect() {
-      const sel = document.getElementById("takeSwagSelect");
-      sel.innerHTML = '<option value="">-- None (Drop Only) --</option>';
-      const current = AppState.swag.filter(x => x.CurrentCacheGC === AppState.activeGC);
-      current.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.ItemName;
-        opt.textContent = `${item.ItemName} (${item.ItemType})`;
-        sel.appendChild(opt);
-      });
-    }
-
-    // =========================================================
-    // MODAL HELPERS & PROFILE CONTROLS
-    // =========================================================
-    function openProfileModal() {
-      document.getElementById("profUsername").value = AppState.user;
-      document.getElementById("profSigItem").value = AppState.signatureItem;
-      document.getElementById("profSyncKey").value = AppState.syncKey;
-      document.getElementById("profileModal").style.display = "flex";
-    }
-
-    function saveProfileModal() {
-      const u = document.getElementById("profUsername").value.trim();
-      const s = document.getElementById("profSigItem").value.trim();
-      const k = document.getElementById("profSyncKey").value.trim();
-
-      if (!u) {
-        alert("Username required to sign logs.");
-        return;
-      }
-
-      AppState.user = u;
-      AppState.signatureItem = s;
-      AppState.syncKey = k;
-
-      localStorage.setItem("ct_cacher_user", u);
-      localStorage.setItem("ct_cacher_sig", s);
-      localStorage.setItem("ct_cacher_key", k);
-
-      closeModal("profileModal");
-      printScreen(`[USER] Signed in as ${u}.`);
-      syncProfileWithBackend(true);
-      updateUI();
-    }
-
-    function openSignModal() {
-      document.getElementById("signModal").style.display = "flex";
-    }
-
-    function openSwagModal() {
-      updateSwagSelect();
-      document.getElementById("swagModal").style.display = "flex";
-    }
-
-    function openStatsModal() {
-      const div = document.getElementById("statsContent");
-      const logged = AppState.profileData.stagesLogged || [];
-      let listHtml = "<p><strong>COMPLETED STAGES:</strong></p><ul>";
-      if (logged.length === 0) {
-        listHtml += "<li>None logged yet. Get hunting!</li>";
-      } else {
-        logged.forEach(gc => { listHtml += `<li>✓ ${gc}</li>`; });
-      }
-      listHtml += "</ul><br><p><strong>INVENTORY:</strong> " + (AppState.profileData.inventory.join(", ") || "Empty") + "</p>";
-      if (AppState.isAdmin) {
-        listHtml += "<br><p style='color:#a4ffa4;'><strong>CORRIDOR ADMIN: ACTIVE</strong></p>";
-      }
-      div.innerHTML = listHtml;
-      document.getElementById("statsModal").style.display = "flex";
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).style.display = "none";
-    }
-
-    function logoutCacher() {
-      AppState.user = "";
-      AppState.syncKey = "";
-      localStorage.removeItem("ct_cacher_user");
-      localStorage.removeItem("ct_cacher_key");
-      printScreen("[SESSION] Logged off terminal.");
-      updateUI();
-    }
-
-    // =========================================================
-    // CLI PARSER (NATURAL LANGUAGE & SHORTCUTS)
-    // =========================================================
-    function handleCliSubmit(e) {
-      e.preventDefault();
-      const input = document.getElementById("cliInput");
-      const cmd = input.value.trim();
-      if (!cmd) return;
-      input.value = "";
-
-      printScreen(`> ${cmd}`);
-      const upper = cmd.toUpperCase();
-
-      if (upper === "HELP" || upper === "?") {
-        printScreen("COMMANDS: CACHE <GC>, HINT, SIGN, SWAG, BATTERY, PROJECT, COMBO, WORKBENCH, STATUS");
-      } else if (upper.startsWith("CACHE ")) {
-        const gc = upper.replace("CACHE ", "").trim();
-        AppState.activeGC = gc;
-        showCurrentCacheInfo();
-      } else if (upper === "HINT") {
-        decryptCurrentHint();
-      } else if (upper.startsWith("SIGN") || upper.startsWith("FOUND")) {
-        openSignModal();
-      } else if (upper === "SWAG") {
-        openSwagModal();
-      } else if (upper === "BATTERY" || upper === "STATUS") {
-        checkBattery();
-      } else if (upper === "KICK" || upper === "TAP") {
-        tapCasing();
-      } else if (upper === "WORKBENCH" || upper === "RATLAB") {
-        const pin = prompt("ENTER RAT PACK WORKSHOP PIN:");
-        if (pin === "8675309") {
-          printScreen("[WORKBENCH UNLOCKED] Nezzmuk / Ratwaffles garage diagnostic active.");
-          printScreen("Available: CLEAR TEST LOGS, VOLTAGE CALIBRATION, RELAY OVERRIDE.");
-        } else {
-          printScreen("Solid steel cover plate with security screws. Just an ordinary ammo can bracket.");
-        }
-      } else {
-        printScreen("Relay click... unknown instruction. Type HELP or use action buttons.");
-      }
-    }
+    });
   </script>
 </body>
 </html>
