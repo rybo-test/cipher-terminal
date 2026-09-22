@@ -989,7 +989,7 @@
     // 0. GOOGLE APPS SCRIPT BACKEND ENDPOINT CONFIGURATION
     // =======================================================
     // Replace with your active Google Apps Script Web App Deployment URL:
-    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbw9e3JqXQ1s7H_89K2-fQx_Lz4p6O6VqF3t0j/exec";
+    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
 
     // =======================================================
     // 1. GAME MASTER DATA (STAGES 01 - 05)
@@ -1196,38 +1196,36 @@
     }
 
     // =======================================================
-    // 3. GOOGLE APPS SCRIPT LIVE SYNC ENGINE
+    // 3. GOOGLE APPS SCRIPT LIVE SYNC ENGINE (CORS-PROOF GET)
     // =======================================================
     async function syncFindToGoogleSheet(stageNumber, stageData) {
       const badge = document.getElementById("statusPlaceholder");
       if (badge) badge.textContent = "[ 🟡 SYNCING... ]";
 
-      const payload = {
+      const params = new URLSearchParams({
         action: "logFind",
         username: activeUser,
         syncKey: activeSyncKey,
         gc: stageData.gc,
         status: "Found It",
-        notes: `Stage ${stageNumber} unlocked via code: ${stageData.unlockCode}`,
-        timestamp: new Date().toISOString()
-      };
+        notes: `Stage ${stageNumber} unlocked via code: ${stageData.unlockCode}`
+      });
 
       try {
-        const response = await fetch(GOOGLE_SCRIPT_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
+        const response = await fetch(`${GOOGLE_SCRIPT_API_URL}?${params.toString()}`, {
+          method: "GET",
+          mode: "cors"
         });
 
         const result = await response.json();
         console.log("☁️ GOOGLE SHEET SYNC CONFIRMED:", result);
         if (badge) badge.textContent = "[ 🟢 ONLINE // GZ ]";
       } catch (err) {
-        console.warn("⚠️ Signal dropped at GZ. Queuing log locally...", err);
+        console.warn("⚠️ Sync encounter issue, saving offline:", err);
         if (badge) badge.textContent = "[ 🟠 SAVED OFFLINE ]";
         
         let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
-        queue.push(payload);
+        queue.push(params.toString());
         localStorage.setItem("cipher_offline_queue", JSON.stringify(queue));
       }
     }
@@ -1241,15 +1239,14 @@
 
       const remainingQueue = [];
 
-      for (const item of queue) {
+      for (const queryString of queue) {
         try {
-          await fetch(GOOGLE_SCRIPT_API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(item)
+          await fetch(`${GOOGLE_SCRIPT_API_URL}?${queryString}`, {
+            method: "GET",
+            mode: "cors"
           });
         } catch (err) {
-          remainingQueue.push(item);
+          remainingQueue.push(queryString);
         }
       }
 
@@ -1284,7 +1281,7 @@
 
         inputEl.value = "";
 
-        // FIRE GOOGLE SHEET SYNC CALL HERE:
+        // FIRE GOOGLE SHEET SYNC
         syncFindToGoogleSheet(currentStage, stage);
 
         if (currentStage < 5) {
