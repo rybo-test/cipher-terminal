@@ -1201,7 +1201,10 @@
 
       if (enteredCode === stage.unlockCode.toUpperCase()) {
         playChime();
-
+      // Sync finding to the live Google Sheet ledger
+      if (window.CipherCore) {
+        CipherCore.syncFindToLedger(currentStage, stage);
+        }
         if (!completedStages.includes(currentStage)) {
           completedStages.push(currentStage);
         }
