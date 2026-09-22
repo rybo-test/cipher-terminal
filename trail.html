@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>C.I.P.H.E.R. // Corridor Trail Navigator</title>
+  <style>
+    /* --------------------------------------------------------
+       THEME PROFILES (Display Modes)
+       -------------------------------------------------------- */
+    :root {
+      --content-scale: 1;
+      --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      /* CRT Green (Default) */
+      --bg-dark: #0a0f0d;
+      --panel-bg: #121a15;
+      --panel-inner: #080d0a;
+      --border-main: #2a5a3a;
+      --border-accent: #38ef7d;
+      --accent: #38ef7d;
+      --accent-dim: #7da88d;
+      --text-bright: #ffffff;
+      --text-main: #38ef7d;
+      --text-dim: #7da88d;
+      --warning: #f7b731;
+      --danger: #eb3b5a;
+      --map-canal: #102636;
+      --map-rail: #1f3d28;
+      --map-trail: #1b3824;
+      --map-topo: #122417;
+      --map-node-bg: #0c1810;
+    }
+
+    /* Theme: Paper Log (Ultra High-Contrast for Bright Sunlight) */
+    body.theme-light {
+      --bg-dark: #d8ded9;
+      --panel-bg: #f4f6f4;
+      --panel-inner: #e6eae6;
+      --border-main: #405747;
+      --border-accent: #174223;
+      --accent: #144724;
+      --accent-dim: #254d33;
+      --text-bright: #050a06;
+      --text-main: #050a06;
+      --text-dim: #1f3626;
+      --warning: #874b00;
+      --danger: #a81320;
+      --map-canal: #5b829e;
+      --map-rail: #476650;
+      --map-trail: #3d5e46;
+      --map-topo: #b8c7ba;
+      --map-node-bg: #c9d6cb;
+    }
+
+    /* Theme: Amber Phosphor */
+    body.theme-amber {
+      --bg-dark: #120b00;
+      --panel-bg: #1f1402;
+      --panel-inner: #0f0a00;
+      --border-main: #5c3f0d;
+      --border-accent: #ffb000;
+      --accent: #ffb000;
+      --accent-dim: #ba8829;
+      --text-bright: #ffffff;
+      --text-main: #ffb000;
+      --text-dim: #ba8829;
+      --warning: #ffcf66;
+      --danger: #ff4d4d;
+      --map-canal: #3b2808;
+      --map-rail: #4d360c;
+      --map-trail: #4a330b;
+      --map-topo: #2a1d06;
+      --map-node-bg: #1c1303;
+    }
+
+    /* Theme: Hi-Vis (Color-Blind Safe Blue/Yellow) */
+    body.theme-hivis {
+      --bg-dark: #0a0e14;
+      --panel-bg: #131924;
+      --panel-inner: #0d121c;
+      --border-main: #2b456b;
+      --border-accent: #4ba3ff;
+      --accent: #4ba3ff;
+      --accent-dim: #8ab6e9;
+      --text-bright: #ffffff;
+      --text-main: #4ba3ff;
+      --text-dim: #8ab6e9;
+      --warning: #ffd13b;
+      --danger: #ff5252;
+      --map-canal: #1c2b42;
+      --map-rail: #2a4163;
+      --map-trail: #273e5e;
+      --map-topo: #142033;
+      --map-node-bg: #151f30;
+    }
+
+    /* --------------------------------------------------------
+       FONT SIZE TIERS
+       -------------------------------------------------------- */
+    body.font-regular { --content-scale: 1; }
+    body.font-large { --content-scale: 1.18; }
+    body.font-trailxl { --content-scale: 1.38; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 650px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    /* =======================================================
+       UNIVERSAL TOP TOOLBAR (STABLE CHROME)
+       ======================================================= */
+    .cipher-toolbar {
+      background: var(--panel-inner);
+      border: 2px solid var(--border-main);
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tb-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--panel-inner);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .tb-status-badge {
+      background: var(--panel-bg);
+      color: var(--accent);
+      border: 1px solid var(--border-main);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .tb-nav-row {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
+      gap: 4px;
+      padding: 6px;
+      background: var(--panel-bg);
+    }
+
+    .tb-btn {
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      color: var(--text-dim);
+      padding: 8px 3px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+    }
+    .tb-btn:active { background: var(--border-main); }
+    .tb-btn.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
+    }
+
+    .tb-context-row {
+      padding: 6px 8px;
+      background: var(--panel-inner);
+      border-top: 1px dashed var(--border-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .tb-context-label {
+      color: var(--warning);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .tb-context-actions {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .btn-context {
+      background: var(--panel-bg);
+      color: var(--text-bright);
+      border: 1px solid var(--border-main);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .btn-context:active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-context:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+
+    /* Menu Drawer */
+    .tb-menu-drawer {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 6px;
+      width: 290px;
+      background: var(--panel-inner);
+      border: 2px solid var(--border-accent);
+      border-radius: 6px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+      z-index: 100;
+      padding: 8px 0;
+      font-family: var(--font-mono);
+    }
+    .tb-menu-drawer.open { display: block; }
+
+    .tb-menu-header {
+      padding: 4px 12px;
+      font-size: 10px;
+      color: var(--warning);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .tb-menu-item {
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-bright);
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
+
+    .tb-menu-controls {
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .control-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .btn-control-chip {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
+      color: var(--text-dim);
+      padding: 6px 2px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      text-align: center;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .btn-control-chip.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
+    }
+
+    .tb-menu-divider {
+      height: 1px;
+      background: var(--border-main);
+      margin: 5px 0;
+    }
+
+    /* =======================================================
+       DECK CONTAINER & TRAIL SPECIFIC LAYOUT
+       ======================================================= */
+    .deck-container {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-main);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .trail-sub-nav {
+      display: flex;
+      background: var(--panel-inner);
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .btn-sub-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .btn-sub-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: var(--panel-bg);
+    }
+
+    .map-canvas-container {
+      background: var(--bg-dark);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .svg-map-wrapper {
+      width: 100%;
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Zoom Rocker */
+    .map-zoom-rocker {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--panel-inner);
+      border: 1px solid var(--border-accent);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .btn-zoom {
+      background: transparent;
+      border: none;
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-zoom:active { background: var(--border-main); }
+    .zoom-level-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--accent);
+      padding: 0 6px;
+      border-left: 1px solid var(--border-main);
+      border-right: 1px solid var(--border-main);
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .svg-map-wrapper svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: viewBox 0.35s ease-in-out;
+    }
+
+    /* SVG Map Vector Styles */
+    .map-topo-line {
+      stroke: var(--map-topo);
+      stroke-width: 1.5;
+      fill: none;
+      stroke-dasharray: 2 3;
+    }
+    .map-rail-line {
+      stroke: var(--map-rail);
+      stroke-width: 3;
+      stroke-linecap: square;
+    }
+    .map-rail-ties {
+      stroke: var(--map-rail);
+      stroke-width: 1.5;
+      stroke-dasharray: 2 4;
+    }
+    .map-trail-line {
+      stroke: var(--map-trail);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .map-trail-active-line {
+      stroke: var(--border-accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 6 3;
+    }
+    .map-canal-line {
+      stroke: var(--map-canal);
+      stroke-width: 9;
+      stroke-linecap: round;
+    }
+    .map-fence-line {
+      stroke: var(--border-main);
+      stroke-width: 1;
+      stroke-dasharray: 8 2 2 2;
+    }
+
+    /* Nodes & Landmarks */
+    .map-node-target { cursor: pointer; }
+    .map-node-circle {
+      fill: var(--map-node-bg);
+      stroke: var(--border-main);
+      stroke-width: 2;
+      transition: all 0.2s ease;
+    }
+    .map-node-circle.found { stroke: var(--accent); stroke-width: 2.5; }
+    .map-node-circle.active-target { stroke: var(--accent); stroke-width: 3.5; }
+    .map-node-circle.locked { stroke: var(--border-main); opacity: 0.6; }
+
+    .map-landmark-icon {
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .map-landmark-icon:active {
+      transform: scale(1.15);
+    }
+
+    .map-pulse {
+      animation: pulse-ring 2s infinite ease-out;
+      transform-origin: center;
+    }
+    @keyframes pulse-ring {
+      0% { r: 12; opacity: 0.8; }
+      100% { r: 24; opacity: 0; }
+    }
+
+    /* Map Cache Inspector Card */
+    .map-inspector {
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-family: var(--font-mono);
+    }
+
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-main);
+      padding-bottom: 6px;
+    }
+
+    .inspector-name {
+      font-size: calc(14px * var(--content-scale));
+      font-weight: 800;
+      color: var(--text-bright);
+    }
+
+    .inspector-status {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    .status-found { background: var(--panel-bg); color: var(--accent); border: 1px solid var(--border-main); }
+    .status-current { background: var(--accent); color: var(--bg-dark); }
+    .status-locked { background: var(--panel-bg); color: var(--text-dim); border: 1px dashed var(--border-main); }
+    .status-landmark { background: var(--panel-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+    .inspector-comment {
+      font-size: calc(13px * var(--content-scale));
+      line-height: 1.45;
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .inspector-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: calc(11px * var(--content-scale));
+      color: var(--text-dim);
+      font-weight: bold;
+    }
+
+    .btn-gps-handoff {
+      background: var(--panel-bg);
+      color: var(--text-bright);
+      border: 1px solid var(--accent);
+      padding: 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-gps-handoff:active { background: var(--accent); color: var(--bg-dark); }
+    .btn-gps-handoff:disabled {
+      border-color: var(--border-main);
+      color: var(--text-dim);
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Cache Listing Specs */
+    .gc-dossier {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .gc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .gc-box {
+      background: var(--panel-inner);
+      border: 1px solid var(--border-main);
+      padding: 8px 10px;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .gc-box-lbl { font-size: 10px; color: var(--text-dim); font-weight: bold; }
+    .gc-box-val { font-size: calc(13px * var(--content-scale)); color: var(--text-bright); font-weight: 800; }
+
+    .hint-box {
+      background: var(--panel-inner);
+      border: 1px dashed var(--warning);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: calc(13px * var(--content-scale));
+      line-height: 1.45;
+      color: var(--warning);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="theme-crt font-regular">
+
+  <div class="app-shell">
+
+    <!-- =======================================================
+         UNIVERSAL TOP TOOLBAR (STABLE CHROME)
+         ======================================================= -->
+    <div class="cipher-toolbar" id="cipherToolbar">
+      
+      <!-- Row 1: Hardware Identity & Version Stamping -->
+      <div class="tb-status-row">
+        <div>
+          <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
+          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+        </div>
+        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
+        <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
+      </div>
+
+      <!-- Row 2: 4 Primary Anchors (Inter-Page Navigation) -->
+      <div class="tb-nav-row">
+        <a href="mission.html" class="tb-btn" id="btnNavMission">
+          🎯 MISSION
+        </a>
+        <a href="trail.html" class="tb-btn active" id="btnNavTrail">
+          🗺️ TRAIL
+        </a>
+        <a href="pack.html" class="tb-btn" id="btnNavPack">
+          <span id="packNavLabel">🎒 PACK (2)</span>
+        </a>
+        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
+          ≡ MENU ▾
+        </button>
+      </div>
+
+      <!-- Row 3: Dynamic Contextual Action Bar -->
+      <div class="tb-context-row">
+        <span class="tb-context-label">> ACTION:</span>
+        <div class="tb-context-actions" id="contextActionsSlot">
+          <!-- Populated dynamically by map vs cache specs view -->
+        </div>
+      </div>
+
+      <!-- Dropdown Drawer -->
+      <div class="tb-menu-drawer" id="menuDrawer">
+        <div class="tb-menu-header">FIELD PROGRESS</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
+        <div class="tb-menu-item" onclick="playClick(); alert('Opening Corridor Challenges')">🎯 Challenges</div>
+        
+        <div class="tb-menu-divider"></div>
+        
+        <div class="tb-menu-header">THEME / SUN</div>
+        <div class="tb-menu-controls">
+          <div class="control-grid-4">
+            <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
+            <button type="button" class="btn-control-chip" id="chipThemeLight" onclick="setTheme('light')">PAPER</button>
+            <button type="button" class="btn-control-chip" id="chipThemeAmber" onclick="setTheme('amber')">AMBER</button>
+            <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-header">TEXT SIZE</div>
+        <div class="tb-menu-controls">
+          <div class="control-grid">
+            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
+            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
+            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">XL</button>
+          </div>
+        </div>
+
+        <div class="tb-menu-divider"></div>
+
+        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
+        <a href="terminal.html" class="tb-menu-item" onclick="playClick();">👤 Gateway Login</a>
+        <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 BYOP Manual</div>
+        <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
+        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
+        <a href="terminal.html" class="tb-menu-item" onclick="playClick();" style="color: var(--danger);">🚪 Log Off</a>
+      </div>
+
+    </div>
+
+    <!-- =======================================================
+         TRAIL DECK (Enriched SVG Map & Specs)
+         ======================================================= -->
+    <div class="deck-container" id="deckTrail">
+      
+      <div class="trail-sub-nav">
+        <button type="button" class="btn-sub-tab active" id="subTabMap" onclick="switchTrailSubTab('map')">🗺️ CORRIDOR MAP</button>
+        <button type="button" class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
+      </div>
+
+      <!-- Sub-View A: Enriched SVG Corridor Map -->
+      <div class="map-canvas-container" id="trailMapView">
+        
+        <div class="svg-map-wrapper">
+          <div class="map-zoom-rocker">
+            <button type="button" class="btn-zoom" onclick="zoomMap(-1)" title="Zoom Out">-</button>
+            <span class="zoom-level-badge" id="zoomBadge">1×</span>
+            <button type="button" class="btn-zoom" onclick="zoomMap(1)" title="Zoom In">+</button>
+          </div>
+
+          <svg id="corridorSvg" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <g id="treeSymbol">
+                <circle cx="0" cy="-4" r="5" fill="none" stroke="currentColor" stroke-width="1.2" />
+                <path d="M 0,1 L 0,5" stroke="currentColor" stroke-width="1.2" />
+              </g>
+            </defs>
+
+            <!-- 1. Topographic Elevation Curves (Wellsville Foothills) -->
+            <path d="M 0,25 Q 120,10 260,20 T 500,10" class="map-topo-line" />
+            <path d="M 0,50 Q 150,30 300,45 T 500,28" class="map-topo-line" />
+            <text x="8" y="16" fill="var(--map-topo)" font-family="monospace" font-size="8" font-weight="bold">▲ WELLSVILLE RANGE BENCH (4,900 FT)</text>
+
+            <!-- 2. Old Sugar Beet Railway Spur Line -->
+            <path d="M 10,215 L 490,175" class="map-rail-line" />
+            <path d="M 10,215 L 490,175" class="map-rail-ties" />
+            <text x="380" y="196" fill="var(--map-rail)" font-family="monospace" font-size="8" font-weight="bold">UPRR SPUR</text>
+
+            <!-- 3. Logan Irrigation Canal Trunk -->
+            <path d="M 10,65 Q 150,45 250,85 T 490,95" fill="none" class="map-canal-line" />
+            <text x="20" y="58" fill="var(--accent-dim)" font-family="monospace" font-size="8" font-weight="bold">LOGAN IRRIGATION CANAL</text>
+
+            <!-- 4. Barbed Wire Fence Line -->
+            <path d="M 40,165 L 460,115" class="map-fence-line" />
+
+            <!-- 5. Corridor Trail Path -->
+            <path d="M 50,185 L 140,145 L 250,165 L 360,110 L 450,130" fill="none" class="map-trail-line" />
+            <path id="mapTrailActivePath" d="M 50,185 L 50,185" fill="none" class="map-trail-active-line" />
+
+            <!-- 6. Landmarks -->
+            <g class="map-landmark-icon" onclick="inspectLandmark('headgate3')" fill="var(--warning)" stroke="var(--warning)">
+              <rect x="238" y="78" width="12" height="10" fill="none" stroke-width="1.5" />
+              <line x1="244" y1="74" x2="244" y2="88" stroke-width="1.5" />
+              <circle cx="244" cy="74" r="2.5" fill="none" />
+              <text x="244" y="98" fill="var(--warning)" font-family="monospace" font-size="7" font-weight="bold" text-anchor="middle">GATE #3</text>
+            </g>
+
+            <g class="map-landmark-icon" onclick="inspectLandmark('footbridge')" fill="var(--text-dim)" stroke="var(--text-dim)">
+              <line x1="134" y1="48" x2="146" y2="58" stroke-width="3" stroke-linecap="square" />
+              <text x="140" y="42" fill="var(--text-dim)" font-family="monospace" font-size="7" text-anchor="middle">BRIDGE</text>
+            </g>
+
+            <g class="map-landmark-icon" onclick="inspectLandmark('culvert')" fill="var(--text-dim)">
+              <rect x="340" y="180" width="14" height="8" fill="none" stroke="currentColor" stroke-width="1" />
+              <text x="347" y="174" fill="var(--text-dim)" font-family="monospace" font-size="7" text-anchor="middle">CULVERT</text>
+            </g>
+
+            <!-- Tree Clusters -->
+            <g color="var(--border-main)">
+              <use href="#treeSymbol" x="70" y="175" />
+              <use href="#treeSymbol" x="80" y="172" />
+              <use href="#treeSymbol" x="225" y="155" />
+              <use href="#treeSymbol" x="235" y="152" />
+              <use href="#treeSymbol" x="420" y="118" />
+            </g>
+
+            <!-- Active Target Pulsing Ring -->
+            <circle id="mapPulseRing" cx="50" cy="185" r="14" fill="none" stroke="var(--accent)" stroke-width="2" class="map-pulse" />
+
+            <!-- Dynamic Node Group (Populated by JS) -->
+            <g id="mapNodesGroup"></g>
+          </svg>
+        </div>
+
+        <!-- Interactive Map Cache/Landmark Drawer -->
+        <div class="map-inspector" id="mapInspector">
+          <div class="inspector-header">
+            <span class="inspector-name" id="inspTitle">Cache 01: Trailhead Pulloff</span>
+            <span class="inspector-status status-current" id="inspStatus">ACTIVE GZ</span>
+          </div>
+
+          <div class="inspector-comment" id="inspComment">
+            "First ammo can in the gravel turnaround."
+          </div>
+
+          <div class="inspector-meta">
+            <span id="inspGc">GC10001 // Regular Ammo Can</span>
+            <span id="inspDt">D 1.5 / T 1.5</span>
+          </div>
+
+          <button type="button" class="btn-gps-handoff" id="inspGpsBtn" onclick="launchPhoneGps()">
+            🧭 OPEN GPS
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Sub-View B: Cache Listing Specs -->
+      <div class="gc-dossier" id="trailCacheView" style="display: none;">
+        <div class="gc-grid">
+          <div class="gc-box">
+            <span class="gc-box-lbl">GC CODE</span>
+            <span class="gc-box-val" id="specGcVal">GC10001</span>
+          </div>
+          <div class="gc-box">
+            <span class="gc-box-lbl">DIFFICULTY / TERRAIN</span>
+            <span class="gc-box-val" id="specDtVal">D 1.5 / T 1.5</span>
+          </div>
+          <div class="gc-box">
+            <span class="gc-box-lbl">CONTAINER</span>
+            <span class="gc-box-val" id="specContainerVal">Ammo Can</span>
+          </div>
+          <div class="gc-box">
+            <span class="gc-box-lbl">COORDINATES (WGS84)</span>
+            <span class="gc-box-val" id="specCoordsVal" style="font-size: calc(11px * var(--content-scale));">N 41° 44.280 W 111° 50.460</span>
+          </div>
+        </div>
+
+        <div class="hint-box" id="hintBox">
+          <strong>SPOILER HINT:</strong><br />
+          <span id="hintText">Pneavrq vo gbgny fgenatr bs tvery fgnag ba obhyqre.</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // =======================================================
+    // 0. ACTIVE BACKEND ENDPOINT
+    // =======================================================
+    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
+
+    // =======================================================
+    // 1. GAME MASTER DATA (CORRIDOR STAGES 01 - 05)
+    // =======================================================
+    const CORRIDOR_DATA = {
+      1: {
+        id: 1,
+        title: "Stop 1: Trailhead Pulloff",
+        gc: "GC10001",
+        container: "Ammo Can",
+        dt: "D 1.5 / T 1.5",
+        lat: "41.7380",
+        lng: "-111.8410",
+        coordsWgs84: "N 41° 44.280 W 111° 50.460",
+        cx: 50, cy: 185,
+        hintEnc: "Guvpx juvgr fgehvef haqre gurer oheabq ba obhyqre.",
+        hintDec: "Under the large gravel road turnaround boulder.",
+        speechActive: "\"Daylight detected. 12.6V on the lead-acid bus. Stop 1 is in the gravel turnaround. Don't lose your pen in the weeds.\"",
+        speechCompleted: "\"Stop 1 verified. You signed the scroll and closed the lid tight. Proceed northeast to the canal footbridge.\""
+      },
+      2: {
+        id: 2,
+        title: "Stop 2: Irrigation Crossing",
+        gc: "GC10002",
+        container: "Steel Lockbox",
+        dt: "D 2.0 / T 2.0",
+        lat: "41.7420",
+        lng: "-111.8360",
+        coordsWgs84: "N 41° 44.520 W 111° 50.160",
+        cx: 140, cy: 145,
+        hintEnc: "Zntargvpnyyl sbhaq haqre guvpx fgrry tebg fgehg.",
+        hintDec: "Magnetically anchored under the south steel cross-beam.",
+        speechActive: "\"Moisture sensor reads 84% near the ditch. Watch your footing on the steel bridge and enter the padlock combination.\"",
+        speechCompleted: "\"Padlock cracked. EPDM gasket held up against the canal spray. Stamped Washer #02 is in your pack.\""
+      },
+      3: {
+        id: 3,
+        title: "Stop 3: The Milepost Marker",
+        gc: "GC10003",
+        container: "Regular Ammo Can",
+        dt: "D 2.0 / T 1.5",
+        lat: "41.7470",
+        lng: "-111.8316",
+        coordsWgs84: "N 41° 44.820 W 111° 49.900",
+        cx: 250, cy: 165,
+        hintEnc: "Onfr bs prqne pbeare cbfg haqre tebhaq yriry fgbar.",
+        hintDec: "Base of cedar corner post under ground level flat stone.",
+        speechActive: "\"Stop 3 is bolted to the cedar corner post. Mind the barbed wire and enter the code stamped on the lid.\"",
+        speechCompleted: "\"Verified. Ratwaffles stamped that washer at 2 AM in his garage. Head towards the culvert guard.\""
+      },
+      4: {
+        id: 4,
+        title: "Stop 4: Culvert Guard",
+        gc: "GC10004",
+        container: "Heavy Steel Pipe",
+        dt: "D 2.5 / T 2.0",
+        lat: "41.7520",
+        lng: "-111.8250",
+        coordsWgs84: "N 41° 45.120 W 111° 49.500",
+        cx: 360, cy: 110,
+        hintEnc: "Vagrevbe fgehvef bs 36 vapu EFR phireg fvqr.",
+        hintDec: "Interior rim of 36-inch RSI drainage culvert.",
+        speechActive: "\"RSI installed that drainage culvert back in 1984. Enter the word from Washer #03 to clear the chamber.\"",
+        speechCompleted: "\"Chamber cleared. You've earned elevation clearance up to the mountain bench view.\""
+      },
+      5: {
+        id: 5,
+        title: "Stop 5: Wellsville Bench View",
+        gc: "GC10005",
+        container: "Ammo Can",
+        dt: "D 3.0 / T 2.5",
+        lat: "41.7590",
+        lng: "-111.8190",
+        coordsWgs84: "N 41° 45.540 W 111° 49.140",
+        cx: 450, cy: 130,
+        hintEnc: "Sbhaq va unyybj phgva ebbgf ba ohyqre fureb.",
+        hintDec: "Found in hollowed juniper roots on boulder shelf.",
+        speechActive: "\"Mountain wind detected. Don't let your GPS batteries die in the cold. Enter the code from the log scroll.\"",
+        speechCompleted: "\"CORRIDOR CLUSTER CLEARED! You audited all 5 caches without losing your pen. The Rat Pack approves.\""
+      }
+    };
+
+    const MAP_LANDMARKS = {
+      headgate3: {
+        title: "Landmark: Canal Headgate #03",
+        status: "INFRASTRUCTURE",
+        comment: "\"RSI installed that hand-wheel gate in '84 to irrigate the south alfalfa flat. Heavily rusted, do not attempt to turn.\"",
+        meta1: "Structure: Welded Steel & Sluice Concrete",
+        meta2: "Danger: Deep ditch mud & slick footing"
+      },
+      footbridge: {
+        title: "Landmark: Irrigation Footbridge",
+        status: "WAYPOINT",
+        comment: "\"Steel plank bridge spanning the primary ditch. Stage 02 is magnetically anchored directly beneath the cross-beam.\"",
+        meta1: "Structure: Corrugated Steel Deck",
+        meta2: "Elevation: 4,530 FT"
+      },
+      culvert: {
+        title: "Landmark: Railway Drainage Culvert",
+        status: "WAYPOINT",
+        comment: "\"Heavy 36-inch corrugated drainage pipe passing under the rail bed. Watch for spiders if inspecting the opening.\"",
+        meta1: "Structure: CMP Corrugated Pipe",
+        meta2: "Hazard: Standing water during runoff"
+      }
+    };
+
+    // =======================================================
+    // 2. STATE SYNCHRONIZATION
+    // =======================================================
+    let currentStage = 1;
+    let completedStages = [];
+    let packCount = 1;
+    let activeInspectedCache = 1;
+    let hintDecrypted = false;
+    let activeUser = "Nezzmuk";
+
+    function loadGameState() {
+      try {
+        const savedStage = localStorage.getItem('cipher_active_stage');
+        if (savedStage) currentStage = parseInt(savedStage, 10);
+
+        const savedCompleted = localStorage.getItem('cipher_completed_stages');
+        if (savedCompleted) completedStages = JSON.parse(savedCompleted);
+
+        const savedPack = localStorage.getItem('cipher_pack_items');
+        if (savedPack) {
+          const items = JSON.parse(savedPack);
+          packCount = items.length;
+        }
+
+        const user = localStorage.getItem('ct_cacher_user');
+        if (user) activeUser = user;
+      } catch (e) {
+        console.warn('Local state read error:', e);
+      }
+      activeInspectedCache = currentStage;
+      document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
+      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packCount})`;
+    }
+
+    // =======================================================
+    // 3. MAP RENDERING & INSPECTOR ENGINE
+    // =======================================================
+    function renderSvgMap() {
+      const nodesGroup = document.getElementById('mapNodesGroup');
+      nodesGroup.innerHTML = "";
+
+      const activeStage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[5];
+      const pulseRing = document.getElementById('mapPulseRing');
+
+      if (pulseRing) {
+        pulseRing.setAttribute('cx', activeStage.cx);
+        pulseRing.setAttribute('cy', activeStage.cy);
+        pulseRing.style.display = completedStages.includes(5) ? 'none' : 'block';
+      }
+
+      const activePathEl = document.getElementById('mapTrailActivePath');
+      let activePathStr = `M ${CORRIDOR_DATA[1].cx},${CORRIDOR_DATA[1].cy}`;
+      for (let i = 2; i <= currentStage; i++) {
+        activePathStr += ` L ${CORRIDOR_DATA[i].cx},${CORRIDOR_DATA[i].cy}`;
+      }
+      activePathEl.setAttribute('d', activePathStr);
+
+      for (let i = 1; i <= 5; i++) {
+        const c = CORRIDOR_DATA[i];
+        const isFound = completedStages.includes(i);
+        const isCurrent = i === currentStage && !completedStages.includes(5);
+        const isLocked = i > currentStage;
+
+        let circleClass = "map-node-circle";
+        let innerSymbol = `0${i}`;
+        let subText = `0${i}`;
+        let subFill = "var(--text-dim)";
+
+        if (isFound) {
+          circleClass += " found";
+          innerSymbol = "✓";
+          subFill = "var(--accent-dim)";
+        } else if (isCurrent) {
+          circleClass += " active-target";
+          innerSymbol = `0${i}`;
+          subText = "GZ";
+          subFill = "var(--accent)";
+        } else if (isLocked) {
+          circleClass += " locked";
+          innerSymbol = "🔒";
+          subFill = "var(--text-dim)";
+        }
+
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", "map-node-target");
+        g.setAttribute("onclick", `inspectMapCache(${i})`);
+
+        g.innerHTML = `
+          <circle cx="${c.cx}" cy="${c.cy}" r="${isCurrent ? 13 : 11}" class="${circleClass}" />
+          <text x="${c.cx}" y="${c.cy + (isFound ? 3 : 4)}" fill="${isCurrent ? 'var(--text-bright)' : (isFound ? 'var(--accent)' : 'var(--text-dim)')}" font-family="monospace" font-size="${isFound ? 9 : (isLocked ? 8 : 10)}" font-weight="bold" text-anchor="middle">${innerSymbol}</text>
+          <text x="${c.cx}" y="${c.cy + (i % 2 === 0 ? -17 : 21)}" fill="${subFill}" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">${subText}</text>
+        `;
+        nodesGroup.appendChild(g);
+      }
+    }
+
+    function renderInspector(stopNum) {
+      const cache = CORRIDOR_DATA[stopNum];
+      if (!cache) return;
+
+      const isFound = completedStages.includes(stopNum);
+      const isCurrent = stopNum === currentStage && !completedStages.includes(5);
+      const isLocked = stopNum > currentStage;
+
+      document.getElementById('inspTitle').innerText = cache.title;
+      const statusEl = document.getElementById('inspStatus');
+
+      if (isFound) {
+        statusEl.innerText = "FOUND [✓]";
+        statusEl.className = "inspector-status status-found";
+        document.getElementById('inspComment').innerText = cache.speechCompleted;
+      } else if (isCurrent) {
+        statusEl.innerText = "ACTIVE GZ";
+        statusEl.className = "inspector-status status-current";
+        document.getElementById('inspComment').innerText = cache.speechActive;
+      } else {
+        statusEl.innerText = "LOCKED 🔒";
+        statusEl.className = "inspector-status status-locked";
+        document.getElementById('inspComment').innerText = `"Clear Stage 0${currentStage} to access this corridor sector."`;
+      }
+
+      document.getElementById('inspGc').innerText = `${cache.gc} // ${cache.container}`;
+      document.getElementById('inspDt').innerText = cache.dt;
+
+      const gpsBtn = document.getElementById('inspGpsBtn');
+      if (isLocked) {
+        gpsBtn.disabled = true;
+        gpsBtn.innerText = `🔒 LOCKED // STAGE 0${currentStage}`;
+      } else {
+        gpsBtn.disabled = false;
+        gpsBtn.innerText = "🧭 OPEN GPS";
+      }
+    }
+
+    function renderCacheSpecs(stopNum) {
+      const cache = CORRIDOR_DATA[stopNum] || CORRIDOR_DATA[1];
+      document.getElementById('specGcVal').innerText = cache.gc;
+      document.getElementById('specDtVal').innerText = cache.dt;
+      document.getElementById('specContainerVal').innerText = cache.container;
+      document.getElementById('specCoordsVal').innerText = cache.coordsWgs84;
+
+      const hintElem = document.getElementById('hintText');
+      hintElem.innerText = hintDecrypted ? cache.hintDec : cache.hintEnc;
+    }
+
+    function inspectMapCache(stopNum) {
+      playClick();
+      activeInspectedCache = stopNum;
+      renderInspector(stopNum);
+      renderCacheSpecs(stopNum);
+      updateTrailActionSlot();
+    }
+
+    function inspectLandmark(key) {
+      playClick();
+      const landmark = MAP_LANDMARKS[key];
+      if (!landmark) return;
+
+      document.getElementById('inspTitle').innerText = landmark.title;
+      const statusEl = document.getElementById('inspStatus');
+      statusEl.innerText = landmark.status;
+      statusEl.className = 'inspector-status status-landmark';
+
+      document.getElementById('inspComment').innerText = landmark.comment;
+      document.getElementById('inspGc').innerText = landmark.meta1;
+      document.getElementById('inspDt').innerText = landmark.meta2;
+
+      const gpsBtn = document.getElementById('inspGpsBtn');
+      gpsBtn.disabled = true;
+      gpsBtn.innerText = "LANDMARK // NOT A CACHE";
+
+      const actionSlot = document.getElementById('contextActionsSlot');
+      actionSlot.innerHTML = `<button type="button" class="btn-context" disabled>Terrain Note</button>`;
+    }
+
+    function launchPhoneGps() {
+      const cache = CORRIDOR_DATA[activeInspectedCache] || CORRIDOR_DATA[currentStage];
+      if (activeInspectedCache > currentStage) return;
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${cache.lat},${cache.lng}`;
+      window.open(url, '_blank');
+    }
+
+    function decryptHint() {
+      playClick();
+      hintDecrypted = !hintDecrypted;
+      renderCacheSpecs(activeInspectedCache);
+    }
+
+    // =======================================================
+    // 4. NAVIGATION & SUB-VIEW TABS
+    // =======================================================
+    function switchTrailSubTab(subTab) {
+      playClick();
+      const tabMap = document.getElementById('subTabMap');
+      const tabCache = document.getElementById('subTabCache');
+      const viewMap = document.getElementById('trailMapView');
+      const viewCache = document.getElementById('trailCacheView');
+
+      if (subTab === 'map') {
+        tabMap.classList.add('active');
+        tabCache.classList.remove('active');
+        viewMap.style.display = 'flex';
+        viewCache.style.display = 'none';
+      } else {
+        tabCache.classList.add('active');
+        tabMap.classList.remove('active');
+        viewCache.style.display = 'flex';
+        viewMap.style.display = 'none';
+      }
+      updateTrailActionSlot();
+    }
+
+    function updateTrailActionSlot() {
+      const actionSlot = document.getElementById('contextActionsSlot');
+      const isMapView = document.getElementById('subTabMap').classList.contains('active');
+
+      if (isMapView) {
+        if (activeInspectedCache > currentStage) {
+          actionSlot.innerHTML = `<button type="button" class="btn-context" disabled>🔒 Locked</button>`;
+        } else {
+          actionSlot.innerHTML = `
+            <button type="button" class="btn-context" onclick="playClick(); launchPhoneGps()">🧭 To GZ</button>
+            <a href="mission.html" class="btn-context" style="text-decoration:none;">🎯 Open Briefing</a>
+          `;
+        }
+      } else {
+        actionSlot.innerHTML = `<button type="button" class="btn-context" onclick="decryptHint()">💡 Decrypt Hint</button>`;
+      }
+    }
+
+    function toggleMenu(e) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      playClick();
+      document.getElementById('menuDrawer').classList.toggle('open');
+    }
+
+    document.addEventListener('click', function(e) {
+      const toolbar = document.getElementById('cipherToolbar');
+      const drawer = document.getElementById('menuDrawer');
+      if (drawer && drawer.classList.contains('open')) {
+        if (!toolbar.contains(e.target)) drawer.classList.remove('open');
+      }
+    });
+
+    function resetDemoProgress() {
+      if (!confirm("Reset demo progress back to Stage 01?")) return;
+      localStorage.setItem('cipher_active_stage', '1');
+      localStorage.setItem('cipher_completed_stages', JSON.stringify([]));
+      localStorage.setItem('cipher_pack_items', JSON.stringify([
+        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
+      ]));
+      loadGameState();
+      renderSvgMap();
+      renderInspector(1);
+      renderCacheSpecs(1);
+      updateTrailActionSlot();
+      playClick();
+      alert("Corridor progress reset to Stage 01.");
+    }
+
+    // =======================================================
+    // 5. AUDIO SYNTHESIZER
+    // =======================================================
+    let soundActive = true;
+    let audioCtx = null;
+
+    function initAudio() {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (err) {}
+    }
+
+    function playClick() {
+      if (!soundActive) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (err) {}
+    }
+
+    function toggleSound() {
+      soundActive = !soundActive;
+      playClick();
+      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+    }
+
+    // 3-Tier SVG Zoom Rocker
+    let currentZoomTier = 0;
+    const ZOOM_TIERS = [
+      { label: "1×", viewBox: "0 0 500 240" },
+      { label: "2×", viewBox: "80 60 340 150" },
+      { label: "4×", viewBox: "180 110 160 85" }
+    ];
+
+    function zoomMap(delta) {
+      playClick();
+      currentZoomTier = Math.max(0, Math.min(ZOOM_TIERS.length - 1, currentZoomTier + delta));
+      const tier = ZOOM_TIERS[currentZoomTier];
+      document.getElementById('corridorSvg').setAttribute('viewBox', tier.viewBox);
+      document.getElementById('zoomBadge').innerText = tier.label;
+    }
+
+    // Theme & Font Sizing
+    function setTheme(themeKey) {
+      playClick();
+      document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
+      ['chipThemeCrt', 'chipThemeLight', 'chipThemeAmber', 'chipThemeHivis'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (themeKey === 'light') {
+        document.body.classList.add('theme-light');
+        document.getElementById('chipThemeLight').classList.add('active');
+      } else if (themeKey === 'amber') {
+        document.body.classList.add('theme-amber');
+        document.getElementById('chipThemeAmber').classList.add('active');
+      } else if (themeKey === 'hivis') {
+        document.body.classList.add('theme-hivis');
+        document.getElementById('chipThemeHivis').classList.add('active');
+      } else {
+        document.body.classList.add('theme-crt');
+        document.getElementById('chipThemeCrt').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_theme', themeKey); } catch (e) {}
+    }
+
+    function setFontSize(sizeKey) {
+      playClick();
+      document.body.classList.remove('font-regular', 'font-large', 'font-trailxl');
+      ['chipFontReg', 'chipFontLg', 'chipFontXl'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+
+      if (sizeKey === 'large') {
+        document.body.classList.add('font-large');
+        document.getElementById('chipFontLg').classList.add('active');
+      } else if (sizeKey === 'trailxl') {
+        document.body.classList.add('font-trailxl');
+        document.getElementById('chipFontXl').classList.add('active');
+      } else {
+        document.body.classList.add('font-regular');
+        document.getElementById('chipFontReg').classList.add('active');
+      }
+      try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
+    }
+
+    // Page Load Init
+    window.addEventListener('DOMContentLoaded', () => {
+      loadGameState();
+      try {
+        const savedTheme = localStorage.getItem('cipher_theme');
+        if (savedTheme) setTheme(savedTheme);
+        const savedFont = localStorage.getItem('cipher_font_size');
+        if (savedFont) setFontSize(savedFont);
+      } catch (e) {}
+      renderSvgMap();
+      renderInspector(activeInspectedCache);
+      renderCacheSpecs(activeInspectedCache);
+      updateTrailActionSlot();
+    });
+  </script>
+</body>
+</html>
