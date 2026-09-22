@@ -986,6 +986,12 @@
 
   <script>
     // =======================================================
+    // 0. GOOGLE APPS SCRIPT BACKEND ENDPOINT CONFIGURATION
+    // =======================================================
+    // Replace with your active Google Apps Script Web App Deployment URL:
+    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbw9e3JqXQ1s7H_89K2-fQx_Lz4p6O6VqF3t0j/exec";
+
+    // =======================================================
     // 1. GAME MASTER DATA (STAGES 01 - 05)
     // =======================================================
     const CORRIDOR_DATA = {
@@ -1134,6 +1140,7 @@
     let activeInspectedCache = 1;
     let hintDecrypted = false;
     let activeUser = "Nezzmuk";
+    let activeSyncKey = "CT-NEZZ-5909";
 
     function loadGameState() {
       try {
@@ -1154,6 +1161,9 @@
 
         const user = localStorage.getItem('ct_cacher_user');
         if (user) activeUser = user;
+
+        const key = localStorage.getItem('ct_cacher_key');
+        if (key) activeSyncKey = key;
       } catch (e) {
         console.warn('Local state error, using defaults:', e);
       }
@@ -1186,7 +1196,69 @@
     }
 
     // =======================================================
-    // 3. UNLOCK & STAGE PROGRESSION ENGINE
+    // 3. GOOGLE APPS SCRIPT LIVE SYNC ENGINE
+    // =======================================================
+    async function syncFindToGoogleSheet(stageNumber, stageData) {
+      const badge = document.getElementById("statusPlaceholder");
+      if (badge) badge.textContent = "[ 🟡 SYNCING... ]";
+
+      const payload = {
+        action: "logFind",
+        username: activeUser,
+        syncKey: activeSyncKey,
+        gc: stageData.gc,
+        status: "Found It",
+        notes: `Stage ${stageNumber} unlocked via code: ${stageData.unlockCode}`,
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        console.log("☁️ GOOGLE SHEET SYNC CONFIRMED:", result);
+        if (badge) badge.textContent = "[ 🟢 ONLINE // GZ ]";
+      } catch (err) {
+        console.warn("⚠️ Signal dropped at GZ. Queuing log locally...", err);
+        if (badge) badge.textContent = "[ 🟠 SAVED OFFLINE ]";
+        
+        let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
+        queue.push(payload);
+        localStorage.setItem("cipher_offline_queue", JSON.stringify(queue));
+      }
+    }
+
+    async function flushOfflineQueue() {
+      let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
+      if (queue.length === 0) return;
+
+      const badge = document.getElementById("statusPlaceholder");
+      if (badge) badge.textContent = `[ 🟡 SYNCING (${queue.length}) ]`;
+
+      const remainingQueue = [];
+
+      for (const item of queue) {
+        try {
+          await fetch(GOOGLE_SCRIPT_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(item)
+          });
+        } catch (err) {
+          remainingQueue.push(item);
+        }
+      }
+
+      localStorage.setItem("cipher_offline_queue", JSON.stringify(remainingQueue));
+      if (badge) badge.textContent = remainingQueue.length === 0 ? "[ 🟢 ONLINE // GZ ]" : "[ 🟠 OFFLINE QUEUE ]";
+    }
+
+    // =======================================================
+    // 4. UNLOCK & STAGE PROGRESSION ENGINE
     // =======================================================
     function submitUnlockCode() {
       playClick();
@@ -1201,10 +1273,7 @@
 
       if (enteredCode === stage.unlockCode.toUpperCase()) {
         playChime();
-      // Sync finding to the live Google Sheet ledger
-      if (window.CipherCore) {
-        CipherCore.syncFindToLedger(currentStage, stage);
-        }
+
         if (!completedStages.includes(currentStage)) {
           completedStages.push(currentStage);
         }
@@ -1215,12 +1284,15 @@
 
         inputEl.value = "";
 
+        // FIRE GOOGLE SHEET SYNC CALL HERE:
+        syncFindToGoogleSheet(currentStage, stage);
+
         if (currentStage < 5) {
           currentStage += 1;
           activeInspectedCache = currentStage;
           saveGameState();
           renderAll();
-          alert(`STAGE ${stage.id} UNLOCKED!\nNew waypoint unlocked. Check your pack for updated tools.`);
+          alert(`STAGE ${stage.id} UNLOCKED!\nNew waypoint unlocked. Log sent to cloud ledger.`);
         } else {
           saveGameState();
           renderAll();
@@ -1233,7 +1305,7 @@
     }
 
     // =======================================================
-    // 4. RENDERING & UI UPDATES
+    // 5. RENDERING & UI UPDATES
     // =======================================================
     function renderAll() {
       renderMissionDeck();
@@ -1436,7 +1508,7 @@
     }
 
     // =======================================================
-    // 5. AUDIO & HARDWARE CHIRPS
+    // 6. AUDIO & HARDWARE CHIRPS
     // =======================================================
     let soundActive = true;
     let audioCtx = null;
@@ -1485,6 +1557,7 @@
 
         osc1.frequency.setValueAtTime(587.33, now); // D5
         osc1.frequency.setValueAtTime(880, now + 0.08); // A5
+
         osc2.frequency.setValueAtTime(1174.66, now); // D6
 
         gain.gain.setValueAtTime(0.15, now);
@@ -1526,7 +1599,7 @@
     }
 
     // =======================================================
-    // 6. NAVIGATION & DISPLAY CONTROLS
+    // 7. NAVIGATION & DISPLAY CONTROLS
     // =======================================================
     function switchDeck(deckName) {
       playClick();
@@ -1703,6 +1776,7 @@
       } catch (e) {}
       renderAll();
       switchDeck('mission');
+      flushOfflineQueue();
     });
   </script>
 </body>
