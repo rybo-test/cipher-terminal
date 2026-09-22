@@ -261,9 +261,12 @@
 
     <div class="boot-chassis">
       
-      <!-- Stamped Hardware Header -->
+      <!-- Stamped Hardware Header with Global Version -->
       <div class="boot-header">
-        <div><span>C.I.P.H.E.R. //</span> <span style="color: var(--text-dim);">RSI-1984 GATEWAY</span></div>
+        <div>
+          <span>C.I.P.H.E.R. //</span> 
+          <span style="color: var(--text-dim);" id="cipherVersionStamp">v2.6-RSI</span>
+        </div>
         <div class="status-badge" id="busVoltageBadge">12.6V FLOAT</div>
       </div>
 
@@ -318,65 +321,9 @@
 
   </div>
 
+  <script src="js/cipher-audio.js"></script>
+  <script src="js/cipher-core.js"></script>
   <script>
-    // =======================================================
-    // 1. AUDIO CHIRP SYNTHESIZER (Matching test-trail.html)
-    // =======================================================
-    let audioCtx = null;
-
-    function initAudio() {
-      try {
-        if (!audioCtx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) audioCtx = new AudioContext();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      } catch (err) {}
-    }
-
-    function playClick() {
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
-      } catch (err) {}
-    }
-
-    function playChime() {
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const now = audioCtx.currentTime;
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc1.type = 'square';
-        osc2.type = 'sine';
-        osc1.frequency.setValueAtTime(587.33, now); // D5
-        osc1.frequency.setValueAtTime(880, now + 0.08); // A5
-        osc2.frequency.setValueAtTime(1174.66, now); // D6
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.35);
-        osc2.stop(now + 0.35);
-      } catch (err) {}
-    }
-
     function logConsole(msg, type = "sys") {
       const screen = document.getElementById("consoleScreen");
       const div = document.createElement("div");
@@ -386,13 +333,10 @@
       screen.scrollTop = screen.scrollHeight;
     }
 
-    // =======================================================
-    // 2. AUTHENTICATION & SESSION PERSISTENCE
-    // =======================================================
     let currentMode = "new";
 
     function setAuthMode(mode) {
-      playClick();
+      if (window.CipherAudio) CipherAudio.playClick();
       currentMode = mode;
       const btnNew = document.getElementById("btnModeNew");
       const btnReturn = document.getElementById("btnModeReturn");
@@ -424,7 +368,7 @@
     }
 
     function processAirlock() {
-      playClick();
+      if (window.CipherAudio) CipherAudio.playClick();
       const usernameInput = document.getElementById("inputUsername").value.trim();
 
       if (!usernameInput) {
@@ -441,11 +385,9 @@
         localStorage.setItem("ct_cacher_sig", sigItem);
         localStorage.setItem("ct_cacher_key", newKey);
 
-        // Check if Nezzmuk/Rat Pack admin
         const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(usernameInput.toUpperCase());
         localStorage.setItem("ct_cacher_admin", isAdmin ? "true" : "false");
 
-        // Initialize clean state if not present
         if (!localStorage.getItem("cipher_active_stage")) {
           localStorage.setItem("cipher_active_stage", "1");
           localStorage.setItem("cipher_completed_stages", JSON.stringify([]));
@@ -454,18 +396,16 @@
           ]));
         }
 
-        playChime();
+        if (window.CipherAudio) CipherAudio.playChime();
         logConsole(`[REGISTERED] Session generated for ${usernameInput}.`, "bright");
         logConsole(`[PASSKEY] Your SyncKey: ${newKey}`, "warn");
         logConsole("[TRANSFER] Flipping to Corridor Trail interface in 1s...", "sys");
 
         setTimeout(() => {
-          // Transitions to the live trail game page
           window.location.href = "test-trail.html";
         }, 1200);
 
       } else {
-        // Returning mode
         const syncKeyInput = document.getElementById("inputSyncKey").value.trim().toUpperCase();
         if (!syncKeyInput) {
           logConsole("[ERROR] Passkey missing. Enter your SyncKey or switch to New Cacher.", "alert");
@@ -479,7 +419,7 @@
         const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(usernameInput.toUpperCase());
         localStorage.setItem("ct_cacher_admin", isAdmin ? "true" : "false");
 
-        playChime();
+        if (window.CipherAudio) CipherAudio.playChime();
         logConsole(`[VERIFIED] SyncKey accepted. Restoring corridor records...`, "bright");
 
         setTimeout(() => {
@@ -489,7 +429,7 @@
     }
 
     function enterAsGuest() {
-      playClick();
+      if (window.CipherAudio) CipherAudio.playClick();
       localStorage.setItem("ct_cacher_user", "Guest");
       localStorage.setItem("ct_cacher_key", "GUEST-SCOUT");
       localStorage.setItem("ct_cacher_admin", "false");
@@ -499,14 +439,15 @@
       }, 500);
     }
 
-    // =======================================================
-    // 3. AUTO-LOGIN CHECK ON LOAD
-    // =======================================================
     window.addEventListener("DOMContentLoaded", () => {
+      // Sync Version stamp from core
+      if (window.CipherCore) {
+        document.getElementById("cipherVersionStamp").textContent = CipherCore.version;
+      }
+
       const existingUser = localStorage.getItem("ct_cacher_user");
       const existingKey = localStorage.getItem("ct_cacher_key");
 
-      // Inherit saved theme if present
       try {
         const savedTheme = localStorage.getItem("cipher_theme");
         if (savedTheme) document.body.className = `theme-${savedTheme} font-regular`;
