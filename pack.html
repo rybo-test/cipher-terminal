@@ -5,15 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>C.I.P.H.E.R. // Field Inventory & Pack</title>
   <style>
-    /* --------------------------------------------------------
-       THEME PROFILES (Display Modes)
-       -------------------------------------------------------- */
     :root {
       --content-scale: 1;
       --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
       --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-      /* CRT Green (Default) */
       --bg-dark: #0a0f0d;
       --panel-bg: #121a15;
       --panel-inner: #080d0a;
@@ -77,13 +73,7 @@
     body.font-large { --content-scale: 1.18; }
     body.font-trailxl { --content-scale: 1.38; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
@@ -94,7 +84,6 @@
       justify-content: center;
       align-items: flex-start;
       padding: 10px;
-      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .app-shell {
@@ -261,16 +250,8 @@
       flex-direction: column;
       gap: 5px;
     }
-    .control-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-    }
-    .control-grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-    }
+    .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .control-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
     .btn-control-chip {
       background: var(--panel-bg);
       border: 1px solid var(--border-main);
@@ -289,11 +270,7 @@
       border-color: var(--accent);
     }
 
-    .tb-menu-divider {
-      height: 1px;
-      background: var(--border-main);
-      margin: 5px 0;
-    }
+    .tb-menu-divider { height: 1px; background: var(--border-main); margin: 5px 0; }
 
     .deck-container {
       background: var(--panel-bg);
@@ -453,45 +430,34 @@
       <div class="tb-status-row">
         <div>
           <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CLEAN</span>
         </div>
         <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
         <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
       </div>
 
       <div class="tb-nav-row">
-        <a href="mission.html" class="tb-btn" id="btnNavMission">
-          🎯 MISSION
-        </a>
-        <a href="trail.html" class="tb-btn" id="btnNavTrail">
-          🗺️ TRAIL
-        </a>
-        <a href="pack.html" class="tb-btn active" id="btnNavPack">
-          <span id="packNavLabel">🎒 PACK (1)</span>
-        </a>
-        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
-          ≡ MENU ▾
-        </button>
+        <a href="mission.html" class="tb-btn" id="btnNavMission">🎯 MISSION</a>
+        <a href="trail.html" class="tb-btn" id="btnNavTrail">🗺️ TRAIL</a>
+        <a href="pack.html" class="tb-btn active" id="btnNavPack">🎒 PACK</a>
+        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">≡ MENU ▾</button>
       </div>
 
       <div class="tb-context-row">
         <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
-          <button type="button" class="btn-context" onclick="playClick(); jumpToTrade()">🎁 Record Trade</button>
-          <a href="mission.html" class="btn-context">🎯 Active Mission</a>
-          <a href="trail.html" class="btn-context">🗺️ Corridor Map</a>
+          <button type="button" class="btn-context" onclick="showTradeRules()">📖 Swag Trading Rule</button>
         </div>
       </div>
 
       <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">FIELD PROGRESS</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Corridor Challenges')">🎯 Challenges</div>
+        <div class="tb-menu-header">NAVIGATION</div>
+        <a href="profile.html" class="tb-menu-item">👤 Cacher Profile</a>
+        <div class="tb-menu-item" onclick="showRulesModal()">📖 Geocaching Rules & BYOP</div>
         
         <div class="tb-menu-divider"></div>
         
-        <div class="tb-menu-header">THEME / SUN</div>
+        <div class="tb-menu-header">DISPLAY / ACCESSIBILITY</div>
         <div class="tb-menu-controls">
           <div class="control-grid-4">
             <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
@@ -500,8 +466,6 @@
             <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
           </div>
         </div>
-
-        <div class="tb-menu-header">TEXT SIZE</div>
         <div class="tb-menu-controls">
           <div class="control-grid">
             <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
@@ -511,13 +475,11 @@
         </div>
 
         <div class="tb-menu-divider"></div>
-
-        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();">👤 Gateway Login</a>
-        <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 BYOP Manual</div>
+        
+        <div class="tb-menu-header">OPERATOR SESSION</div>
+        <a href="terminal.html" class="tb-menu-item">👤 Switch Cacher / Log In</a>
         <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
-        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();" style="color: var(--danger);">🚪 Log Off</a>
+        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Progress</div>
       </div>
 
     </div>
@@ -525,10 +487,10 @@
     <div class="deck-container" id="deckPack">
       
       <div class="pack-header-card">
-        <div class="pack-meta">OPERATOR GEAR & COLLECTIBLES</div>
+        <div class="pack-meta">FIELD GEAR & TRADING ITEMS</div>
         <div class="pack-title">Cacher Trail Pack</div>
         <div class="pack-desc">
-          Stamped brass washers, field permits, and signature swag carried along the corridor trail. Tap any item for mechanical details.
+          Items, washers, and corridor permits collected along the corridor trail. Tap any item to inspect its details.
         </div>
       </div>
 
@@ -536,13 +498,13 @@
       </div>
 
       <div class="trade-card" id="tradeAirlock">
-        <div class="trade-title">📦 SWAG TRADE AIRLOCK (TRADE EQUAL OR UP)</div>
+        <div class="trade-title">📦 SWAG EXCHANGE (TRADE EQUAL OR UP)</div>
         <div class="trade-grid">
-          <input type="text" id="inputDroppedItem" class="trade-input" placeholder="Item Dropped..." />
-          <input type="text" id="inputTakenItem" class="trade-input" placeholder="Item Taken..." />
+          <input type="text" id="inputDroppedItem" class="trade-input" placeholder="Item Left..." />
+          <input type="text" id="inputTakenItem" class="trade-input" placeholder="Item Took..." />
         </div>
         <button type="button" class="btn-trade" id="btnTradeSubmit" onclick="recordSwagTrade()">
-          LOG SWAG TRANSACTION ➔
+          RECORD SWAG TRADE ➔
         </button>
       </div>
 
@@ -556,7 +518,7 @@
     let currentStage = 1;
     let packItems = [];
     let activeUser = "Nezzmuk";
-    let activeSyncKey = "CT-NEZZ-5909";
+    let activeSyncKey = "CT-NEZZ-1605";
 
     function loadGameState() {
       try {
@@ -568,7 +530,7 @@
           packItems = JSON.parse(savedPack);
         } else {
           packItems = [
-            { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
+            { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
           ];
         }
 
@@ -582,7 +544,6 @@
       }
 
       document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
-      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
     }
 
     function saveGameState() {
@@ -600,7 +561,7 @@
       if (packItems.length === 0) {
         listEl.innerHTML = `
           <div style="text-align:center; padding:20px; color:var(--text-dim); font-family:var(--font-mono);">
-            Pack is empty. Solve corridor stages to collect washers and permits.
+            Pack is empty. Solve corridor caches to collect washers and permits.
           </div>
         `;
         return;
@@ -634,14 +595,15 @@
       const taken = takenEl.value.trim();
 
       if (!dropped && !taken) {
-        alert("Enter an item dropped, an item taken, or both to log a trade.");
+        alert("Enter an item left, an item took, or both to log a trade.");
         return;
       }
 
       const badge = document.getElementById("statusPlaceholder");
       if (badge) badge.textContent = "[ 🟡 LOGGING SWAG... ]";
 
-      const gc = `GC1000${Math.min(5, currentStage)}`;
+      const gcLookup = { 1: "GC10001", 2: "GC10008", 3: "GC10017", 4: "GC10025" };
+      const gc = gcLookup[currentStage] || "GC10001";
 
       if (taken) {
         packItems.push({
@@ -651,7 +613,6 @@
         });
         saveGameState();
         renderPackList();
-        document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
       }
 
       const params = new URLSearchParams({
@@ -673,11 +634,11 @@
         console.log("☁️ SWAG TRADE LOGGED TO LEDGER:", result);
         playChime();
         if (badge) badge.textContent = "[ 🟢 ONLINE // GZ ]";
-        alert(`SWAG TRADE RECORDED!\nDropped: ${dropped || 'None'}\nTaken: ${taken || 'None'}`);
+        alert(`SWAG TRADE LOGGED!\nLeft: ${dropped || 'None'}\nTook: ${taken || 'None'}`);
         droppedEl.value = "";
         takenEl.value = "";
       } catch (err) {
-        console.warn("⚠️ Swag trade saved locally, network offline:", err);
+        console.warn("⚠️ Network offline, trade stored locally:", err);
         if (badge) badge.textContent = "[ 🟠 SAVED OFFLINE ]";
         alert(`OFFLINE: Trade saved to local pack. Ledger sync queued.`);
         droppedEl.value = "";
@@ -685,29 +646,29 @@
       }
     }
 
-    function jumpToTrade() {
-      const el = document.getElementById('tradeAirlock');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      document.getElementById('inputDroppedItem')?.focus();
+    function showTradeRules() {
+      playClick();
+      alert("SWAG TRADING ETIQUETTE:\nIf you take an item from a cache container, you must leave something of equal or greater value.\nTrackables are not swag: they belong to owners and are meant to travel.");
+    }
+
+    function showRulesModal() {
+      playClick();
+      alert("GEOCACHING RULES:\n1. If you take something from the container, leave something of equal or greater value.\n2. Write your handle and date in the physical paper logbook (BYOP).\n3. Re-hide the cache container exactly as you found it.");
     }
 
     function resetDemoProgress() {
-      if (!confirm("Reset demo pack back to Permit #01?")) return;
+      if (!confirm("Reset pack back to Permit #01?")) return;
       packItems = [
-        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
+        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
       ];
       saveGameState();
       renderPackList();
-      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
       playClick();
       alert("Pack inventory reset.");
     }
 
     function toggleMenu(e) {
-      if (e) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
+      if (e) { e.stopPropagation(); e.preventDefault(); }
       playClick();
       document.getElementById('menuDrawer').classList.toggle('open');
     }
