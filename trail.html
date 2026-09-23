@@ -5,15 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>C.I.P.H.E.R. // Corridor Trail Navigator</title>
   <style>
-    /* --------------------------------------------------------
-       THEME PROFILES (Display Modes)
-       -------------------------------------------------------- */
     :root {
       --content-scale: 1;
       --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
       --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-      /* CRT Green (Default) */
       --bg-dark: #0a0f0d;
       --panel-bg: #121a15;
       --panel-inner: #080d0a;
@@ -33,7 +29,6 @@
       --map-node-bg: #0c1810;
     }
 
-    /* Theme: Paper Log (Ultra High-Contrast for Bright Sunlight) */
     body.theme-light {
       --bg-dark: #d8ded9;
       --panel-bg: #f4f6f4;
@@ -54,7 +49,6 @@
       --map-node-bg: #c9d6cb;
     }
 
-    /* Theme: Amber Phosphor */
     body.theme-amber {
       --bg-dark: #120b00;
       --panel-bg: #1f1402;
@@ -75,7 +69,6 @@
       --map-node-bg: #1c1303;
     }
 
-    /* Theme: Hi-Vis (Color-Blind Safe Blue/Yellow) */
     body.theme-hivis {
       --bg-dark: #0a0e14;
       --panel-bg: #131924;
@@ -96,20 +89,11 @@
       --map-node-bg: #151f30;
     }
 
-    /* --------------------------------------------------------
-       FONT SIZE TIERS
-       -------------------------------------------------------- */
     body.font-regular { --content-scale: 1; }
     body.font-large { --content-scale: 1.18; }
     body.font-trailxl { --content-scale: 1.38; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
@@ -120,7 +104,6 @@
       justify-content: center;
       align-items: flex-start;
       padding: 10px;
-      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .app-shell {
@@ -132,9 +115,6 @@
       margin-bottom: 40px;
     }
 
-    /* =======================================================
-       UNIVERSAL TOP TOOLBAR (STABLE CHROME)
-       ======================================================= */
     .cipher-toolbar {
       background: var(--panel-inner);
       border: 2px solid var(--border-main);
@@ -238,18 +218,13 @@
       font-weight: bold;
       white-space: nowrap;
       cursor: pointer;
+      text-decoration: none;
     }
     .btn-context:active {
       border-color: var(--accent);
       color: var(--accent);
     }
-    .btn-context:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      border-style: dashed;
-    }
 
-    /* Menu Drawer */
     .tb-menu-drawer {
       display: none;
       position: absolute;
@@ -295,16 +270,8 @@
       flex-direction: column;
       gap: 5px;
     }
-    .control-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-    }
-    .control-grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-    }
+    .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .control-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
     .btn-control-chip {
       background: var(--panel-bg);
       border: 1px solid var(--border-main);
@@ -323,15 +290,8 @@
       border-color: var(--accent);
     }
 
-    .tb-menu-divider {
-      height: 1px;
-      background: var(--border-main);
-      margin: 5px 0;
-    }
+    .tb-menu-divider { height: 1px; background: var(--border-main); margin: 5px 0; }
 
-    /* =======================================================
-       DECK CONTAINER & TRAIL SPECIFIC LAYOUT
-       ======================================================= */
     .deck-container {
       background: var(--panel-bg);
       border: 2px solid var(--border-main);
@@ -339,31 +299,6 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-    }
-
-    .trail-sub-nav {
-      display: flex;
-      background: var(--panel-inner);
-      border-bottom: 1px solid var(--border-main);
-    }
-
-    .btn-sub-tab {
-      flex: 1;
-      padding: 10px;
-      text-align: center;
-      background: transparent;
-      border: none;
-      color: var(--text-dim);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-    .btn-sub-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-      background: var(--panel-bg);
     }
 
     .map-canvas-container {
@@ -383,7 +318,6 @@
       position: relative;
     }
 
-    /* Zoom Rocker */
     .map-zoom-rocker {
       position: absolute;
       top: 8px;
@@ -423,83 +357,26 @@
       text-align: center;
     }
 
-    .svg-map-wrapper svg {
-      width: 100%;
-      height: auto;
-      display: block;
-      transition: viewBox 0.35s ease-in-out;
-    }
+    .svg-map-wrapper svg { width: 100%; height: auto; display: block; transition: viewBox 0.35s ease-in-out; }
 
-    /* SVG Map Vector Styles */
-    .map-topo-line {
-      stroke: var(--map-topo);
-      stroke-width: 1.5;
-      fill: none;
-      stroke-dasharray: 2 3;
-    }
-    .map-rail-line {
-      stroke: var(--map-rail);
-      stroke-width: 3;
-      stroke-linecap: square;
-    }
-    .map-rail-ties {
-      stroke: var(--map-rail);
-      stroke-width: 1.5;
-      stroke-dasharray: 2 4;
-    }
-    .map-trail-line {
-      stroke: var(--map-trail);
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .map-trail-active-line {
-      stroke: var(--border-accent);
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-dasharray: 6 3;
-    }
-    .map-canal-line {
-      stroke: var(--map-canal);
-      stroke-width: 9;
-      stroke-linecap: round;
-    }
-    .map-fence-line {
-      stroke: var(--border-main);
-      stroke-width: 1;
-      stroke-dasharray: 8 2 2 2;
-    }
+    .map-topo-line { stroke: var(--map-topo); stroke-width: 1.5; fill: none; stroke-dasharray: 2 3; }
+    .map-rail-line { stroke: var(--map-rail); stroke-width: 3; stroke-linecap: square; }
+    .map-rail-ties { stroke: var(--map-rail); stroke-width: 1.5; stroke-dasharray: 2 4; }
+    .map-trail-line { stroke: var(--map-trail); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .map-trail-active-line { stroke: var(--border-accent); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 6 3; }
+    .map-canal-line { stroke: var(--map-canal); stroke-width: 9; stroke-linecap: round; }
+    .map-fence-line { stroke: var(--border-main); stroke-width: 1; stroke-dasharray: 8 2 2 2; }
 
-    /* Nodes & Landmarks */
     .map-node-target { cursor: pointer; }
-    .map-node-circle {
-      fill: var(--map-node-bg);
-      stroke: var(--border-main);
-      stroke-width: 2;
-      transition: all 0.2s ease;
-    }
+    .map-node-circle { fill: var(--map-node-bg); stroke: var(--border-main); stroke-width: 2; transition: all 0.2s ease; }
     .map-node-circle.found { stroke: var(--accent); stroke-width: 2.5; }
     .map-node-circle.active-target { stroke: var(--accent); stroke-width: 3.5; }
     .map-node-circle.locked { stroke: var(--border-main); opacity: 0.6; }
 
-    .map-landmark-icon {
-      cursor: pointer;
-      transition: transform 0.15s ease;
-    }
-    .map-landmark-icon:active {
-      transform: scale(1.15);
-    }
+    .map-landmark-icon { cursor: pointer; }
+    .map-pulse { animation: pulse-ring 2s infinite ease-out; transform-origin: center; }
+    @keyframes pulse-ring { 0% { r: 12; opacity: 0.8; } 100% { r: 24; opacity: 0; } }
 
-    .map-pulse {
-      animation: pulse-ring 2s infinite ease-out;
-      transform-origin: center;
-    }
-    @keyframes pulse-ring {
-      0% { r: 12; opacity: 0.8; }
-      100% { r: 24; opacity: 0; }
-    }
-
-    /* Map Cache Inspector Card */
     .map-inspector {
       background: var(--panel-inner);
       border: 1px solid var(--border-main);
@@ -519,37 +396,15 @@
       padding-bottom: 6px;
     }
 
-    .inspector-name {
-      font-size: calc(14px * var(--content-scale));
-      font-weight: 800;
-      color: var(--text-bright);
-    }
-
-    .inspector-status {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: bold;
-    }
+    .inspector-name { font-size: calc(14px * var(--content-scale)); font-weight: 800; color: var(--text-bright); }
+    .inspector-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
     .status-found { background: var(--panel-bg); color: var(--accent); border: 1px solid var(--border-main); }
     .status-current { background: var(--accent); color: var(--bg-dark); }
     .status-locked { background: var(--panel-bg); color: var(--text-dim); border: 1px dashed var(--border-main); }
     .status-landmark { background: var(--panel-bg); color: var(--warning); border: 1px solid var(--warning); }
 
-    .inspector-comment {
-      font-size: calc(13px * var(--content-scale));
-      line-height: 1.45;
-      color: var(--text-main);
-      font-weight: 700;
-    }
-
-    .inspector-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: calc(11px * var(--content-scale));
-      color: var(--text-dim);
-      font-weight: bold;
-    }
+    .inspector-comment { font-size: calc(13px * var(--content-scale)); line-height: 1.45; color: var(--text-main); font-weight: 700; }
+    .inspector-meta { display: flex; justify-content: space-between; font-size: calc(11px * var(--content-scale)); color: var(--text-dim); font-weight: bold; }
 
     .btn-gps-handoff {
       background: var(--panel-bg);
@@ -568,105 +423,47 @@
       gap: 6px;
     }
     .btn-gps-handoff:active { background: var(--accent); color: var(--bg-dark); }
-    .btn-gps-handoff:disabled {
-      border-color: var(--border-main);
-      color: var(--text-dim);
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* Cache Listing Specs */
-    .gc-dossier {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      font-family: var(--font-mono);
-    }
-
-    .gc-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .gc-box {
-      background: var(--panel-inner);
-      border: 1px solid var(--border-main);
-      padding: 8px 10px;
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .gc-box-lbl { font-size: 10px; color: var(--text-dim); font-weight: bold; }
-    .gc-box-val { font-size: calc(13px * var(--content-scale)); color: var(--text-bright); font-weight: 800; }
-
-    .hint-box {
-      background: var(--panel-inner);
-      border: 1px dashed var(--warning);
-      padding: 12px;
-      border-radius: 4px;
-      font-size: calc(13px * var(--content-scale));
-      line-height: 1.45;
-      color: var(--warning);
-      font-weight: 700;
-    }
+    .btn-gps-handoff:disabled { border-color: var(--border-main); color: var(--text-dim); opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body class="theme-crt font-regular">
 
   <div class="app-shell">
 
-    <!-- =======================================================
-         UNIVERSAL TOP TOOLBAR (STABLE CHROME)
-         ======================================================= -->
     <div class="cipher-toolbar" id="cipherToolbar">
       
-      <!-- Row 1: Hardware Identity & Version Stamping -->
       <div class="tb-status-row">
         <div>
           <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CLEAN</span>
         </div>
         <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
         <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
       </div>
 
-      <!-- Row 2: 4 Primary Anchors (Inter-Page Navigation) -->
       <div class="tb-nav-row">
-        <a href="mission.html" class="tb-btn" id="btnNavMission">
-          🎯 MISSION
-        </a>
-        <a href="trail.html" class="tb-btn active" id="btnNavTrail">
-          🗺️ TRAIL
-        </a>
-        <a href="pack.html" class="tb-btn" id="btnNavPack">
-          <span id="packNavLabel">🎒 PACK (2)</span>
-        </a>
-        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
-          ≡ MENU ▾
-        </button>
+        <a href="mission.html" class="tb-btn" id="btnNavMission">🎯 MISSION</a>
+        <a href="trail.html" class="tb-btn active" id="btnNavTrail">🗺️ TRAIL</a>
+        <a href="pack.html" class="tb-btn" id="btnNavPack">🎒 PACK</a>
+        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">≡ MENU ▾</button>
       </div>
 
-      <!-- Row 3: Dynamic Contextual Action Bar -->
       <div class="tb-context-row">
         <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
-          <!-- Populated dynamically by map vs cache specs view -->
+          <button type="button" class="btn-context" onclick="playClick(); launchPhoneGps()">🧭 Navigate to GZ</button>
+          <button type="button" class="btn-context" onclick="decryptHint()">💡 Decrypt Hint</button>
         </div>
       </div>
 
-      <!-- Dropdown Drawer -->
       <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">FIELD PROGRESS</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Corridor Challenges')">🎯 Challenges</div>
+        <div class="tb-menu-header">NAVIGATION</div>
+        <a href="profile.html" class="tb-menu-item">👤 Cacher Profile</a>
+        <div class="tb-menu-item" onclick="showRulesModal()">📖 Geocaching Rules & BYOP</div>
         
         <div class="tb-menu-divider"></div>
         
-        <div class="tb-menu-header">THEME / SUN</div>
+        <div class="tb-menu-header">DISPLAY / ACCESSIBILITY</div>
         <div class="tb-menu-controls">
           <div class="control-grid-4">
             <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
@@ -675,8 +472,6 @@
             <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
           </div>
         </div>
-
-        <div class="tb-menu-header">TEXT SIZE</div>
         <div class="tb-menu-controls">
           <div class="control-grid">
             <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
@@ -686,28 +481,17 @@
         </div>
 
         <div class="tb-menu-divider"></div>
-
-        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();">👤 Gateway Login</a>
-        <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 BYOP Manual</div>
+        
+        <div class="tb-menu-header">OPERATOR SESSION</div>
+        <a href="terminal.html" class="tb-menu-item">👤 Switch Cacher / Log In</a>
         <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
-        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();" style="color: var(--danger);">🚪 Log Off</a>
+        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Progress</div>
       </div>
 
     </div>
 
-    <!-- =======================================================
-         TRAIL DECK (Enriched SVG Map & Specs)
-         ======================================================= -->
     <div class="deck-container" id="deckTrail">
       
-      <div class="trail-sub-nav">
-        <button type="button" class="btn-sub-tab active" id="subTabMap" onclick="switchTrailSubTab('map')">🗺️ CORRIDOR MAP</button>
-        <button type="button" class="btn-sub-tab" id="subTabCache" onclick="switchTrailSubTab('cache')">📦 CACHE SPECS</button>
-      </div>
-
-      <!-- Sub-View A: Enriched SVG Corridor Map -->
       <div class="map-canvas-container" id="trailMapView">
         
         <div class="svg-map-wrapper">
@@ -725,28 +509,22 @@
               </g>
             </defs>
 
-            <!-- 1. Topographic Elevation Curves (Wellsville Foothills) -->
             <path d="M 0,25 Q 120,10 260,20 T 500,10" class="map-topo-line" />
             <path d="M 0,50 Q 150,30 300,45 T 500,28" class="map-topo-line" />
             <text x="8" y="16" fill="var(--map-topo)" font-family="monospace" font-size="8" font-weight="bold">▲ WELLSVILLE RANGE BENCH (4,900 FT)</text>
 
-            <!-- 2. Old Sugar Beet Railway Spur Line -->
             <path d="M 10,215 L 490,175" class="map-rail-line" />
             <path d="M 10,215 L 490,175" class="map-rail-ties" />
             <text x="380" y="196" fill="var(--map-rail)" font-family="monospace" font-size="8" font-weight="bold">UPRR SPUR</text>
 
-            <!-- 3. Logan Irrigation Canal Trunk -->
             <path d="M 10,65 Q 150,45 250,85 T 490,95" fill="none" class="map-canal-line" />
             <text x="20" y="58" fill="var(--accent-dim)" font-family="monospace" font-size="8" font-weight="bold">LOGAN IRRIGATION CANAL</text>
 
-            <!-- 4. Barbed Wire Fence Line -->
             <path d="M 40,165 L 460,115" class="map-fence-line" />
 
-            <!-- 5. Corridor Trail Path -->
-            <path d="M 50,185 L 140,145 L 250,165 L 360,110 L 450,130" fill="none" class="map-trail-line" />
+            <path d="M 50,185 L 140,145 L 250,165 L 360,110" fill="none" class="map-trail-line" />
             <path id="mapTrailActivePath" d="M 50,185 L 50,185" fill="none" class="map-trail-active-line" />
 
-            <!-- 6. Landmarks -->
             <g class="map-landmark-icon" onclick="inspectLandmark('headgate3')" fill="var(--warning)" stroke="var(--warning)">
               <rect x="238" y="78" width="12" height="10" fill="none" stroke-width="1.5" />
               <line x1="244" y1="74" x2="244" y2="88" stroke-width="1.5" />
@@ -764,27 +542,14 @@
               <text x="347" y="174" fill="var(--text-dim)" font-family="monospace" font-size="7" text-anchor="middle">CULVERT</text>
             </g>
 
-            <!-- Tree Clusters -->
-            <g color="var(--border-main)">
-              <use href="#treeSymbol" x="70" y="175" />
-              <use href="#treeSymbol" x="80" y="172" />
-              <use href="#treeSymbol" x="225" y="155" />
-              <use href="#treeSymbol" x="235" y="152" />
-              <use href="#treeSymbol" x="420" y="118" />
-            </g>
-
-            <!-- Active Target Pulsing Ring -->
             <circle id="mapPulseRing" cx="50" cy="185" r="14" fill="none" stroke="var(--accent)" stroke-width="2" class="map-pulse" />
-
-            <!-- Dynamic Node Group (Populated by JS) -->
             <g id="mapNodesGroup"></g>
           </svg>
         </div>
 
-        <!-- Interactive Map Cache/Landmark Drawer -->
         <div class="map-inspector" id="mapInspector">
           <div class="inspector-header">
-            <span class="inspector-name" id="inspTitle">Cache 01: Trailhead Pulloff</span>
+            <span class="inspector-name" id="inspTitle">Cache Tales #01: The Welded Anchor</span>
             <span class="inspector-status status-current" id="inspStatus">ACTIVE GZ</span>
           </div>
 
@@ -793,42 +558,15 @@
           </div>
 
           <div class="inspector-meta">
-            <span id="inspGc">GC10001 // Regular Ammo Can</span>
-            <span id="inspDt">D 1.5 / T 1.5</span>
+            <span id="inspGc">GC10001 // Ammo Can</span>
+            <span id="inspDt">D 2.0 / T 2.5</span>
           </div>
 
           <button type="button" class="btn-gps-handoff" id="inspGpsBtn" onclick="launchPhoneGps()">
-            🧭 OPEN GPS
+            🧭 OPEN EXTERNAL GPS (GOOGLE MAPS)
           </button>
         </div>
 
-      </div>
-
-      <!-- Sub-View B: Cache Listing Specs -->
-      <div class="gc-dossier" id="trailCacheView" style="display: none;">
-        <div class="gc-grid">
-          <div class="gc-box">
-            <span class="gc-box-lbl">GC CODE</span>
-            <span class="gc-box-val" id="specGcVal">GC10001</span>
-          </div>
-          <div class="gc-box">
-            <span class="gc-box-lbl">DIFFICULTY / TERRAIN</span>
-            <span class="gc-box-val" id="specDtVal">D 1.5 / T 1.5</span>
-          </div>
-          <div class="gc-box">
-            <span class="gc-box-lbl">CONTAINER</span>
-            <span class="gc-box-val" id="specContainerVal">Ammo Can</span>
-          </div>
-          <div class="gc-box">
-            <span class="gc-box-lbl">COORDINATES (WGS84)</span>
-            <span class="gc-box-val" id="specCoordsVal" style="font-size: calc(11px * var(--content-scale));">N 41° 44.280 W 111° 50.460</span>
-          </div>
-        </div>
-
-        <div class="hint-box" id="hintBox">
-          <strong>SPOILER HINT:</strong><br />
-          <span id="hintText">Pneavrq vo gbgny fgenatr bs tvery fgnag ba obhyqre.</span>
-        </div>
       </div>
 
     </div>
@@ -836,89 +574,58 @@
   </div>
 
   <script>
-    // =======================================================
-    // 0. ACTIVE BACKEND ENDPOINT
-    // =======================================================
-    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
-
-    // =======================================================
-    // 1. GAME MASTER DATA (CORRIDOR STAGES 01 - 05)
-    // =======================================================
     const CORRIDOR_DATA = {
       1: {
         id: 1,
-        title: "Stop 1: Trailhead Pulloff",
+        title: "Cache Tales #01: The Welded Anchor",
         gc: "GC10001",
         container: "Ammo Can",
-        dt: "D 1.5 / T 1.5",
+        dt: "D 2.0 / T 2.5",
         lat: "41.7380",
         lng: "-111.8410",
-        coordsWgs84: "N 41° 44.280 W 111° 50.460",
         cx: 50, cy: 185,
-        hintEnc: "Guvpx juvgr fgehvef haqre gurer oheabq ba obhyqre.",
         hintDec: "Under the large gravel road turnaround boulder.",
-        speechActive: "\"Daylight detected. 12.6V on the lead-acid bus. Stop 1 is in the gravel turnaround. Don't lose your pen in the weeds.\"",
-        speechCompleted: "\"Stop 1 verified. You signed the scroll and closed the lid tight. Proceed northeast to the canal footbridge.\""
+        speechActive: "\"Cache #1 is in the gravel turnaround. Inspect the boulder shelf.\"",
+        speechCompleted: "\"Cache #1 verified. Paper scroll signed and lid sealed tight.\""
       },
       2: {
         id: 2,
-        title: "Stop 2: Irrigation Crossing",
-        gc: "GC10002",
-        container: "Steel Lockbox",
-        dt: "D 2.0 / T 2.0",
+        title: "Cache Tales #08: Canal Trickle",
+        gc: "GC10008",
+        container: "Lock-and-Lock",
+        dt: "D 2.5 / T 3.0",
         lat: "41.7420",
         lng: "-111.8360",
-        coordsWgs84: "N 41° 44.520 W 111° 50.160",
         cx: 140, cy: 145,
-        hintEnc: "Zntargvpnyyl sbhaq haqre guvpx fgrry tebg fgehg.",
         hintDec: "Magnetically anchored under the south steel cross-beam.",
-        speechActive: "\"Moisture sensor reads 84% near the ditch. Watch your footing on the steel bridge and enter the padlock combination.\"",
-        speechCompleted: "\"Padlock cracked. EPDM gasket held up against the canal spray. Stamped Washer #02 is in your pack.\""
+        speechActive: "\"Moisture sensor reads 84% near the ditch. Watch your footing on the steel bridge.\"",
+        speechCompleted: "\"Padlock cracked. EPDM gasket held up against the canal spray.\""
       },
       3: {
         id: 3,
-        title: "Stop 3: The Milepost Marker",
-        gc: "GC10003",
-        container: "Regular Ammo Can",
-        dt: "D 2.0 / T 1.5",
+        title: "Cache Tales #17: Gravel Pit Strata",
+        gc: "GC10017",
+        container: "EarthCache (None)",
+        dt: "D 1.5 / T 2.0",
         lat: "41.7470",
         lng: "-111.8316",
-        coordsWgs84: "N 41° 44.820 W 111° 49.900",
         cx: 250, cy: 165,
-        hintEnc: "Onfr bs prqne pbeare cbfg haqre tebhaq yriry fgbar.",
-        hintDec: "Base of cedar corner post under ground level flat stone.",
-        speechActive: "\"Stop 3 is bolted to the cedar corner post. Mind the barbed wire and enter the code stamped on the lid.\"",
-        speechCompleted: "\"Verified. Ratwaffles stamped that washer at 2 AM in his garage. Head towards the culvert guard.\""
+        hintDec: "Count the visible sediment strata layers on the exposed north cut.",
+        speechActive: "\"Lake Bonneville bench gravels exposed right in front of you.\"",
+        speechCompleted: "\"Geological audit confirmed. Proceed to the cedar repeater.\""
       },
       4: {
         id: 4,
-        title: "Stop 4: Culvert Guard",
-        gc: "GC10004",
-        container: "Heavy Steel Pipe",
-        dt: "D 2.5 / T 2.0",
+        title: "Cache Tales #25: The Cedar Repeater",
+        gc: "GC10025",
+        container: "Ammo Can",
+        dt: "D 3.0 / T 3.5",
         lat: "41.7520",
         lng: "-111.8250",
-        coordsWgs84: "N 41° 45.120 W 111° 49.500",
         cx: 360, cy: 110,
-        hintEnc: "Vagrevbe fgehvef bs 36 vapu EFR phireg fvqr.",
-        hintDec: "Interior rim of 36-inch RSI drainage culvert.",
-        speechActive: "\"RSI installed that drainage culvert back in 1984. Enter the word from Washer #03 to clear the chamber.\"",
-        speechCompleted: "\"Chamber cleared. You've earned elevation clearance up to the mountain bench view.\""
-      },
-      5: {
-        id: 5,
-        title: "Stop 5: Wellsville Bench View",
-        gc: "GC10005",
-        container: "Ammo Can",
-        dt: "D 3.0 / T 2.5",
-        lat: "41.7590",
-        lng: "-111.8190",
-        coordsWgs84: "N 41° 45.540 W 111° 49.140",
-        cx: 450, cy: 130,
-        hintEnc: "Sbhaq va unyybj phgva ebbgf ba ohyqre fureb.",
-        hintDec: "Found in hollowed juniper roots on boulder shelf.",
-        speechActive: "\"Mountain wind detected. Don't let your GPS batteries die in the cold. Enter the code from the log scroll.\"",
-        speechCompleted: "\"CORRIDOR CLUSTER CLEARED! You audited all 5 caches without losing your pen. The Rat Pack approves.\""
+        hintDec: "Interior hollow of the split cedar post.",
+        speechActive: "\"Repeater node detected. High elevation clearance verified.\"",
+        speechCompleted: "\"CORRIDOR TRAIL CLEARED! All 4 caches logged.\""
       }
     };
 
@@ -926,34 +633,29 @@
       headgate3: {
         title: "Landmark: Canal Headgate #03",
         status: "INFRASTRUCTURE",
-        comment: "\"RSI installed that hand-wheel gate in '84 to irrigate the south alfalfa flat. Heavily rusted, do not attempt to turn.\"",
+        comment: "\"Hand-wheel sluice gate irrigating the south alfalfa flat. Heavily rusted.\"",
         meta1: "Structure: Welded Steel & Sluice Concrete",
-        meta2: "Danger: Deep ditch mud & slick footing"
+        meta2: "Caution: Deep ditch mud"
       },
       footbridge: {
         title: "Landmark: Irrigation Footbridge",
         status: "WAYPOINT",
-        comment: "\"Steel plank bridge spanning the primary ditch. Stage 02 is magnetically anchored directly beneath the cross-beam.\"",
-        meta1: "Structure: Corrugated Steel Deck",
+        comment: "\"Corrugated steel deck bridge spanning the canal trunk.\"",
+        meta1: "Structure: Steel Cross-Beam Deck",
         meta2: "Elevation: 4,530 FT"
       },
       culvert: {
         title: "Landmark: Railway Drainage Culvert",
         status: "WAYPOINT",
-        comment: "\"Heavy 36-inch corrugated drainage pipe passing under the rail bed. Watch for spiders if inspecting the opening.\"",
+        comment: "\"36-inch corrugated drainage pipe passing under the rail bed.\"",
         meta1: "Structure: CMP Corrugated Pipe",
-        meta2: "Hazard: Standing water during runoff"
+        meta2: "Hazard: Standing runoff"
       }
     };
 
-    // =======================================================
-    // 2. STATE SYNCHRONIZATION
-    // =======================================================
     let currentStage = 1;
     let completedStages = [];
-    let packCount = 1;
     let activeInspectedCache = 1;
-    let hintDecrypted = false;
     let activeUser = "Nezzmuk";
 
     function loadGameState() {
@@ -964,12 +666,6 @@
         const savedCompleted = localStorage.getItem('cipher_completed_stages');
         if (savedCompleted) completedStages = JSON.parse(savedCompleted);
 
-        const savedPack = localStorage.getItem('cipher_pack_items');
-        if (savedPack) {
-          const items = JSON.parse(savedPack);
-          packCount = items.length;
-        }
-
         const user = localStorage.getItem('ct_cacher_user');
         if (user) activeUser = user;
       } catch (e) {
@@ -977,36 +673,32 @@
       }
       activeInspectedCache = currentStage;
       document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
-      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packCount})`;
     }
 
-    // =======================================================
-    // 3. MAP RENDERING & INSPECTOR ENGINE
-    // =======================================================
     function renderSvgMap() {
       const nodesGroup = document.getElementById('mapNodesGroup');
       nodesGroup.innerHTML = "";
 
-      const activeStage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[5];
+      const activeStage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[4];
       const pulseRing = document.getElementById('mapPulseRing');
 
       if (pulseRing) {
         pulseRing.setAttribute('cx', activeStage.cx);
         pulseRing.setAttribute('cy', activeStage.cy);
-        pulseRing.style.display = completedStages.includes(5) ? 'none' : 'block';
+        pulseRing.style.display = completedStages.includes(4) ? 'none' : 'block';
       }
 
       const activePathEl = document.getElementById('mapTrailActivePath');
       let activePathStr = `M ${CORRIDOR_DATA[1].cx},${CORRIDOR_DATA[1].cy}`;
-      for (let i = 2; i <= currentStage; i++) {
+      for (let i = 2; i <= Math.min(4, currentStage); i++) {
         activePathStr += ` L ${CORRIDOR_DATA[i].cx},${CORRIDOR_DATA[i].cy}`;
       }
       activePathEl.setAttribute('d', activePathStr);
 
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= 4; i++) {
         const c = CORRIDOR_DATA[i];
         const isFound = completedStages.includes(i);
-        const isCurrent = i === currentStage && !completedStages.includes(5);
+        const isCurrent = i === currentStage && !completedStages.includes(4);
         const isLocked = i > currentStage;
 
         let circleClass = "map-node-circle";
@@ -1047,7 +739,7 @@
       if (!cache) return;
 
       const isFound = completedStages.includes(stopNum);
-      const isCurrent = stopNum === currentStage && !completedStages.includes(5);
+      const isCurrent = stopNum === currentStage && !completedStages.includes(4);
       const isLocked = stopNum > currentStage;
 
       document.getElementById('inspTitle').innerText = cache.title;
@@ -1064,7 +756,7 @@
       } else {
         statusEl.innerText = "LOCKED 🔒";
         statusEl.className = "inspector-status status-locked";
-        document.getElementById('inspComment').innerText = `"Clear Stage 0${currentStage} to access this corridor sector."`;
+        document.getElementById('inspComment').innerText = `"Log Cache 0${currentStage} to unlock this waypoint."`;
       }
 
       document.getElementById('inspGc').innerText = `${cache.gc} // ${cache.container}`;
@@ -1073,30 +765,17 @@
       const gpsBtn = document.getElementById('inspGpsBtn');
       if (isLocked) {
         gpsBtn.disabled = true;
-        gpsBtn.innerText = `🔒 LOCKED // STAGE 0${currentStage}`;
+        gpsBtn.innerText = `🔒 LOCKED // CACHE 0${currentStage}`;
       } else {
         gpsBtn.disabled = false;
-        gpsBtn.innerText = "🧭 OPEN GPS";
+        gpsBtn.innerText = "🧭 OPEN EXTERNAL GPS (GOOGLE MAPS)";
       }
-    }
-
-    function renderCacheSpecs(stopNum) {
-      const cache = CORRIDOR_DATA[stopNum] || CORRIDOR_DATA[1];
-      document.getElementById('specGcVal').innerText = cache.gc;
-      document.getElementById('specDtVal').innerText = cache.dt;
-      document.getElementById('specContainerVal').innerText = cache.container;
-      document.getElementById('specCoordsVal').innerText = cache.coordsWgs84;
-
-      const hintElem = document.getElementById('hintText');
-      hintElem.innerText = hintDecrypted ? cache.hintDec : cache.hintEnc;
     }
 
     function inspectMapCache(stopNum) {
       playClick();
       activeInspectedCache = stopNum;
       renderInspector(stopNum);
-      renderCacheSpecs(stopNum);
-      updateTrailActionSlot();
     }
 
     function inspectLandmark(key) {
@@ -1116,12 +795,10 @@
       const gpsBtn = document.getElementById('inspGpsBtn');
       gpsBtn.disabled = true;
       gpsBtn.innerText = "LANDMARK // NOT A CACHE";
-
-      const actionSlot = document.getElementById('contextActionsSlot');
-      actionSlot.innerHTML = `<button type="button" class="btn-context" disabled>Terrain Note</button>`;
     }
 
     function launchPhoneGps() {
+      playClick();
       const cache = CORRIDOR_DATA[activeInspectedCache] || CORRIDOR_DATA[currentStage];
       if (activeInspectedCache > currentStage) return;
       const url = `https://www.google.com/maps/dir/?api=1&destination=${cache.lat},${cache.lng}`;
@@ -1130,57 +807,28 @@
 
     function decryptHint() {
       playClick();
-      hintDecrypted = !hintDecrypted;
-      renderCacheSpecs(activeInspectedCache);
+      const cache = CORRIDOR_DATA[activeInspectedCache] || CORRIDOR_DATA[currentStage];
+      alert(`HINT FOR ${cache.gc}:\n${cache.hintDec}`);
     }
 
-    // =======================================================
-    // 4. NAVIGATION & SUB-VIEW TABS
-    // =======================================================
-    function switchTrailSubTab(subTab) {
+    function showRulesModal() {
       playClick();
-      const tabMap = document.getElementById('subTabMap');
-      const tabCache = document.getElementById('subTabCache');
-      const viewMap = document.getElementById('trailMapView');
-      const viewCache = document.getElementById('trailCacheView');
-
-      if (subTab === 'map') {
-        tabMap.classList.add('active');
-        tabCache.classList.remove('active');
-        viewMap.style.display = 'flex';
-        viewCache.style.display = 'none';
-      } else {
-        tabCache.classList.add('active');
-        tabMap.classList.remove('active');
-        viewCache.style.display = 'flex';
-        viewMap.style.display = 'none';
-      }
-      updateTrailActionSlot();
+      alert("GEOCACHING RULES:\n1. If you take something from the container, leave something of equal or greater value.\n2. Write your handle and date in the physical paper logbook (BYOP).\n3. Re-hide the cache container exactly as you found it.");
     }
 
-    function updateTrailActionSlot() {
-      const actionSlot = document.getElementById('contextActionsSlot');
-      const isMapView = document.getElementById('subTabMap').classList.contains('active');
-
-      if (isMapView) {
-        if (activeInspectedCache > currentStage) {
-          actionSlot.innerHTML = `<button type="button" class="btn-context" disabled>🔒 Locked</button>`;
-        } else {
-          actionSlot.innerHTML = `
-            <button type="button" class="btn-context" onclick="playClick(); launchPhoneGps()">🧭 To GZ</button>
-            <a href="mission.html" class="btn-context" style="text-decoration:none;">🎯 Open Briefing</a>
-          `;
-        }
-      } else {
-        actionSlot.innerHTML = `<button type="button" class="btn-context" onclick="decryptHint()">💡 Decrypt Hint</button>`;
-      }
+    function resetDemoProgress() {
+      if (!confirm("Reset corridor progress back to Cache 01?")) return;
+      localStorage.setItem('cipher_active_stage', '1');
+      localStorage.setItem('cipher_completed_stages', JSON.stringify([]));
+      loadGameState();
+      renderSvgMap();
+      renderInspector(1);
+      playClick();
+      alert("Corridor progress reset to Cache 01.");
     }
 
     function toggleMenu(e) {
-      if (e) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
+      if (e) { e.stopPropagation(); e.preventDefault(); }
       playClick();
       document.getElementById('menuDrawer').classList.toggle('open');
     }
@@ -1193,25 +841,6 @@
       }
     });
 
-    function resetDemoProgress() {
-      if (!confirm("Reset demo progress back to Stage 01?")) return;
-      localStorage.setItem('cipher_active_stage', '1');
-      localStorage.setItem('cipher_completed_stages', JSON.stringify([]));
-      localStorage.setItem('cipher_pack_items', JSON.stringify([
-        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
-      ]));
-      loadGameState();
-      renderSvgMap();
-      renderInspector(1);
-      renderCacheSpecs(1);
-      updateTrailActionSlot();
-      playClick();
-      alert("Corridor progress reset to Stage 01.");
-    }
-
-    // =======================================================
-    // 5. AUDIO SYNTHESIZER
-    // =======================================================
     let soundActive = true;
     let audioCtx = null;
 
@@ -1250,7 +879,6 @@
       document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
     }
 
-    // 3-Tier SVG Zoom Rocker
     let currentZoomTier = 0;
     const ZOOM_TIERS = [
       { label: "1×", viewBox: "0 0 500 240" },
@@ -1266,7 +894,6 @@
       document.getElementById('zoomBadge').innerText = tier.label;
     }
 
-    // Theme & Font Sizing
     function setTheme(themeKey) {
       playClick();
       document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
@@ -1312,7 +939,6 @@
       try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
     }
 
-    // Page Load Init
     window.addEventListener('DOMContentLoaded', () => {
       loadGameState();
       try {
@@ -1323,8 +949,6 @@
       } catch (e) {}
       renderSvgMap();
       renderInspector(activeInspectedCache);
-      renderCacheSpecs(activeInspectedCache);
-      updateTrailActionSlot();
     });
   </script>
 </body>
