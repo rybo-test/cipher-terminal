@@ -368,6 +368,20 @@
       line-height: 1.4;
     }
 
+    .inv-tag {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 9px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-main);
+      color: var(--warning);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    /* Structured Swag Exchange Dock */
     .trade-card {
       background: var(--panel-inner);
       border-top: 1px solid var(--border-main);
@@ -390,18 +404,18 @@
       gap: 8px;
     }
 
-    .trade-input {
+    .trade-select {
       background: var(--bg-dark);
       border: 1px solid var(--border-main);
       color: var(--text-bright);
       font-family: var(--font-mono);
       font-size: calc(12px * var(--content-scale));
-      padding: 8px 10px;
+      padding: 9px 8px;
       border-radius: 4px;
       outline: none;
       font-weight: bold;
     }
-    .trade-input:focus { border-color: var(--accent); }
+    .trade-select:focus { border-color: var(--accent); }
 
     .btn-trade {
       background: var(--accent);
@@ -430,7 +444,7 @@
       <div class="tb-status-row">
         <div>
           <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CLEAN</span>
+          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CATALOG</span>
         </div>
         <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
         <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
@@ -487,24 +501,35 @@
     <div class="deck-container" id="deckPack">
       
       <div class="pack-header-card">
-        <div class="pack-meta">FIELD GEAR & TRADING ITEMS</div>
+        <div class="pack-meta">CONTROLLED ITEM INVENTORY</div>
         <div class="pack-title">Cacher Trail Pack</div>
         <div class="pack-desc">
-          Items, washers, and corridor permits collected along the corridor trail. Tap any item to inspect its details.
+          Official corridor permits, clues, and signature swag registered to your session. Tap an item for custody info.
         </div>
       </div>
 
       <div class="pack-list-section" id="packInventoryList">
       </div>
 
+      <!-- Structured Transfer Interface: Replaced open text inputs -->
       <div class="trade-card" id="tradeAirlock">
-        <div class="trade-title">📦 SWAG EXCHANGE (TRADE EQUAL OR UP)</div>
+        <div class="trade-title" id="tradeDockTitle">📦 CACHE TRADING: GC10001</div>
         <div class="trade-grid">
-          <input type="text" id="inputDroppedItem" class="trade-input" placeholder="Item Left..." />
-          <input type="text" id="inputTakenItem" class="trade-input" placeholder="Item Took..." />
+          <div>
+            <label style="font-size:10px; color:var(--text-dim); display:block; margin-bottom:3px;">LEAVE FROM PACK:</label>
+            <select id="selectLeaveItem" class="trade-select" style="width:100%;">
+              <option value="">-- None (Keep Pack) --</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--text-dim); display:block; margin-bottom:3px;">TAKE FROM CONTAINER:</label>
+            <select id="selectTakeItem" class="trade-select" style="width:100%;">
+              <option value="">-- None (Browse Only) --</option>
+            </select>
+          </div>
         </div>
         <button type="button" class="btn-trade" id="btnTradeSubmit" onclick="recordSwagTrade()">
-          RECORD SWAG TRADE ➔
+          CONFIRM CUSTODY TRANSFER ➔
         </button>
       </div>
 
@@ -514,6 +539,22 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
+
+    // MASTER GAME ASSET CATALOG (Finite, Author-Controlled Swag Inventory)
+    const MASTER_SWAG_CATALOG = {
+      "SWAG-WOODEN-01": { itemId: "SWAG-WOODEN-01", icon: "🪙", title: "3D Wooden Coin", desc: "Nezzmuk Signature Series #01", type: "Swag" },
+      "SWAG-PATHTAG-01": { itemId: "SWAG-PATHTAG-01", icon: "🏷️", title: "Cache Tales Pathtag", desc: "Official 2026 Trail Edition", type: "Swag" },
+      "SWAG-TAG-BRASS": { itemId: "SWAG-TAG-BRASS", icon: "⚙️", title: "Milled Brass Token", desc: "Heavy corridor token stamped #42", type: "Swag" },
+      "SWAG-QUARTZ-01": { itemId: "SWAG-QUARTZ-01", icon: "🪨", title: "Bonneville Bench Quartzite", desc: "Polished Lake Bonneville strata specimen", type: "Swag" }
+    };
+
+    // Cache containers starting inventory
+    const CACHE_INVENTORY = {
+      "GC10001": ["SWAG-PATHTAG-01", "SWAG-TAG-BRASS"],
+      "GC10008": ["SWAG-QUARTZ-01"],
+      "GC10017": ["SWAG-WOODEN-01"],
+      "GC10025": []
+    };
 
     let currentStage = 1;
     let packItems = [];
@@ -530,7 +571,8 @@
           packItems = JSON.parse(savedPack);
         } else {
           packItems = [
-            { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
+            { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" },
+            MASTER_SWAG_CATALOG["SWAG-WOODEN-01"]
           ];
         }
 
@@ -554,6 +596,11 @@
       }
     }
 
+    function getActiveGc() {
+      const map = { 1: "GC10001", 2: "GC10008", 3: "GC10017", 4: "GC10025" };
+      return map[currentStage] || "GC10001";
+    }
+
     function renderPackList() {
       const listEl = document.getElementById('packInventoryList');
       listEl.innerHTML = "";
@@ -561,7 +608,7 @@
       if (packItems.length === 0) {
         listEl.innerHTML = `
           <div style="text-align:center; padding:20px; color:var(--text-dim); font-family:var(--font-mono);">
-            Pack is empty. Solve corridor caches to collect washers and permits.
+            Pack is empty. Solve corridor caches to collect items and washers.
           </div>
         `;
         return;
@@ -572,7 +619,7 @@
         card.className = "inventory-card";
         card.onclick = () => {
           playClick();
-          alert(`${item.title}\n\n${item.desc}`);
+          alert(`[${item.itemId || 'ITEM'}] ${item.title}\nType: ${item.type || 'Swag'}\n\n${item.desc}`);
         };
 
         card.innerHTML = `
@@ -580,48 +627,103 @@
           <div class="inv-content">
             <div class="inv-title">${item.title}</div>
             <div class="inv-desc">${item.desc}</div>
+            <span class="inv-tag">${item.type || 'Swag'} // ${item.itemId || 'GEN-1'}</span>
           </div>
         `;
         listEl.appendChild(card);
+      });
+
+      populateTradeDropdowns();
+    }
+
+    function populateTradeDropdowns() {
+      const activeGc = getActiveGc();
+      document.getElementById("tradeDockTitle").innerText = `📦 CACHE TRADING: ${activeGc}`;
+
+      const leaveSelect = document.getElementById("selectLeaveItem");
+      const takeSelect = document.getElementById("selectTakeItem");
+
+      leaveSelect.innerHTML = `<option value="">-- None (Keep Pack) --</option>`;
+      takeSelect.innerHTML = `<option value="">-- None (Browse Only) --</option>`;
+
+      // Populate items in player pack (only Swag can be traded; Permits/Keys cannot be traded)
+      packItems.forEach(item => {
+        if (item.type === "Swag") {
+          const opt = document.createElement("option");
+          opt.value = item.itemId;
+          opt.textContent = `${item.title} (${item.itemId})`;
+          leaveSelect.appendChild(opt);
+        }
+      });
+
+      // Populate items currently residing in the active cache container
+      const containerItems = CACHE_INVENTORY[activeGc] || [];
+      containerItems.forEach(id => {
+        const item = MASTER_SWAG_CATALOG[id];
+        if (item) {
+          const opt = document.createElement("option");
+          opt.value = item.itemId;
+          opt.textContent = `${item.title} (${item.itemId})`;
+          takeSelect.appendChild(opt);
+        }
       });
     }
 
     async function recordSwagTrade() {
       playClick();
-      const droppedEl = document.getElementById('inputDroppedItem');
-      const takenEl = document.getElementById('inputTakenItem');
+      const leaveSelect = document.getElementById("selectLeaveItem");
+      const takeSelect = document.getElementById("selectTakeItem");
 
-      const dropped = droppedEl.value.trim();
-      const taken = takenEl.value.trim();
+      const leaveId = leaveSelect.value;
+      const takeId = takeSelect.value;
 
-      if (!dropped && !taken) {
-        alert("Enter an item left, an item took, or both to log a trade.");
+      if (!leaveId && !takeId) {
+        alert("Select an item to leave from your pack, an item to take from the container, or both.");
         return;
       }
 
+      const activeGc = getActiveGc();
       const badge = document.getElementById("statusPlaceholder");
       if (badge) badge.textContent = "[ 🟡 LOGGING SWAG... ]";
 
-      const gcLookup = { 1: "GC10001", 2: "GC10008", 3: "GC10017", 4: "GC10025" };
-      const gc = gcLookup[currentStage] || "GC10001";
+      let droppedItemTitle = "None";
+      let takenItemTitle = "None";
 
-      if (taken) {
-        packItems.push({
-          icon: "🎁",
-          title: taken,
-          desc: `Swag traded at ${gc}`
-        });
-        saveGameState();
-        renderPackList();
+      // Transfer custody: Remove left item from player pack
+      if (leaveId) {
+        const idx = packItems.findIndex(i => i.itemId === leaveId);
+        if (idx !== -1) {
+          droppedItemTitle = packItems[idx].title;
+          packItems.splice(idx, 1);
+        }
+        if (!CACHE_INVENTORY[activeGc].includes(leaveId)) {
+          CACHE_INVENTORY[activeGc].push(leaveId);
+        }
       }
+
+      // Transfer custody: Add taken item to player pack
+      if (takeId) {
+        const item = MASTER_SWAG_CATALOG[takeId];
+        if (item && !packItems.some(i => i.itemId === takeId)) {
+          takenItemTitle = item.title;
+          packItems.push(item);
+        }
+        const cIdx = CACHE_INVENTORY[activeGc].indexOf(takeId);
+        if (cIdx !== -1) {
+          CACHE_INVENTORY[activeGc].splice(cIdx, 1);
+        }
+      }
+
+      saveGameState();
+      renderPackList();
 
       const params = new URLSearchParams({
         action: "tradeSwag",
         username: activeUser,
         syncKey: activeSyncKey,
-        gc: gc,
-        dropped: dropped || "None",
-        taken: taken || "None"
+        gc: activeGc,
+        dropped: leaveId ? `${droppedItemTitle} [${leaveId}]` : "None",
+        taken: takeId ? `${takenItemTitle} [${takeId}]` : "None"
       });
 
       try {
@@ -634,15 +736,11 @@
         console.log("☁️ SWAG TRADE LOGGED TO LEDGER:", result);
         playChime();
         if (badge) badge.textContent = "[ 🟢 ONLINE // GZ ]";
-        alert(`SWAG TRADE LOGGED!\nLeft: ${dropped || 'None'}\nTook: ${taken || 'None'}`);
-        droppedEl.value = "";
-        takenEl.value = "";
+        alert(`CUSTODY TRANSFER CONFIRMED!\nLeft in ${activeGc}: ${droppedItemTitle}\nTook into pack: ${takenItemTitle}`);
       } catch (err) {
         console.warn("⚠️ Network offline, trade stored locally:", err);
         if (badge) badge.textContent = "[ 🟠 SAVED OFFLINE ]";
-        alert(`OFFLINE: Trade saved to local pack. Ledger sync queued.`);
-        droppedEl.value = "";
-        takenEl.value = "";
+        alert(`OFFLINE: Trade saved locally in memory. Cloud ledger will sync when online.`);
       }
     }
 
@@ -657,14 +755,15 @@
     }
 
     function resetDemoProgress() {
-      if (!confirm("Reset pack back to Permit #01?")) return;
+      if (!confirm("Reset pack back to default Permit #01 and Wooden Coin?")) return;
       packItems = [
-        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
+        { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" },
+        MASTER_SWAG_CATALOG["SWAG-WOODEN-01"]
       ];
       saveGameState();
       renderPackList();
       playClick();
-      alert("Pack inventory reset.");
+      alert("Pack inventory reset to defaults.");
     }
 
     function toggleMenu(e) {
