@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C.I.P.H.E.R. // Telemetry & Memory Auditor</title>
+  <style>
+    :root {
+      --bg: #0a0f0d;
+      --panel: #121a15;
+      --border: #2a5a3a;
+      --text: #38ef7d;
+      --text-dim: #7da88d;
+      --warn: #f7b731;
+      --alert: #eb3b5a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: ui-monospace, monospace; }
+    body { background: var(--bg); color: var(--text); padding: 16px; font-size: 13px; line-height: 1.4; }
+    h1 { font-size: 18px; margin-bottom: 12px; color: #fff; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+    .title { color: var(--warn); font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+    .btn-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    button { background: var(--text); color: var(--bg); border: none; padding: 8px 14px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+    button.alt { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    button:active { opacity: 0.8; }
+    textarea { width: 100%; height: 260px; background: #000; border: 1px solid var(--border); color: #fff; font-family: monospace; font-size: 11px; padding: 10px; border-radius: 4px; resize: vertical; }
+    .status-tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 11px; margin-bottom: 8px; }
+    .status-ok { background: #144724; color: #38ef7d; }
+    .status-err { background: #5a1418; color: #eb3b5a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+    th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; }
+    th { background: #080d0a; color: var(--warn); }
+  </style>
+</head>
+<body>
+
+  <h1>C.I.P.H.E.R. // SYSTEM INTEGRITY AUDITOR</h1>
+  
+  <div class="btn-row">
+    <button type="button" onclick="runFullAudit()">🔍 RUN COMPLETE AUDIT</button>
+    <button type="button" class="alt" onclick="copyAuditOutput()">📋 COPY OUTPUT FOR ANALYSIS</button>
+    <button type="button" class="alt" onclick="clearLocalMemory()" style="color:var(--alert); border-color:var(--alert);">⚠️ RESET LOCAL STORAGE</button>
+  </div>
+
+  <div id="statusIndicator"></div>
+
+  <!-- SECTION 1: BROWSER MEMORY -->
+  <div class="panel">
+    <div class="title">1. CLIENT STORAGE STATE (localStorage)</div>
+    <div id="localMemorySummary">Press "RUN COMPLETE AUDIT" to scan browser storage.</div>
+  </div>
+
+  <!-- SECTION 2: LIVE SPREADSHEET READOUT -->
+  <div class="panel">
+    <div class="title">2. CLOUD LEDGER TAB READOUT (CIPHER_Telemetry_Ledger)</div>
+    <div id="cloudLedgerSummary">Not queried yet.</div>
+  </div>
+
+  <!-- SECTION 3: RAW JSON EXPORT -->
+  <div class="panel">
+    <div class="title">3. RAW EXPORT DATA (Copy & Send Back)</div>
+    <textarea id="rawExportBox" readonly placeholder="Raw diagnostic JSON will appear here..."></textarea>
+  </div>
+
+  <script>
+    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
+
+    let auditPayload = {
+      timestamp: new Date().toISOString(),
+      localStorage: {},
+      cloudLedger: null,
+      errors: []
+    };
+
+    function runFullAudit() {
+      auditPayload.localStorage = {};
+      auditPayload.errors = [];
+      auditPayload.cloudLedger = null;
+
+      // 1. Scan LocalStorage
+      const localKeys = [
+        'ct_cacher_user',
+        'ct_cacher_key',
+        'ct_cacher_sig',
+        'ct_cacher_admin',
+        'cipher_active_stage',
+        'cipher_completed_stages',
+        'cipher_pack_items',
+        'cipher_offline_queue',
+        'cipher_theme',
+        'cipher_font_size',
+        'cipher_sound'
+      ];
+
+      let localHtml = `<table><tr><th>Key</th><th>Value in Browser</th></tr>`;
+      localKeys.forEach(k => {
+        const val = localStorage.getItem(k);
+        auditPayload.localStorage[k] = val;
+        localHtml += `<tr><td><strong>${k}</strong></td><td>${val !== null ? escapeHtml(val) : '<span style="color:var(--alert)">null (not set)</span>'}</td></tr>`;
+      });
+      localHtml += `</table>`;
+      document.getElementById('localMemorySummary').innerHTML = localHtml;
+
+      // 2. Query Cloud Ledger
+      const statusDiv = document.getElementById('statusIndicator');
+      statusDiv.innerHTML = `<span class="status-tag status-ok">Querying Cloud Ledger via Apps Script...</span>`;
+
+      fetch(`${GOOGLE_SCRIPT_API_URL}?action=auditLedger`, { method: "GET", mode: "cors" })
+        .then(res => res.json())
+        .then(data => {
+          if (data.result === "SUCCESS" && data.report) {
+            auditPayload.cloudLedger = data.report;
+            statusDiv.innerHTML = `<span class="status-tag status-ok">CONNECTED // Ledger Responded Nominal</span>`;
+            
+            let cloudHtml = `<p style="margin-bottom:8px;">Spreadsheet: <strong>${escapeHtml(data.report.spreadsheetName)}</strong></p>`;
+            cloudHtml += `<table><tr><th>Tab Name</th><th>Exists?</th><th>Row Count</th><th>Sample Header / Rows</th></tr>`;
+            
+            Object.keys(data.report.sheets).forEach(tab => {
+              const s = data.report.sheets[tab];
+              const preview = s.rows && s.rows.length > 0 ? JSON.stringify(s.rows[0]) : "Empty";
+              cloudHtml += `<tr>
+                <td><strong>${tab}</strong></td>
+                <td>${s.exists ? '✅ Yes' : '<span style="color:var(--alert)">❌ Missing</span>'}</td>
+                <td>${s.rowCount} rows</td>
+                <td><code>${escapeHtml(preview)}</code></td>
+              </tr>`;
+            });
+            cloudHtml += `</table>`;
+            document.getElementById('cloudLedgerSummary').innerHTML = cloudHtml;
+          } else {
+            throw new Error(JSON.stringify(data));
+          }
+          updateRawExport();
+        })
+        .catch(err => {
+          auditPayload.errors.push(err.toString());
+          statusDiv.innerHTML = `<span class="status-tag status-err">ERROR // Could not read Ledger</span>`;
+          document.getElementById('cloudLedgerSummary').innerHTML = `<p style="color:var(--alert)">Failed to connect: ${escapeHtml(err.toString())}</p>`;
+          updateRawExport();
+        });
+    }
+
+    function updateRawExport() {
+      document.getElementById('rawExportBox').value = JSON.stringify(auditPayload, null, 2);
+    }
+
+    function copyAuditOutput() {
+      const box = document.getElementById('rawExportBox');
+      box.select();
+      navigator.clipboard.writeText(box.value).then(() => {
+        alert("Diagnostic data copied to clipboard! Paste it into our chat.");
+      });
+    }
+
+    function clearLocalMemory() {
+      if (!confirm("Clear all C.I.P.H.E.R. keys from browser localStorage?")) return;
+      localStorage.clear();
+      alert("Local storage wiped clean.");
+      runFullAudit();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    window.addEventListener('DOMContentLoaded', runFullAudit);
+  </script>
+</body>
+</html>
