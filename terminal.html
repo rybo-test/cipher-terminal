@@ -25,7 +25,6 @@
       --danger: #eb3b5a;
     }
 
-    /* Paper Log Theme */
     body.theme-light {
       --bg-dark: #d8ded9;
       --panel-bg: #f4f6f4;
@@ -41,7 +40,6 @@
       --danger: #a81320;
     }
 
-    /* Amber Phosphor Theme */
     body.theme-amber {
       --bg-dark: #120b00;
       --panel-bg: #1f1402;
@@ -57,7 +55,6 @@
       --danger: #ff4d4d;
     }
 
-    /* Hi-Vis Theme */
     body.theme-hivis {
       --bg-dark: #0a0e14;
       --panel-bg: #131924;
@@ -101,7 +98,6 @@
       margin-bottom: 40px;
     }
 
-    /* Steel Chassis Shell */
     .boot-chassis {
       background: var(--panel-inner);
       border: 2px solid var(--border-main);
@@ -132,7 +128,6 @@
       border-radius: 3px;
     }
 
-    /* Screen Console */
     .console-screen {
       background: var(--bg-dark);
       padding: 16px;
@@ -156,7 +151,6 @@
     .console-line.warn { color: var(--warning); }
     .console-line.alert { color: var(--danger); }
 
-    /* Auth Airlock Deck */
     .auth-deck {
       padding: 16px;
       background: var(--panel-bg);
@@ -261,7 +255,6 @@
 
     <div class="boot-chassis">
       
-      <!-- Stamped Hardware Header with Global Version -->
       <div class="boot-header">
         <div>
           <span>C.I.P.H.E.R. //</span> 
@@ -270,7 +263,6 @@
         <div class="status-badge" id="busVoltageBadge">12.6V FLOAT</div>
       </div>
 
-      <!-- Retro Console Screen Output -->
       <div class="console-screen" id="consoleScreen">
         <div class="console-line sys">[BOOT] RSI-1984 LEAD-ACID BUS ONLINE.</div>
         <div class="console-line sys">[SOLAR] FLOAT CHARGE HARVESTING NOMINAL.</div>
@@ -278,10 +270,8 @@
         <div class="console-line bright">"Did you bring a pen, or are you just a human bean standing in the cold?"</div>
       </div>
 
-      <!-- Auth Airlock Deck -->
       <div class="auth-deck">
         
-        <!-- Toggle: New vs Returning -->
         <div class="auth-toggle-row">
           <button type="button" class="btn-toggle-auth active" id="btnModeNew" onclick="setAuthMode('new')">
             🆕 NEW CACHER
@@ -291,7 +281,6 @@
           </button>
         </div>
 
-        <!-- Dynamic Form Fields -->
         <div class="field-group">
           <label class="field-label" id="lblHandle">GEOCACHING USERNAME (PAPER LOG NAME):</label>
           <input type="text" id="inputUsername" class="auth-input" placeholder="e.g. Nezzmuk" autocomplete="off" />
@@ -321,9 +310,63 @@
 
   </div>
 
-  <script src="js/cipher-audio.js"></script>
-  <script src="js/cipher-core.js"></script>
   <script>
+    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
+
+    let audioCtx = null;
+    function initAudio() {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (err) {}
+    }
+
+    function playClick() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (err) {}
+    }
+
+    function playChime() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'square';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now);
+        osc1.frequency.setValueAtTime(880, now + 0.08);
+        osc2.frequency.setValueAtTime(1174.66, now);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
+      } catch (err) {}
+    }
+
     function logConsole(msg, type = "sys") {
       const screen = document.getElementById("consoleScreen");
       const div = document.createElement("div");
@@ -336,7 +379,7 @@
     let currentMode = "new";
 
     function setAuthMode(mode) {
-      if (window.CipherAudio) CipherAudio.playClick();
+      playClick();
       currentMode = mode;
       const btnNew = document.getElementById("btnModeNew");
       const btnReturn = document.getElementById("btnModeReturn");
@@ -367,15 +410,18 @@
       return `CT-${clean}-${random}`;
     }
 
-    function processAirlock() {
-      if (window.CipherAudio) CipherAudio.playClick();
+    async function processAirlock() {
+      playClick();
       const usernameInput = document.getElementById("inputUsername").value.trim();
 
       if (!usernameInput) {
-        logConsole("[ERROR] Handle required. You cannot sign Rite-in-the-Rain logs anonymously.", "alert");
+        logConsole("[ERROR] Handle required to sign log ledger.", "alert");
         alert("Enter your geocaching handle used to sign paper scrolls.");
         return;
       }
+
+      const btn = document.getElementById("btnEngage");
+      btn.disabled = true;
 
       if (currentMode === "new") {
         const sigItem = document.getElementById("inputSigItem").value.trim() || "Signature Wooden Nickel";
@@ -396,21 +442,56 @@
           ]));
         }
 
-        if (window.CipherAudio) CipherAudio.playChime();
-        logConsole(`[REGISTERED] Session generated for ${usernameInput}.`, "bright");
+        logConsole("[SYNC] Registering with Cachers ledger...", "sys");
+
+        const params = new URLSearchParams({
+          action: "registerCacher",
+          username: usernameInput,
+          syncKey: newKey,
+          sigItem: sigItem
+        });
+
+        try {
+          await fetch(`${GOOGLE_SCRIPT_API_URL}?${params.toString()}`, { method: "GET", mode: "cors" });
+          logConsole("[SUCCESS] Ledger acknowledged cacher.", "bright");
+        } catch (e) {
+          logConsole("[OFFLINE] Ledger offline. Stored in local flash memory.", "warn");
+        }
+
+        playChime();
+        logConsole(`[REGISTERED] Session confirmed for ${usernameInput}.`, "bright");
         logConsole(`[PASSKEY] Your SyncKey: ${newKey}`, "warn");
-        logConsole("[TRANSFER] Flipping to Corridor Trail interface in 1s...", "sys");
 
         setTimeout(() => {
-          window.location.href = "test-trail.html";
+          window.location.href = "mission.html";
         }, 1200);
 
       } else {
         const syncKeyInput = document.getElementById("inputSyncKey").value.trim().toUpperCase();
         if (!syncKeyInput) {
-          logConsole("[ERROR] Passkey missing. Enter your SyncKey or switch to New Cacher.", "alert");
+          btn.disabled = false;
+          logConsole("[ERROR] Passkey missing.", "alert");
           alert("Enter your SyncKey (e.g. CT-XXXX-XXXX).");
           return;
+        }
+
+        logConsole("[SYNC] Querying cloud ledger for cacher record...", "sys");
+
+        const params = new URLSearchParams({
+          action: "syncCacher",
+          username: usernameInput,
+          syncKey: syncKeyInput
+        });
+
+        try {
+          const resp = await fetch(`${GOOGLE_SCRIPT_API_URL}?${params.toString()}`, { method: "GET", mode: "cors" });
+          const res = await resp.json();
+          if (res.cacher) {
+            logConsole(`[RESTORED] Total finds: ${res.cacher.totalFinds}`, "bright");
+            localStorage.setItem("ct_cacher_sig", res.cacher.sigItem || "Signature Wooden Nickel");
+          }
+        } catch (e) {
+          logConsole("[OFFLINE] Restoration server unreachable. Using local cache.", "warn");
         }
 
         localStorage.setItem("ct_cacher_user", usernameInput);
@@ -419,32 +500,27 @@
         const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(usernameInput.toUpperCase());
         localStorage.setItem("ct_cacher_admin", isAdmin ? "true" : "false");
 
-        if (window.CipherAudio) CipherAudio.playChime();
-        logConsole(`[VERIFIED] SyncKey accepted. Restoring corridor records...`, "bright");
+        playChime();
+        logConsole(`[VERIFIED] Session armed. Loading Mission Deck...`, "bright");
 
         setTimeout(() => {
-          window.location.href = "test-trail.html";
+          window.location.href = "mission.html";
         }, 1000);
       }
     }
 
     function enterAsGuest() {
-      if (window.CipherAudio) CipherAudio.playClick();
+      playClick();
       localStorage.setItem("ct_cacher_user", "Guest");
       localStorage.setItem("ct_cacher_key", "GUEST-SCOUT");
       localStorage.setItem("ct_cacher_admin", "false");
       logConsole("[BYPASS] Entering corridor in Guest mode...", "warn");
       setTimeout(() => {
-        window.location.href = "test-trail.html";
+        window.location.href = "mission.html";
       }, 500);
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      // Sync Version stamp from core
-      if (window.CipherCore) {
-        document.getElementById("cipherVersionStamp").textContent = CipherCore.version;
-      }
-
       const existingUser = localStorage.getItem("ct_cacher_user");
       const existingKey = localStorage.getItem("ct_cacher_key");
 
