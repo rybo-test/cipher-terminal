@@ -28,7 +28,6 @@
       --danger: #eb3b5a;
     }
 
-    /* Theme: Paper Log (Ultra High-Contrast for Bright Sunlight) */
     body.theme-light {
       --bg-dark: #d8ded9;
       --panel-bg: #f4f6f4;
@@ -44,7 +43,6 @@
       --danger: #a81320;
     }
 
-    /* Theme: Amber Phosphor */
     body.theme-amber {
       --bg-dark: #120b00;
       --panel-bg: #1f1402;
@@ -60,7 +58,6 @@
       --danger: #ff4d4d;
     }
 
-    /* Theme: Hi-Vis (Color-Blind Safe Blue/Yellow) */
     body.theme-hivis {
       --bg-dark: #0a0e14;
       --panel-bg: #131924;
@@ -76,9 +73,6 @@
       --danger: #ff5252;
     }
 
-    /* --------------------------------------------------------
-       FONT SIZE TIERS
-       -------------------------------------------------------- */
     body.font-regular { --content-scale: 1; }
     body.font-large { --content-scale: 1.18; }
     body.font-trailxl { --content-scale: 1.38; }
@@ -112,9 +106,6 @@
       margin-bottom: 40px;
     }
 
-    /* =======================================================
-       UNIVERSAL TOP TOOLBAR (STABLE CHROME)
-       ======================================================= */
     .cipher-toolbar {
       background: var(--panel-inner);
       border: 2px solid var(--border-main);
@@ -224,13 +215,7 @@
       border-color: var(--accent);
       color: var(--accent);
     }
-    .btn-context:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      border-style: dashed;
-    }
 
-    /* Menu Drawer */
     .tb-menu-drawer {
       display: none;
       position: absolute;
@@ -310,9 +295,6 @@
       margin: 5px 0;
     }
 
-    /* =======================================================
-       DECK CONTAINER & PACK CARDS
-       ======================================================= */
     .deck-container {
       background: var(--panel-bg);
       border: 2px solid var(--border-main);
@@ -409,7 +391,6 @@
       line-height: 1.4;
     }
 
-    /* Swag Trade Airlock */
     .trade-card {
       background: var(--panel-inner);
       border-top: 1px solid var(--border-main);
@@ -467,12 +448,8 @@
 
   <div class="app-shell">
 
-    <!-- =======================================================
-         UNIVERSAL TOP TOOLBAR (STABLE CHROME)
-         ======================================================= -->
     <div class="cipher-toolbar" id="cipherToolbar">
       
-      <!-- Row 1: Hardware Identity & Version Stamping -->
       <div class="tb-status-row">
         <div>
           <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
@@ -482,7 +459,6 @@
         <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
       </div>
 
-      <!-- Row 2: 4 Primary Anchors (Inter-Page Navigation) -->
       <div class="tb-nav-row">
         <a href="mission.html" class="tb-btn" id="btnNavMission">
           🎯 MISSION
@@ -498,7 +474,6 @@
         </button>
       </div>
 
-      <!-- Row 3: Dynamic Contextual Action Bar -->
       <div class="tb-context-row">
         <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
@@ -508,7 +483,6 @@
         </div>
       </div>
 
-      <!-- Dropdown Drawer -->
       <div class="tb-menu-drawer" id="menuDrawer">
         <div class="tb-menu-header">FIELD PROGRESS</div>
         <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
@@ -548,9 +522,6 @@
 
     </div>
 
-    <!-- =======================================================
-         PACK DECK (Inventory & Swag Airlock)
-         ======================================================= -->
     <div class="deck-container" id="deckPack">
       
       <div class="pack-header-card">
@@ -561,12 +532,9 @@
         </div>
       </div>
 
-      <!-- Item List Container -->
       <div class="pack-list-section" id="packInventoryList">
-        <!-- Dynamically rendered by JS -->
       </div>
 
-      <!-- Swag Trade Ledger Airlock -->
       <div class="trade-card" id="tradeAirlock">
         <div class="trade-title">📦 SWAG TRADE AIRLOCK (TRADE EQUAL OR UP)</div>
         <div class="trade-grid">
@@ -583,14 +551,8 @@
   </div>
 
   <script>
-    // =======================================================
-    // 0. ACTIVE BACKEND ENDPOINT
-    // =======================================================
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
 
-    // =======================================================
-    // 1. STATE INITIALIZATION
-    // =======================================================
     let currentStage = 1;
     let packItems = [];
     let activeUser = "Nezzmuk";
@@ -631,9 +593,6 @@
       }
     }
 
-    // =======================================================
-    // 2. RENDERING INVENTORY
-    // =======================================================
     function renderPackList() {
       const listEl = document.getElementById('packInventoryList');
       listEl.innerHTML = "";
@@ -647,7 +606,7 @@
         return;
       }
 
-      packItems.forEach((item, index) => {
+      packItems.forEach((item) => {
         const card = document.createElement('div');
         card.className = "inventory-card";
         card.onclick = () => {
@@ -666,9 +625,6 @@
       });
     }
 
-    // =======================================================
-    // 3. SWAG TRADE AIRLOCK (LOGS TO SwagAndTrackables TAB)
-    // =======================================================
     async function recordSwagTrade() {
       playClick();
       const droppedEl = document.getElementById('inputDroppedItem');
@@ -687,7 +643,6 @@
 
       const gc = `GC1000${Math.min(5, currentStage)}`;
 
-      // Add taken item to local pack
       if (taken) {
         packItems.push({
           icon: "🎁",
@@ -765,9 +720,6 @@
       }
     });
 
-    // =======================================================
-    // 4. AUDIO SYNTHESIZER
-    // =======================================================
     let soundActive = true;
     let audioCtx = null;
 
@@ -809,22 +761,16 @@
         const osc1 = audioCtx.createOscillator();
         const osc2 = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-
         osc1.type = 'square';
         osc2.type = 'sine';
-
-        osc1.frequency.setValueAtTime(587.33, now); // D5
-        osc1.frequency.setValueAtTime(880, now + 0.08); // A5
-
-        osc2.frequency.setValueAtTime(1174.66, now); // D6
-
+        osc1.frequency.setValueAtTime(587.33, now);
+        osc1.frequency.setValueAtTime(880, now + 0.08);
+        osc2.frequency.setValueAtTime(1174.66, now);
         gain.gain.setValueAtTime(0.15, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
         osc1.connect(gain);
         osc2.connect(gain);
         gain.connect(audioCtx.destination);
-
         osc1.start(now);
         osc2.start(now);
         osc1.stop(now + 0.35);
@@ -838,7 +784,6 @@
       document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
     }
 
-    // Theme & Font Sizing
     function setTheme(themeKey) {
       playClick();
       document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
@@ -884,7 +829,6 @@
       try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
     }
 
-    // Page Load Init
     window.addEventListener('DOMContentLoaded', () => {
       loadGameState();
       try {
