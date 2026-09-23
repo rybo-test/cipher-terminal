@@ -3,17 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Operator Profile & Sync</title>
+  <title>C.I.P.H.E.R. // Cacher Profile & Passkey</title>
   <style>
-    /* --------------------------------------------------------
-       THEME PROFILES (Display Modes)
-       -------------------------------------------------------- */
     :root {
       --content-scale: 1;
       --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
       --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-      /* CRT Green (Default) */
       --bg-dark: #0a0f0d;
       --panel-bg: #121a15;
       --panel-inner: #080d0a;
@@ -28,7 +24,6 @@
       --danger: #eb3b5a;
     }
 
-    /* Theme: Paper Log (Ultra High-Contrast for Bright Sunlight) */
     body.theme-light {
       --bg-dark: #d8ded9;
       --panel-bg: #f4f6f4;
@@ -44,7 +39,6 @@
       --danger: #a81320;
     }
 
-    /* Theme: Amber Phosphor */
     body.theme-amber {
       --bg-dark: #120b00;
       --panel-bg: #1f1402;
@@ -60,7 +54,6 @@
       --danger: #ff4d4d;
     }
 
-    /* Theme: Hi-Vis (Color-Blind Safe Blue/Yellow) */
     body.theme-hivis {
       --bg-dark: #0a0e14;
       --panel-bg: #131924;
@@ -76,20 +69,11 @@
       --danger: #ff5252;
     }
 
-    /* --------------------------------------------------------
-       FONT SIZE TIERS
-       -------------------------------------------------------- */
     body.font-regular { --content-scale: 1; }
     body.font-large { --content-scale: 1.18; }
     body.font-trailxl { --content-scale: 1.38; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
@@ -100,7 +84,6 @@
       justify-content: center;
       align-items: flex-start;
       padding: 10px;
-      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .app-shell {
@@ -112,9 +95,6 @@
       margin-bottom: 40px;
     }
 
-    /* =======================================================
-       UNIVERSAL TOP TOOLBAR (STABLE CHROME)
-       ======================================================= */
     .cipher-toolbar {
       background: var(--panel-inner);
       border: 2px solid var(--border-main);
@@ -225,7 +205,6 @@
       color: var(--accent);
     }
 
-    /* Menu Drawer */
     .tb-menu-drawer {
       display: none;
       position: absolute;
@@ -271,16 +250,8 @@
       flex-direction: column;
       gap: 5px;
     }
-    .control-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-    }
-    .control-grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-    }
+    .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .control-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
     .btn-control-chip {
       background: var(--panel-bg);
       border: 1px solid var(--border-main);
@@ -299,15 +270,8 @@
       border-color: var(--accent);
     }
 
-    .tb-menu-divider {
-      height: 1px;
-      background: var(--border-main);
-      margin: 5px 0;
-    }
+    .tb-menu-divider { height: 1px; background: var(--border-main); margin: 5px 0; }
 
-    /* =======================================================
-       DECK CONTAINER & PROFILE PANELS
-       ======================================================= */
     .deck-container {
       background: var(--panel-bg);
       border: 2px solid var(--border-main);
@@ -326,11 +290,7 @@
       background: var(--panel-inner);
     }
 
-    .profile-avatar-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+    .profile-avatar-row { display: flex; align-items: center; gap: 14px; }
 
     .profile-avatar {
       width: 52px;
@@ -345,11 +305,7 @@
       flex-shrink: 0;
     }
 
-    .profile-name-group {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    .profile-name-group { display: flex; flex-direction: column; gap: 2px; }
 
     .profile-handle {
       font-size: calc(20px * var(--content-scale));
@@ -368,7 +324,6 @@
       text-transform: uppercase;
     }
 
-    /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -391,21 +346,9 @@
       font-family: var(--font-mono);
     }
 
-    .stat-val {
-      font-size: calc(18px * var(--content-scale));
-      font-weight: 800;
-      color: var(--accent);
-    }
+    .stat-val { font-size: calc(18px * var(--content-scale)); font-weight: 800; color: var(--accent); }
+    .stat-lbl { font-size: 9px; color: var(--text-dim); font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; }
 
-    .stat-lbl {
-      font-size: 9px;
-      color: var(--text-dim);
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    /* Passkey & Form Sections */
     .section-card {
       padding: 14px;
       display: flex;
@@ -423,19 +366,8 @@
       text-transform: uppercase;
     }
 
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-family: var(--font-mono);
-    }
-
-    .field-label {
-      font-size: 10px;
-      color: var(--text-dim);
-      font-weight: bold;
-      letter-spacing: 0.5px;
-    }
+    .field-group { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); }
+    .field-label { font-size: 10px; color: var(--text-dim); font-weight: bold; letter-spacing: 0.5px; }
 
     .field-input {
       background: var(--bg-dark);
@@ -496,57 +428,39 @@
 
   <div class="app-shell">
 
-    <!-- =======================================================
-         UNIVERSAL TOP TOOLBAR (STABLE CHROME)
-         ======================================================= -->
     <div class="cipher-toolbar" id="cipherToolbar">
       
-      <!-- Row 1: Hardware Identity & Version Stamping -->
       <div class="tb-status-row">
         <div>
           <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CLEAN</span>
         </div>
-        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
+        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 PROFILE ]</span>
         <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
       </div>
 
-      <!-- Row 2: 4 Primary Anchors (Inter-Page Navigation) -->
       <div class="tb-nav-row">
-        <a href="mission.html" class="tb-btn" id="btnNavMission">
-          🎯 MISSION
-        </a>
-        <a href="trail.html" class="tb-btn" id="btnNavTrail">
-          🗺️ TRAIL
-        </a>
-        <a href="pack.html" class="tb-btn" id="btnNavPack">
-          <span id="packNavLabel">🎒 PACK (1)</span>
-        </a>
-        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">
-          ≡ MENU ▾
-        </button>
+        <a href="mission.html" class="tb-btn" id="btnNavMission">🎯 MISSION</a>
+        <a href="trail.html" class="tb-btn" id="btnNavTrail">🗺️ TRAIL</a>
+        <a href="pack.html" class="tb-btn" id="btnNavPack">🎒 PACK</a>
+        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">≡ MENU ▾</button>
       </div>
 
-      <!-- Row 3: Dynamic Contextual Action Bar -->
       <div class="tb-context-row">
         <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
-          <button type="button" class="btn-context" onclick="copySyncKey()">📋 Copy Passkey</button>
-          <a href="mission.html" class="btn-context">🎯 Active Mission</a>
-          <a href="trail.html" class="btn-context">🗺️ Corridor Map</a>
+          <button type="button" class="btn-context" onclick="copySyncKey()">📋 Copy SyncKey</button>
         </div>
       </div>
 
-      <!-- Dropdown Drawer -->
       <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">FIELD PROGRESS</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Corridor Challenges')">🎯 Challenges</div>
+        <div class="tb-menu-header">NAVIGATION</div>
+        <a href="profile.html" class="tb-menu-item">👤 Cacher Profile</a>
+        <div class="tb-menu-item" onclick="showRulesModal()">📖 Geocaching Rules & BYOP</div>
         
         <div class="tb-menu-divider"></div>
         
-        <div class="tb-menu-header">THEME / SUN</div>
+        <div class="tb-menu-header">DISPLAY / ACCESSIBILITY</div>
         <div class="tb-menu-controls">
           <div class="control-grid-4">
             <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
@@ -555,8 +469,6 @@
             <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
           </div>
         </div>
-
-        <div class="tb-menu-header">TEXT SIZE</div>
         <div class="tb-menu-controls">
           <div class="control-grid">
             <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
@@ -566,67 +478,58 @@
         </div>
 
         <div class="tb-menu-divider"></div>
-
-        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();">👤 Gateway Login</a>
-        <div class="tb-menu-item" onclick="playClick(); alert('BYOP: Bring Your Own Pen. Always sign the paper scroll.')">📖 BYOP Manual</div>
+        
+        <div class="tb-menu-header">OPERATOR SESSION</div>
+        <a href="terminal.html" class="tb-menu-item">👤 Switch Cacher / Log In</a>
         <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
-        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();" style="color: var(--danger);">🚪 Log Off</a>
+        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Progress</div>
       </div>
 
     </div>
 
-    <!-- =======================================================
-         PROFILE & DOSSIER DECK
-         ======================================================= -->
     <div class="deck-container" id="deckProfile">
       
-      <!-- Operator Card -->
       <div class="profile-card">
         <div class="profile-avatar-row">
           <div class="profile-avatar" id="avatarBox">👤</div>
           <div class="profile-name-group">
             <div class="profile-handle" id="dossierUsername">NEZZMUK</div>
-            <div class="profile-role" id="dossierRole">CORRIDOR MASTER // RAT PACK</div>
+            <div class="profile-role" id="dossierRole">VERIFIED CACHER // RAT PACK</div>
           </div>
         </div>
       </div>
 
-      <!-- Corridor Progress Stats -->
       <div class="stats-grid">
         <div class="stat-box">
-          <div class="stat-val" id="statCompletedCount">0 / 5</div>
+          <div class="stat-val" id="statCompletedCount">0 / 4</div>
           <div class="stat-lbl">Finds Logged</div>
         </div>
         <div class="stat-box">
           <div class="stat-val" id="statPercent">0%</div>
-          <div class="stat-lbl">Corridor Clear</div>
+          <div class="stat-lbl">Trail Completed</div>
         </div>
         <div class="stat-box">
           <div class="stat-val" id="statActiveStage">01</div>
-          <div class="stat-lbl">Active Stage</div>
+          <div class="stat-lbl">Current Cache</div>
         </div>
       </div>
 
-      <!-- Passkey & Cloud Identity -->
       <div class="section-card">
-        <div class="section-title">🔑 CLOUD SYNC PASSKEY</div>
+        <div class="section-title">🔑 CLOUD SYNC PASSKEY (SyncKey)</div>
         <div class="sync-key-display">
-          <span id="syncKeyVal">CT-NEZZ-5909</span>
+          <span id="syncKeyVal">CT-NEZZ-1605</span>
           <button type="button" class="btn-copy" onclick="copySyncKey()">COPY</button>
         </div>
         <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); line-height: 1.4;">
-          Keep this key. It restores your finds, pack items, and verified corridor standing on any device or new field session.
+          Your unique SyncKey restores your verified finds, inventory, and unlocked trail stages across any device.
         </div>
       </div>
 
-      <!-- Operator Signature Configuration -->
       <div class="section-card">
-        <div class="section-title">⚙️ FIELD CONFIGURATION</div>
+        <div class="section-title">⚙️ CACHER PREFERENCES</div>
         <div class="field-group">
           <label class="field-label">SIGNATURE SWAG ITEM:</label>
-          <input type="text" id="inputSigItem" class="field-input" placeholder="e.g. 3D Printed Nickel" />
+          <input type="text" id="inputSigItem" class="field-input" placeholder="e.g. 3D Wooden Coin" />
         </div>
         <button type="button" class="btn-save" onclick="saveProfileChanges()">
           SAVE PREFERENCES ➔
@@ -638,15 +541,11 @@
   </div>
 
   <script>
-    // =======================================================
-    // 0. ACTIVE STATE MANAGEMENT
-    // =======================================================
     let activeUser = "Nezzmuk";
-    let activeSyncKey = "CT-NEZZ-5909";
-    let activeSig = "Signature Wooden Nickel";
+    let activeSyncKey = "CT-NEZZ-1605";
+    let activeSig = "3D Wooden Coin";
     let currentStage = 1;
     let completedStages = [];
-    let packCount = 1;
 
     function loadProfile() {
       try {
@@ -664,30 +563,23 @@
 
         const completed = localStorage.getItem('cipher_completed_stages');
         if (completed) completedStages = JSON.parse(completed);
-
-        const pack = localStorage.getItem('cipher_pack_items');
-        if (pack) packCount = JSON.parse(pack).length;
       } catch (e) {
         console.warn('Profile read error:', e);
       }
 
-      // Populate UI
       document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
-      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packCount})`;
       document.getElementById('dossierUsername').textContent = activeUser.toUpperCase();
       document.getElementById('syncKeyVal').textContent = activeSyncKey || "NO PASSKEY";
       document.getElementById('inputSigItem').value = activeSig;
 
-      // Check admin status
       const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(activeUser.toUpperCase());
-      document.getElementById('dossierRole').textContent = isAdmin ? "CORRIDOR MASTER // RAT PACK" : "FIELD OPERATOR // AUDITOR";
+      document.getElementById('dossierRole').textContent = isAdmin ? "CORRIDOR MASTER // RAT PACK" : "VERIFIED FIELD CACHER";
       document.getElementById('avatarBox').textContent = isAdmin ? "🤠" : "👤";
 
-      // Stats
       const finds = completedStages.length;
-      document.getElementById('statCompletedCount').textContent = `${finds} / 5`;
-      document.getElementById('statPercent').textContent = `${Math.round((finds / 5) * 100)}%`;
-      document.getElementById('statActiveStage').textContent = completedStages.includes(5) ? "DONE" : `0${currentStage}`;
+      document.getElementById('statCompletedCount').textContent = `${finds} / 4`;
+      document.getElementById('statPercent').textContent = `${Math.round((finds / 4) * 100)}%`;
+      document.getElementById('statActiveStage').textContent = completedStages.includes(4) ? "COMPLETE" : `0${currentStage}`;
     }
 
     function saveProfileChanges() {
@@ -696,7 +588,7 @@
       if (newSig) {
         localStorage.setItem('ct_cacher_sig', newSig);
         playChime();
-        alert("Field preferences saved.");
+        alert("Cacher preferences saved.");
       }
     }
 
@@ -704,29 +596,28 @@
       playClick();
       if (!activeSyncKey) return;
       navigator.clipboard.writeText(activeSyncKey).then(() => {
-        alert(`Passkey copied to clipboard:\n${activeSyncKey}`);
+        alert(`SyncKey copied to clipboard:\n${activeSyncKey}`);
       }).catch(() => {
-        alert(`Your passkey is: ${activeSyncKey}`);
+        alert(`Your SyncKey is: ${activeSyncKey}`);
       });
     }
 
+    function showRulesModal() {
+      playClick();
+      alert("GEOCACHING RULES:\n1. If you take something from the container, leave something of equal or greater value.\n2. Write your handle and date in the physical paper logbook (BYOP).\n3. Re-hide the cache container exactly as you found it.");
+    }
+
     function resetDemoProgress() {
-      if (!confirm("Reset all corridor progress back to Stage 01?")) return;
+      if (!confirm("Reset trail progress back to Cache 01?")) return;
       localStorage.setItem('cipher_active_stage', '1');
       localStorage.setItem('cipher_completed_stages', JSON.stringify([]));
-      localStorage.setItem('cipher_pack_items', JSON.stringify([
-        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
-      ]));
       loadProfile();
       playClick();
-      alert("Corridor progress reset.");
+      alert("Trail progress reset to Cache 01.");
     }
 
     function toggleMenu(e) {
-      if (e) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
+      if (e) { e.stopPropagation(); e.preventDefault(); }
       playClick();
       document.getElementById('menuDrawer').classList.toggle('open');
     }
@@ -739,9 +630,6 @@
       }
     });
 
-    // =======================================================
-    // 1. AUDIO SYNTHESIZER
-    // =======================================================
     let soundActive = true;
     let audioCtx = null;
 
@@ -806,7 +694,6 @@
       document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
     }
 
-    // Theme & Font Sizing
     function setTheme(themeKey) {
       playClick();
       document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
@@ -852,7 +739,6 @@
       try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
     }
 
-    // Page Load Init
     window.addEventListener('DOMContentLoaded', () => {
       loadProfile();
       try {
