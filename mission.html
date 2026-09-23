@@ -401,7 +401,7 @@
       <div class="tb-status-row">
         <div>
           <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CLEAN</span>
+          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CATALOG</span>
         </div>
         <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
         <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
@@ -493,6 +493,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
 
+    // Corridor Master Cache Directory with Test Unlock Codes embedded directly in hint
     const CORRIDOR_DATA = {
       1: {
         id: 1,
@@ -502,12 +503,12 @@
         dt: "D 2.0 / T 2.5",
         lat: "41.7380",
         lng: "-111.8410",
-        hintDec: "Under the large gravel road turnaround boulder.",
+        hintDec: "Under the large gravel road turnaround boulder. [TEST UNLOCK CODE: ANCHOR]",
         missionDesc: "Locate the 50-cal ammo can secured at the turnaround. Inspect the inside lid for the stamped verification code.",
         unlockCode: "ANCHOR",
         speechActive: "\"Cache #1 is in the gravel turnaround. Sign the paper scroll and enter the stamped lid code.\"",
         speechCompleted: "\"Cache #1 verified. Paper scroll signed and lid sealed tight.\"",
-        reward: { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
+        reward: { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" }
       },
       2: {
         id: 2,
@@ -517,12 +518,12 @@
         dt: "D 2.5 / T 3.0",
         lat: "41.7420",
         lng: "-111.8360",
-        hintDec: "Magnetically anchored under the south steel cross-beam.",
+        hintDec: "Magnetically anchored under the south steel cross-beam. [TEST UNLOCK CODE: 384]",
         missionDesc: "Cross the irrigation ditch. Locate the locked container under the bridge and enter the padlock combination.",
         unlockCode: "384",
         speechActive: "\"Watch your footing on the steel bridge and enter the padlock combination.\"",
         speechCompleted: "\"Padlock cracked. EPDM gasket held up against the canal spray.\"",
-        reward: { icon: "⚙️", title: "Brass Washer #02", desc: "Stamped Word: POST" }
+        reward: { itemId: "WASH-02", icon: "⚙️", title: "Brass Washer #02", desc: "Stamped Word: POST", type: "Clue/Washer" }
       },
       3: {
         id: 3,
@@ -532,12 +533,12 @@
         dt: "D 1.5 / T 2.0",
         lat: "41.7470",
         lng: "-111.8316",
-        hintDec: "Count the visible sediment strata layers on the exposed north cut.",
+        hintDec: "Count the visible sediment strata layers on the exposed north cut. [TEST UNLOCK CODE: STRATA]",
         missionDesc: "Observe the geological strata wall. Count the distinctive gravel bands to deduce the logging word.",
         unlockCode: "STRATA",
         speechActive: "\"Lake Bonneville bench gravels exposed right in front of you.\"",
         speechCompleted: "\"Geological audit confirmed. Proceed to the cedar repeater.\"",
-        reward: { icon: "🪨", title: "Sediment Specimen", desc: "Lake Bonneville Bench Quartzite" }
+        reward: { itemId: "SWAG-101", icon: "🪨", title: "Sediment Specimen", desc: "Lake Bonneville Bench Quartzite", type: "Swag" }
       },
       4: {
         id: 4,
@@ -547,12 +548,12 @@
         dt: "D 3.0 / T 3.5",
         lat: "41.7520",
         lng: "-111.8250",
-        hintDec: "Interior hollow of the split cedar post.",
+        hintDec: "Interior hollow of the split cedar post. [TEST UNLOCK CODE: REPEATER]",
         missionDesc: "Locate the cedar repeater tree. Find the stamped codeword inside the chamber.",
         unlockCode: "REPEATER",
         speechActive: "\"Repeater node detected. Sign the physical log and enter the chamber codeword.\"",
         speechCompleted: "\"CORRIDOR TRAIL CLEARED! All 4 caches logged.\"",
-        reward: { icon: "🏆", title: "Corridor Finisher Tag", desc: "Cache Tales Cluster Master" }
+        reward: { itemId: "TAG-001", icon: "🏆", title: "Corridor Finisher Tag", desc: "Cache Tales Cluster Master", type: "Trackable" }
       }
     };
 
@@ -575,7 +576,7 @@
           packItems = JSON.parse(savedPack);
         } else {
           packItems = [
-            { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
+            { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" }
           ];
         }
 
@@ -659,7 +660,8 @@
           completedStages.push(currentStage);
         }
 
-        if (stage.reward && !packItems.some(item => item.title === stage.reward.title)) {
+        // Add reward to pack catalog if not already present
+        if (stage.reward && !packItems.some(item => item.itemId === stage.reward.itemId)) {
           packItems.push(stage.reward);
         }
 
@@ -728,7 +730,7 @@
       currentStage = 1;
       completedStages = [];
       packItems = [
-        { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
+        { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" }
       ];
       saveGameState();
       renderMission();
