@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Active Mission Briefing</title>
+  <title>C.I.P.H.E.R. // Active Cache Mission</title>
   <style>
     :root {
       --content-scale: 1;
@@ -401,7 +401,7 @@
       <div class="tb-status-row">
         <div>
           <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;" id="cipherVersionStamp">v2.6-RSI</span>
+          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CLEAN</span>
         </div>
         <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
         <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
@@ -410,25 +410,26 @@
       <div class="tb-nav-row">
         <a href="mission.html" class="tb-btn active" id="btnNavMission">🎯 MISSION</a>
         <a href="trail.html" class="tb-btn" id="btnNavTrail">🗺️ TRAIL</a>
-        <a href="pack.html" class="tb-btn" id="btnNavPack"><span id="packNavLabel">🎒 PACK (1)</span></a>
+        <a href="pack.html" class="tb-btn" id="btnNavPack">🎒 PACK</a>
         <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">≡ MENU ▾</button>
       </div>
 
       <div class="tb-context-row">
         <span class="tb-context-label">> ACTION:</span>
         <div class="tb-context-actions" id="contextActionsSlot">
-          <button type="button" class="btn-context" onclick="playClick(); jumpToUnlock()">🔓 Jump to Code</button>
           <button type="button" class="btn-context" id="btnToggleHint" onclick="revealHint()">💡 Show Hint</button>
-          <a href="trail.html" class="btn-context">🗺️ View Corridor</a>
+          <button type="button" class="btn-context" onclick="launchPhoneGps()">🧭 Navigate to GZ</button>
         </div>
       </div>
 
       <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">FIELD PROGRESS</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Stats & Finds')">📊 Stats & Finds</div>
-        <div class="tb-menu-item" onclick="playClick(); alert('Opening Trail Lore')">📜 Trail Lore & Audio</div>
+        <div class="tb-menu-header">NAVIGATION</div>
+        <a href="profile.html" class="tb-menu-item">👤 Cacher Profile</a>
+        <div class="tb-menu-item" onclick="showRulesModal()">📖 Geocaching Rules & BYOP</div>
+        
         <div class="tb-menu-divider"></div>
-        <div class="tb-menu-header">THEME / SUN</div>
+        
+        <div class="tb-menu-header">DISPLAY / ACCESSIBILITY</div>
         <div class="tb-menu-controls">
           <div class="control-grid-4">
             <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
@@ -437,12 +438,20 @@
             <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
           </div>
         </div>
+        <div class="tb-menu-controls">
+          <div class="control-grid">
+            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
+            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
+            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">XL</button>
+          </div>
+        </div>
+
         <div class="tb-menu-divider"></div>
-        <div class="tb-menu-header">OPERATOR & HARDWARE</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();">👤 Gateway Login</a>
+        
+        <div class="tb-menu-header">OPERATOR SESSION</div>
+        <a href="terminal.html" class="tb-menu-item">👤 Switch Cacher / Log In</a>
         <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
-        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Demo</div>
-        <a href="terminal.html" class="tb-menu-item" onclick="playClick();" style="color: var(--danger);">🚪 Log Off</a>
+        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Progress</div>
       </div>
 
     </div>
@@ -452,15 +461,15 @@
       <div class="dialogue-card">
         <div class="terminal-avatar">📟</div>
         <div class="terminal-speech" id="cypherSpeechText">
-          "Daylight detected. 12.6 volts on the bus. Ready for field operations."
+          "Signal acquired. Ready for field operations."
         </div>
       </div>
 
       <div class="mission-card">
-        <div class="mission-meta" id="missionMetaText">STAGE 01 / 50</div>
-        <div class="mission-title" id="missionTitleText">Stop 1: The Welded Anchor</div>
+        <div class="mission-meta" id="missionMetaText">CACHE 1 OF 4</div>
+        <div class="mission-title" id="missionTitleText">Cache Tales #01: The Welded Anchor</div>
         <div class="mission-desc" id="missionDescText">
-          Inspect the gravel pulloff container. Locate the codeword stamped on the lid.
+          Locate the container secured at the turnaround. Inspect the inside lid for the stamped verification codeword.
         </div>
 
         <div class="quick-status-box">
@@ -470,7 +479,7 @@
       </div>
 
       <div class="unlock-dock">
-        <div style="font-size: calc(13px * var(--content-scale)); color: var(--text-dim); font-family: var(--font-mono); font-weight: 800;">ENTER CODE:</div>
+        <div style="font-size: calc(13px * var(--content-scale)); color: var(--text-dim); font-family: var(--font-mono); font-weight: 800;">ENTER LOG CODEWORD:</div>
         <div class="input-row">
           <input type="text" id="unlockInput" class="key-input" placeholder="CODE..." autocomplete="off" />
           <button type="button" class="btn-submit" id="btnUnlockSubmit" onclick="submitUnlockCode()">UNLOCK</button>
@@ -484,7 +493,6 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
 
-    // Aligned directly with your CacheList spreadsheet tab
     const CORRIDOR_DATA = {
       1: {
         id: 1,
@@ -492,11 +500,13 @@
         gc: "GC10001",
         container: "Ammo Can",
         dt: "D 2.0 / T 2.5",
+        lat: "41.7380",
+        lng: "-111.8410",
         hintDec: "Under the large gravel road turnaround boulder.",
-        missionDesc: "Inspect the gravel pulloff container. Locate the code stamped on the lid.",
+        missionDesc: "Locate the 50-cal ammo can secured at the turnaround. Inspect the inside lid for the stamped verification code.",
         unlockCode: "ANCHOR",
-        speechActive: "\"Stop 1 is in the gravel turnaround. Don't lose your pen in the weeds.\"",
-        speechCompleted: "\"Stop 1 verified. Paper scroll signed and lid sealed tight.\"",
+        speechActive: "\"Cache #1 is in the gravel turnaround. Sign the paper scroll and enter the stamped lid code.\"",
+        speechCompleted: "\"Cache #1 verified. Paper scroll signed and lid sealed tight.\"",
         reward: { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4" }
       },
       2: {
@@ -505,10 +515,12 @@
         gc: "GC10008",
         container: "Lock-and-Lock",
         dt: "D 2.5 / T 3.0",
+        lat: "41.7420",
+        lng: "-111.8360",
         hintDec: "Magnetically anchored under the south steel cross-beam.",
-        missionDesc: "Cross the irrigation ditch. Locate the container under the bridge and enter the padlock combination.",
+        missionDesc: "Cross the irrigation ditch. Locate the locked container under the bridge and enter the padlock combination.",
         unlockCode: "384",
-        speechActive: "\"Moisture sensor reads 84% near the ditch. Watch your footing on the steel bridge.\"",
+        speechActive: "\"Watch your footing on the steel bridge and enter the padlock combination.\"",
         speechCompleted: "\"Padlock cracked. EPDM gasket held up against the canal spray.\"",
         reward: { icon: "⚙️", title: "Brass Washer #02", desc: "Stamped Word: POST" }
       },
@@ -518,11 +530,13 @@
         gc: "GC10017",
         container: "EarthCache (None)",
         dt: "D 1.5 / T 2.0",
+        lat: "41.7470",
+        lng: "-111.8316",
         hintDec: "Count the visible sediment strata layers on the exposed north cut.",
-        missionDesc: "Observe the geological strata wall. Count the distinctive gravel bands.",
+        missionDesc: "Observe the geological strata wall. Count the distinctive gravel bands to deduce the logging word.",
         unlockCode: "STRATA",
         speechActive: "\"Lake Bonneville bench gravels exposed right in front of you.\"",
-        speechCompleted: "\"Geological audit confirmed. Elevation clearance granted.\"",
+        speechCompleted: "\"Geological audit confirmed. Proceed to the cedar repeater.\"",
         reward: { icon: "🪨", title: "Sediment Specimen", desc: "Lake Bonneville Bench Quartzite" }
       },
       4: {
@@ -531,11 +545,13 @@
         gc: "GC10025",
         container: "Ammo Can",
         dt: "D 3.0 / T 3.5",
+        lat: "41.7520",
+        lng: "-111.8250",
         hintDec: "Interior hollow of the split cedar post.",
         missionDesc: "Locate the cedar repeater tree. Find the stamped codeword inside the chamber.",
         unlockCode: "REPEATER",
-        speechActive: "\"Repeater node detected. High elevation clearance verified.\"",
-        speechCompleted: "\"CORRIDOR CLUSTER CLEARED! Ledger updated.\"",
+        speechActive: "\"Repeater node detected. Sign the physical log and enter the chamber codeword.\"",
+        speechCompleted: "\"CORRIDOR TRAIL CLEARED! All 4 caches logged.\"",
         reward: { icon: "🏆", title: "Corridor Finisher Tag", desc: "Cache Tales Cluster Master" }
       }
     };
@@ -573,7 +589,6 @@
       }
 
       document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
-      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
     }
 
     function saveGameState() {
@@ -586,7 +601,6 @@
       }
     }
 
-    // Pushes find telemetry AND complete profile JSON blob to cloud ledger
     async function syncFindToGoogleSheet(stageNumber, stageData, codeEntered) {
       const badge = document.getElementById("statusPlaceholder");
       if (badge) badge.textContent = "[ 🟡 SYNCING... ]";
@@ -608,7 +622,7 @@
         gc: stageData.gc,
         status: "Found It",
         codeEntered: codeEntered,
-        notes: `Stage ${stageNumber} unlocked via code: ${codeEntered}`,
+        notes: `Cache ${stageNumber} unlocked via code: ${codeEntered}`,
         profileDataJSON: JSON.stringify(profilePayload)
       });
 
@@ -634,7 +648,7 @@
       const stage = CORRIDOR_DATA[currentStage];
 
       if (!stage) {
-        alert("Corridor cluster complete!");
+        alert("All corridor caches completed!");
         return;
       }
 
@@ -657,15 +671,12 @@
 
         saveGameState();
         renderMission();
-        document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
 
-        // Fire cloud sync with full telemetry & profile JSON
         syncFindToGoogleSheet(stage.id, stage, enteredCode);
-
-        alert(`STAGE ${stage.id} UNLOCKED!\nNew waypoint unlocked. Log sent to cloud ledger.`);
+        alert(`CACHE ${stage.id} LOGGED!\nCoordinates for next waypoint unlocked.`);
       } else {
         playErrorBuzz();
-        alert(`ACCESS DENIED: "${enteredCode}" is incorrect.\nHint: ${stage.hintDec}`);
+        alert(`INCORRECT CODE: "${enteredCode}"\nHint: ${stage.hintDec}`);
       }
     }
 
@@ -673,7 +684,7 @@
       const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[4];
       const isComplete = completedStages.includes(4);
 
-      document.getElementById('missionMetaText').innerText = isComplete ? "CORRIDOR COMPLETE // ALL FOUND" : `STAGE 0${currentStage} / 04`;
+      document.getElementById('missionMetaText').innerText = isComplete ? "CORRIDOR COMPLETE // 4 OF 4 LOGGED" : `CACHE ${currentStage} OF 4`;
       document.getElementById('missionTitleText').innerText = stage.title;
       document.getElementById('missionDescText').innerText = stage.missionDesc;
       document.getElementById('cypherSpeechText').innerText = isComplete ? stage.speechCompleted : stage.speechActive;
@@ -685,7 +696,7 @@
 
       if (isComplete) {
         unlockInput.disabled = true;
-        unlockInput.placeholder = "CLUSTER COMPLETE";
+        unlockInput.placeholder = "TRAIL COMPLETE";
         unlockBtn.disabled = true;
       } else {
         unlockInput.disabled = false;
@@ -697,19 +708,23 @@
     function revealHint() {
       playClick();
       const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[1];
-      alert(`STAGE 0${currentStage} HINT:\n${stage.hintDec}`);
+      alert(`CACHE ${currentStage} HINT:\n${stage.hintDec}`);
     }
 
-    function jumpToUnlock() {
-      const input = document.getElementById('unlockInput');
-      if (input) {
-        input.focus();
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    function launchPhoneGps() {
+      playClick();
+      const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[1];
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${stage.lat},${stage.lng}`;
+      window.open(url, '_blank');
+    }
+
+    function showRulesModal() {
+      playClick();
+      alert("GEOCACHING RULES:\n1. If you take something from the container, leave something of equal or greater value.\n2. Write your handle and date in the physical paper logbook (BYOP).\n3. Re-hide the cache container exactly as you found it.");
     }
 
     function resetDemoProgress() {
-      if (!confirm("Reset demo progress back to Stage 01?")) return;
+      if (!confirm("Reset trail progress back to Cache 01?")) return;
       currentStage = 1;
       completedStages = [];
       packItems = [
@@ -717,16 +732,12 @@
       ];
       saveGameState();
       renderMission();
-      document.getElementById('packNavLabel').textContent = `🎒 PACK (${packItems.length})`;
       playClick();
-      alert("Demo reset to Stage 01.");
+      alert("Progress reset to Cache 01.");
     }
 
     function toggleMenu(e) {
-      if (e) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
+      if (e) { e.stopPropagation(); e.preventDefault(); }
       playClick();
       document.getElementById('menuDrawer').classList.toggle('open');
     }
