@@ -5,27 +5,22 @@
  */
 
 const CipherMap = (function () {
-  // Sector 01: Cache Valley Bench Baseline Dataset
   const sectorData = {
     SECTOR_01: {
       name: "Sector 01: Cache Valley Bench",
       unlocked: true,
       svgPaths: [
-        // US-89 / US-91 Highway Corridor
         { d: "M 60 480 L 140 390 L 180 290 L 260 210 L 340 140 L 410 70", class: "map-vector-hwy", title: "US-89/91 Corridor" },
-        // Local Access Roads & Canal Levees
         { d: "M 140 390 L 220 370 L 290 320 L 330 260", class: "map-vector-road", title: "Valley Trunk Road" },
         { d: "M 180 290 L 110 240 L 90 180 L 130 110", class: "map-vector-road", title: "West Bench Byway" },
-        // Logan River & Canal Waterways
         { d: "M 480 160 Q 360 210 290 270 T 160 360 T 40 450", class: "map-vector-water", title: "Logan River Flow" },
-        // Wellsville Mountain Ridge Silhouettes (Elevation Contours)
         { d: "M 30 500 L 70 360 L 110 270 L 150 160 L 210 50", class: "map-vector-topo", title: "Wellsville Ridge Contour" },
         { d: "M 40 500 L 85 370 L 125 280 L 165 170 L 225 60", class: "map-vector-topo-subtle" }
       ],
       towns: [
-        { name: "WELLSVILLE", x: 135, y: 405 },
-        { name: "LOGAN", x: 265, y: 200 },
-        { name: "SMITHFIELD", x: 345, y: 130 }
+        { name: "WELLSVILLE", x: 135, y: 412 },
+        { name: "LOGAN", x: 265, y: 195 },
+        { name: "SMITHFIELD", x: 345, y: 125 }
       ],
       locations: [
         {
@@ -137,7 +132,6 @@ const CipherMap = (function () {
   };
 
   let activeSectorKey = 'SECTOR_01';
-  let activeTheme = 'crt'; // 'crt' | 'blueprint'
   let selectedLocation = null;
 
   return {
@@ -148,19 +142,18 @@ const CipherMap = (function () {
     },
 
     bindControls: function () {
-      // Theme Switcher Toggle
       const themeToggle = document.getElementById('btn-theme-toggle');
       if (themeToggle) {
         themeToggle.addEventListener('click', () => {
-          activeTheme = activeTheme === 'crt' ? 'blueprint' : 'crt';
-          document.body.className = activeTheme === 'blueprint' ? 'theme-blueprint' : '';
-          themeToggle.textContent = activeTheme === 'crt' ? '[ CRT VECTOR ]' : '[ TOPO BLUEPRINT ]';
+          const state = CipherCore.getState();
+          const nextTheme = (state.meta.theme || 'crt') === 'crt' ? 'blueprint' : 'crt';
+          CipherCore.setTheme(nextTheme);
+          themeToggle.textContent = nextTheme === 'crt' ? '[ CRT VECTOR ]' : '[ TOPO BLUEPRINT ]';
           if (typeof CipherAudio !== 'undefined') CipherAudio.click();
           this.renderSector(activeSectorKey);
         });
       }
 
-      // Sector Dropdown Selector
       const sectorSelect = document.getElementById('sector-select');
       if (sectorSelect) {
         sectorSelect.addEventListener('change', (e) => {
@@ -170,7 +163,6 @@ const CipherMap = (function () {
         });
       }
 
-      // Drawer Close Action
       const closeDrawerBtn = document.getElementById('btn-close-drawer');
       if (closeDrawerBtn) {
         closeDrawerBtn.addEventListener('click', () => {
@@ -187,7 +179,6 @@ const CipherMap = (function () {
 
       if (!canvas) return;
 
-      // Handle Locked Sectors (Fog of War)
       if (!sec.unlocked) {
         canvas.innerHTML = '';
         if (shroud) {
@@ -203,31 +194,26 @@ const CipherMap = (function () {
         return;
       }
 
-      // Sector Unlocked: Hide Shroud
       if (shroud) shroud.style.display = 'none';
 
-      // Build Dynamic Vector Paths
       let pathsSvg = sec.svgPaths.map(p => {
         return `<path d="${p.d}" class="${p.class}" data-title="${p.title || ''}" />`;
       }).join('');
 
-      // Build Town Labels
       let townsSvg = sec.towns.map(t => {
         return `
           <g class="map-town-group" transform="translate(${t.x}, ${t.y})">
-            <circle r="3" class="map-town-dot" />
-            <text x="6" y="4" class="map-town-label">${t.name}</text>
+            <circle r="4" class="map-town-dot" />
+            <text x="8" y="5" class="map-town-label">${t.name}</text>
           </g>
         `;
       }).join('');
 
-      // Check state for Secret Rat Lair Discovery
       const state = typeof CipherCore !== 'undefined' ? CipherCore.getState() : null;
       const ratLairKnown = state && state.secrets && state.secrets.ratLairDiscovered;
 
-      // Build Cache Location Pins
       let locationsSvg = sec.locations.map(loc => {
-        if (loc.secret && !ratLairKnown) return ''; // Remains invisible until discovered
+        if (loc.secret && !ratLairKnown) return '';
 
         const isCurrent = state && state.campaign && state.campaign.currentLocationId === loc.id;
         const isSecret = loc.secret;
@@ -235,10 +221,10 @@ const CipherMap = (function () {
 
         return `
           <g class="map-location-pin ${pinClass}" transform="translate(${loc.x}, ${loc.y})" onclick="CipherMap.selectLocation('${loc.id}')">
-            <circle r="${isSecret ? 9 : 7}" class="pin-ring" />
-            <circle r="3" class="pin-core" />
-            ${isCurrent ? '<circle r="12" class="pin-pulse" />' : ''}
-            <text x="10" y="4" class="pin-label">${loc.type.toUpperCase()}</text>
+            <circle r="${isSecret ? 11 : 9}" class="pin-ring" />
+            <circle r="4" class="pin-core" />
+            ${isCurrent ? '<circle r="16" class="pin-pulse" />' : ''}
+            <text x="14" y="5" class="pin-label">${loc.type.toUpperCase()}</text>
           </g>
         `;
       }).join('');
@@ -266,19 +252,16 @@ const CipherMap = (function () {
       selectedLocation = loc;
       if (typeof CipherAudio !== 'undefined') CipherAudio.click();
 
-      // Populate POI Drawer
       document.getElementById('poi-name').textContent = loc.name;
       document.getElementById('poi-type').textContent = `${loc.type} // ${loc.difficulty}`;
       document.getElementById('poi-coords').textContent = loc.coords;
       document.getElementById('poi-terrain').textContent = loc.terrain;
 
-      // Trigger CB Radio Banner
       if (loc.chatter && loc.chatter.length > 0) {
         const line = loc.chatter[Math.floor(Math.random() * loc.chatter.length)];
         this.pushCommsChatter(line.call, line.text);
       }
 
-      // Show Slide-up Drawer
       const drawer = document.getElementById('poi-drawer');
       if (drawer) drawer.classList.add('open');
     },
@@ -324,7 +307,6 @@ const CipherMap = (function () {
 
       this.closeTravelModal();
 
-      // Audio feedback by mode
       if (typeof CipherAudio !== 'undefined') {
         CipherAudio.micClick();
         if (mode === 'drive') {
@@ -334,7 +316,6 @@ const CipherMap = (function () {
         }
       }
 
-      // Update state via CipherCore
       if (typeof CipherCore !== 'undefined') {
         const state = CipherCore.getState();
         state.campaign.currentLocationId = selectedLocation.id;
@@ -346,7 +327,6 @@ const CipherMap = (function () {
       this.closeDrawer();
     },
 
-    // CB Radio Scanner Chatter Engine
     pushCommsChatter: function (callsign, message) {
       const ticker = document.getElementById('comms-ticker');
       const meterSegs = document.querySelectorAll('.s-meter-seg');
@@ -355,7 +335,6 @@ const CipherMap = (function () {
         CipherAudio.squelchTail();
       }
 
-      // Light up S-Meter segments
       meterSegs.forEach((seg, i) => {
         if (i < 4) seg.classList.add('lit');
         if (i === 4) seg.classList.add('peak');
@@ -383,7 +362,6 @@ const CipherMap = (function () {
       this.pushCommsChatter(line.call, line.text);
     },
 
-    // Unlocks the Secret Rat Lair directly onto the active map
     discoverRatLair: function () {
       if (typeof CipherCore !== 'undefined') {
         const state = CipherCore.getState();
