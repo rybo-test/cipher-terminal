@@ -3,99 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>C.I.P.H.E.R. // Regional Cartography</title>
-  <link rel="stylesheet" href="css/cipher-style.css?v=3.60">
+  <title>C.I.P.H.E.R. // Trail Cartography</title>
+  <link rel="stylesheet" href="css/cipher-style.css?v=3.70">
   <style>
-    :root {
-      --bg-primary: #050a06;
-      --bg-surface: #0a140d;
-      --bg-surface-raised: #112015;
-      --border-color: #1b3822;
-      --border-bright: #00e676;
-      --text-main: #ffffff;
-      --text-bright: #00e676;
-      --text-dim: #a7f3d0;
-      --accent-amber: #ffb300;
-      --accent-alert: #ff5252;
-      --font-mono: 'Courier New', Courier, monospace;
-      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      
-      /* Dynamic Scalable Sizing Tokens */
-      --fs-base: 16px;
-      --fs-sm: 14px;
-      --fs-md: 17px;
-      --fs-lg: 20px;
-      --fs-xl: 24px;
-      --map-town-size: 15px;
-      --map-pin-size: 14px;
-    }
-
-    html.font-large, body.font-large {
-      --fs-base: 18px;
-      --fs-sm: 15px;
-      --fs-md: 19px;
-      --fs-lg: 22px;
-      --fs-xl: 26px;
-      --map-town-size: 17px;
-      --map-pin-size: 15px;
-    }
-
-    html.font-xl, body.font-xl {
-      --fs-base: 20px;
-      --fs-sm: 17px;
-      --fs-md: 22px;
-      --fs-lg: 25px;
-      --fs-xl: 29px;
-      --map-town-size: 19px;
-      --map-pin-size: 17px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body {
-      width: 100%;
-      height: 100dvh;
-      background-color: var(--bg-primary);
-      color: var(--text-main);
-      font-family: var(--font-mono);
-      font-size: var(--fs-base);
-      line-height: 1.45;
-      overflow: hidden;
-      touch-action: manipulation;
-    }
-
-    .app-container {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      max-width: 600px;
-      height: 100dvh;
-      margin: 0 auto;
-      background-color: var(--bg-primary);
-      position: relative;
-    }
-
-    .status-header {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border-color);
-      background-color: var(--bg-surface);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-    }
-    .status-header h1.brand-title {
-      color: var(--text-bright);
-      font-family: var(--font-ui);
-      font-size: var(--fs-md);
-      letter-spacing: 0.5px;
-      margin: 0;
-    }
-    .status-header .telemetry-pill {
-      color: var(--text-dim);
-      font-size: var(--fs-sm);
-      font-weight: bold;
-    }
-
     .map-stage {
       flex: 1;
       position: relative;
@@ -104,38 +14,35 @@
       display: flex;
       flex-direction: column;
     }
-
     .map-controls-strip {
-      padding: 10px 14px;
+      padding: 8px 12px;
       background-color: var(--bg-surface);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       z-index: 5;
       flex-shrink: 0;
     }
-
     .sector-select-dropdown {
-      background-color: var(--bg-surface-raised);
+      background-color: #06110a;
       color: var(--text-bright);
-      border: 2px solid var(--border-bright);
+      border: 1.5px solid var(--border-bright);
       font-family: var(--font-ui);
-      font-size: var(--fs-sm);
-      min-height: 48px;
+      font-size: var(--font-sm);
+      min-height: 44px;
       padding: 0 12px;
+      border-radius: 6px;
       font-weight: bold;
       flex: 1;
     }
-
     .svg-container {
       flex: 1;
       width: 100%;
       height: 100%;
       position: relative;
     }
-
     #map-svg-canvas { width: 100%; height: 100%; }
 
     .map-vector-hwy { stroke: var(--text-bright); stroke-width: 4.5; fill: none; stroke-linecap: round; }
@@ -143,313 +50,151 @@
     .map-vector-water { stroke: #38bdf8; stroke-width: 3.5; fill: none; opacity: 0.85; }
     .map-vector-topo { stroke: var(--text-dim); stroke-width: 1.5; fill: none; opacity: 0.6; }
     .map-vector-topo-subtle { stroke: var(--border-color); stroke-width: 1; stroke-dasharray: 3, 4; fill: none; }
-
-    .map-town-dot { fill: #ffffff; }
-    .map-town-label {
-      fill: #ffffff;
-      font-family: var(--font-ui);
-      font-size: var(--map-town-size);
-      font-weight: bold;
-    }
-
+    .map-town-label { fill: #ffffff; font-family: var(--font-ui); font-size: 14px; font-weight: bold; }
     .map-location-pin { cursor: pointer; outline: none; }
-    .map-location-pin:focus .pin-ring { stroke: #ffffff; stroke-width: 3; }
     .pin-ring { fill: var(--bg-surface); stroke: var(--border-bright); stroke-width: 2.5; }
     .pin-core { fill: var(--text-bright); }
-    .pin-label { fill: var(--text-bright); font-family: var(--font-mono); font-size: var(--map-pin-size); font-weight: bold; }
-    .pin-pulse { fill: none; stroke: var(--text-bright); stroke-width: 2; animation: pulse-ring 2s infinite ease-out; }
-    .pin-secret .pin-ring, .pin-secret .pin-core, .pin-secret .pin-label { stroke: var(--accent-amber); fill: var(--accent-amber); }
-    @keyframes pulse-ring { 0% { r: 8; opacity: 1; } 100% { r: 22; opacity: 0; } }
+    .pin-label { fill: var(--text-bright); font-family: var(--font-mono); font-size: 13px; font-weight: bold; }
 
-    /* POI Drawer positioned cleanly ABOVE both CB Bar and Nav Strip */
-    .poi-drawer {
-      position: absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 116px; /* Sits directly above the CB dock */
-      background-color: var(--bg-surface-raised);
-      border: 2px solid var(--border-bright);
-      padding: 14px 16px;
-      border-radius: 4px;
-      z-index: 25; /* Above canvas and overlays */
-      display: none;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.8);
-    }
-    .poi-drawer.open { display: flex; }
-
-    .drawer-drag-handle {
-      width: 44px;
-      height: 5px;
-      background-color: var(--border-bright);
-      margin: 0 auto 4px;
-      border-radius: 3px;
-    }
-
-    .poi-header-row { display: flex; justify-content: space-between; align-items: center; }
-    .poi-title { font-size: var(--fs-lg); font-weight: bold; color: #ffffff; font-family: var(--font-ui); margin: 0; }
-    .poi-meta { font-size: var(--fs-sm); color: var(--text-dim); margin-top: 2px; }
-
-    .poi-details-box {
-      background-color: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      padding: 12px;
-      font-size: var(--fs-base);
-      line-height: 1.4;
-    }
-
-    .poi-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-    .btn-cipher {
-      background-color: var(--bg-surface-raised);
-      color: var(--text-main);
-      border: 1.5px solid var(--border-color);
-      min-height: 48px;
-      padding: 10px 16px;
-      font-family: var(--font-ui);
-      font-size: var(--fs-md);
-      font-weight: bold;
-      cursor: pointer;
-      text-transform: uppercase;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      white-space: nowrap;
-      touch-action: manipulation;
-    }
-    .btn-cipher.primary { border-color: var(--border-bright); color: var(--text-bright); }
-
-    .ui-icon {
-      width: 22px;
-      height: 22px;
-      stroke: currentColor;
-      stroke-width: 2.2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-      flex-shrink: 0;
-    }
-
-    /* CB Radio Dock (Pinned just above navigation bar) */
-    .rat-comms-dock {
-      background-color: var(--bg-surface-raised);
-      border-top: 2px solid var(--border-bright);
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: var(--fs-sm);
-      z-index: 15;
-      flex-shrink: 0;
-    }
-    .rat-comms-channel {
-      background-color: var(--bg-primary);
-      border: 1.5px solid var(--border-color);
-      padding: 4px 8px;
-      color: var(--accent-amber);
-      font-weight: bold;
-      font-size: 13px;
-    }
-    .s-meter-block { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-dim); }
-    .s-meter-bar { display: flex; gap: 2px; }
-    .s-meter-seg { width: 5px; height: 14px; background-color: var(--border-color); }
-    .s-meter-seg.lit { background-color: var(--text-bright); }
-    .s-meter-seg.peak { background-color: var(--accent-alert); }
-    .rat-comms-ticker {
-      flex: 1;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      color: #ffffff;
-      font-weight: bold;
-      font-size: var(--fs-sm);
-    }
-
-    /* Bottom Navigation Strip */
-    .nav-anchor-strip {
-      display: flex;
-      width: 100%;
-      height: calc(62px + env(safe-area-inset-bottom, 0px));
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      border-top: 1px solid var(--border-color);
-      background-color: var(--bg-surface);
-      z-index: 20;
-      flex-shrink: 0;
-    }
-    .nav-tab {
-      flex: 1 1 25%;
-      min-height: 48px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      border-right: 1px solid var(--border-color);
-      color: var(--text-dim);
-      font-family: var(--font-ui);
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      text-transform: uppercase;
-      text-decoration: none;
-    }
-    .nav-tab:last-child { border-right: none; }
-    .nav-tab.active {
-      color: var(--text-bright);
-      background-color: var(--bg-surface-raised);
-      border-top: 3px solid var(--border-bright);
-    }
-    .nav-tab.active .ui-icon { stroke: var(--text-bright); }
-
-    /* Travel Modal */
-    .travel-modal-backdrop {
+    /* Fog of War Shroud & Message Box */
+    .shroud-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(5, 10, 6, 0.88);
-      z-index: 30;
+      background: repeating-linear-gradient(
+        -45deg,
+        rgba(5, 10, 6, 0.95),
+        rgba(5, 10, 6, 0.95) 12px,
+        rgba(15, 30, 20, 0.95) 12px,
+        rgba(15, 30, 20, 0.95) 24px
+      );
       display: none;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 20px;
+      text-align: center;
+      z-index: 10;
     }
-    .travel-modal-card {
-      background-color: var(--bg-surface-raised);
-      border: 2px solid var(--border-bright);
-      width: 100%;
-      max-width: 400px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .shroud-card {
+      background-color: var(--bg-surface);
+      border: 2px dashed var(--accent-alert);
+      border-radius: 8px;
+      padding: 22px;
+      max-width: 340px;
     }
-    .travel-options-list { display: flex; flex-direction: column; gap: 10px; }
-    .travel-option-btn {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      text-align: left;
-      padding: 12px;
-      justify-content: flex-start;
-      min-height: 52px;
-    }
-    .travel-icon { font-size: 1.8rem; }
-    .travel-title { font-size: var(--fs-md); color: #ffffff; }
-    .travel-desc { font-size: var(--fs-sm); color: var(--text-dim); }
-    .sr-only {
+    .shroud-alert { color: var(--accent-alert); font-weight: bold; font-size: var(--font-md); margin-bottom: 8px; font-family: var(--font-mono); }
+    .shroud-title { color: #ffffff; font-size: var(--font-lg); font-weight: bold; margin-bottom: 8px; }
+    .shroud-desc { color: var(--text-dim); font-size: var(--font-sm); line-height: 1.4; }
+
+    /* Elevated POI Drawer */
+    .poi-drawer {
       position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+      left: 10px; right: 10px; bottom: 70px;
+      background-color: var(--bg-surface);
+      border: 2px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 14px;
+      z-index: 25;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.85);
     }
+    .poi-drawer.open { display: flex; }
+    .poi-header-row { display: flex; justify-content: space-between; align-items: center; }
+    .poi-title { font-size: var(--font-lg); font-weight: bold; color: #ffffff; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
     <header class="status-header">
-      <h1 class="brand-title">C.I.P.H.E.R. // MAP v3.5</h1>
-      <div class="telemetry-pill" role="status" aria-label="System Voltage">12.6V FLOAT: OK</div>
+      <span class="brand-title">C.I.P.H.E.R. // v3.7-TRAIL</span>
+      <div class="header-status-pill" role="status">
+        <span class="dot"></span>
+        <span>ONLINE // GZ</span>
+      </div>
+      <span class="header-user-tag">NEZZMUK 👤</span>
     </header>
 
     <main class="map-stage">
-      <section class="map-controls-strip" aria-label="Map Navigation Controls">
-        <label for="sector-select" class="sr-only">Choose Geographic Sector</label>
+      <section class="map-controls-strip">
+        <label for="sector-select" class="sr-only">Sector</label>
         <select id="sector-select" class="sector-select-dropdown">
           <option value="SECTOR_01">SECTOR 01: CACHE VALLEY</option>
           <option value="SECTOR_02">SECTOR 02: BOX ELDER</option>
           <option value="SECTOR_03">SECTOR 03: BEAR LAKE</option>
           <option value="SECTOR_04">SECTOR 04: SE IDAHO</option>
         </select>
-        <button id="btn-theme-toggle" class="btn-cipher" style="min-height: 48px; padding: 0 16px; font-size: var(--fs-sm);">[ CRT VECTOR ]</button>
+        <button id="btn-theme-toggle" class="btn-cipher" style="padding: 0 14px; font-size: var(--font-sm);">[ CRT ]</button>
       </section>
 
-      <section class="svg-container" aria-label="Vector Cartography Canvas">
-        <svg id="map-svg-canvas" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet" role="region" aria-label="Interactive Regional Map"></svg>
+      <section class="svg-container">
+        <svg id="map-svg-canvas" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet"></svg>
         
-        <!-- Elevated POI Drawer -->
-        <section id="poi-drawer" class="poi-drawer" role="dialog" aria-modal="false" aria-labelledby="poi-name">
-          <div class="drawer-drag-handle" aria-hidden="true"></div>
+        <!-- Fog of War Overlay -->
+        <div id="map-shroud-overlay" class="shroud-overlay"></div>
+
+        <!-- POI Drawer -->
+        <section id="poi-drawer" class="poi-drawer">
           <div class="poi-header-row">
             <div>
               <h2 id="poi-name" class="poi-title">Location Name</h2>
-              <div id="poi-type" class="poi-meta">Container // Difficulty</div>
+              <div id="poi-type" style="font-size: var(--font-sm); color: var(--text-dim);">Container // Difficulty</div>
             </div>
-            <button 
-              id="btn-close-drawer" 
-              class="btn-cipher" 
-              aria-label="Close Point of Interest Details" 
-              style="width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 0; font-size: 20px;"
-            >
-              <span aria-hidden="true">✕</span>
-            </button>
+            <button id="btn-close-drawer" class="btn-cipher" style="min-height: 38px; padding: 0 10px;">✕</button>
           </div>
-          <div class="poi-details-box">
+          <div style="background-color: #06110a; border: 1px solid var(--border-color); padding: 10px; border-radius: 4px; font-size: var(--font-base);">
             <div><strong>COORDS:</strong> <span id="poi-coords" style="color: var(--accent-amber); font-weight: bold;">N 00° 00.000 W 000° 00.000</span></div>
-            <div style="margin-top: 6px;"><strong>TERRAIN:</strong> <span id="poi-terrain" style="color: #d1fae5;">Terrain description</span></div>
+            <div style="margin-top: 4px;"><strong>TERRAIN:</strong> <span id="poi-terrain" style="color: var(--text-dim);">Terrain description</span></div>
           </div>
-          <div class="poi-action-grid">
-            <button class="btn-cipher primary" onclick="window.location.href='mission.html'">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span>CRACK</span>
-            </button>
-            <button class="btn-cipher" onclick="CipherMap.openTravelModal()">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-              <span>TRAVEL</span>
-            </button>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="btn-cipher primary-solid" onclick="window.location.href='mission.html'">CRACK</button>
+            <button class="btn-cipher" onclick="CipherMap.openTravelModal()">TRAVEL</button>
           </div>
         </section>
 
-        <!-- Travel Mode Modal -->
-        <section id="travel-modal" class="travel-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="travel-header-title">
-          <div class="travel-modal-card">
-            <h2 id="travel-header-title" style="font-size: var(--fs-lg); color: var(--accent-amber); font-weight: bold; border-bottom: 1px dashed var(--border-color); padding-bottom: 6px;">SELECT TRAVEL MODE</h2>
-            <div id="travel-options-list" class="travel-options-list"></div>
+        <!-- Travel Modal -->
+        <section id="travel-modal" style="position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:30; display:none; align-items:center; justify-content:center; padding:16px;">
+          <div style="background-color: var(--bg-surface); border:2px solid var(--border-bright); border-radius:8px; width:100%; max-width:380px; padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <div class="section-category-tag">SELECT TRANSIT MODE</div>
+            <div id="travel-options-list" style="display:flex; flex-direction:column; gap:8px;"></div>
             <button class="btn-cipher" onclick="CipherMap.closeTravelModal()">[ CANCEL ]</button>
           </div>
         </section>
       </section>
 
-      <!-- Pinned CB Scanner Bar -->
-      <aside class="rat-comms-dock" aria-label="Rat Pack CB Radio Channel 19">
-        <span class="rat-comms-channel" aria-label="Channel 19">CH 19</span>
+      <!-- CB Radio Scanner Dock -->
+      <aside class="rat-comms-dock">
+        <span class="rat-comms-channel">CH 19</span>
         <div class="s-meter-block" aria-hidden="true">
-          <span>SIG:</span>
           <div class="s-meter-bar">
-            <div class="s-meter-seg"></div>
-            <div class="s-meter-seg"></div>
-            <div class="s-meter-seg"></div>
-            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg lit"></div>
+            <div class="s-meter-seg lit"></div>
+            <div class="s-meter-seg lit"></div>
             <div class="s-meter-seg"></div>
           </div>
         </div>
-        <div id="comms-ticker" class="rat-comms-ticker" role="status" aria-live="polite" aria-atomic="true">[SCANNING RAT CH 19...]</div>
+        <div id="comms-ticker" class="rat-comms-ticker">[SCANNING RAT CH 19...]</div>
       </aside>
     </main>
 
     <!-- Navigation Strip -->
-    <nav class="nav-anchor-strip" aria-label="Primary Navigation">
+    <nav class="nav-anchor-strip">
       <a href="mission.html" class="nav-tab">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <svg class="ui-icon-nav" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         <span>MISSION</span>
       </a>
-      <a href="map.html" class="nav-tab active" aria-current="page">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-        <span>MAP</span>
+      <a href="map.html" class="nav-tab active">
+        <svg class="ui-icon-nav" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+        <span>TRAIL</span>
       </a>
       <a href="pack.html" class="nav-tab">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10z"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
+        <svg class="ui-icon-nav" viewBox="0 0 24 24"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10z"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
         <span>PACK</span>
       </a>
       <a href="profile.html" class="nav-tab">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <svg class="ui-icon-nav" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span>MENU</span>
       </a>
     </nav>
@@ -461,16 +206,6 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof CipherMap !== 'undefined') CipherMap.init();
-      const state = (typeof CipherCore !== 'undefined') ? CipherCore.getState() : { meta: {} };
-      const themeToggle = document.getElementById('btn-theme-toggle');
-      if (themeToggle) {
-        themeToggle.textContent = (state.meta.theme || 'crt') === 'crt' ? '[ CRT VECTOR ]' : '[ TOPO BLUEPRINT ]';
-      }
-    });
-
-    // Re-render SVG text nodes when font size changes
-    window.addEventListener('cipher-preference-change', () => {
-      if (typeof CipherMap !== 'undefined') CipherMap.renderSector('SECTOR_01');
     });
   </script>
 </body>
