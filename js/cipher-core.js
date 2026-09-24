@@ -1,7 +1,6 @@
 /**
- * C.I.P.H.E.R. Core State & Cloud Ledger Sync Engine (v3.4)
- * Local-First architecture managing hardware state, error snark counters,
- * inventory protection rules, UI preferences, and milestone Apps Script commitments.
+ * C.I.P.H.E.R. Core State & Cloud Ledger Sync Engine (v3.5)
+ * Controls hardware, inventory, error snark counters, and global typography/theme scaling.
  */
 
 const CipherCore = (function () {
@@ -15,7 +14,7 @@ const CipherCore = (function () {
       totalFinds: 0
     },
     hardware: {
-      ramKB: 64,
+      ramKB: 128,
       busSpeed: '1.77 MHz',
       floatVoltage: '12.6V',
       status: 'FLOAT_OK'
@@ -57,7 +56,7 @@ const CipherCore = (function () {
     meta: {
       failedAttempts: 0,
       theme: 'crt',
-      fontSize: 'regular'
+      fontSize: 'large' // Default to Large for mobile legibility
     }
   };
 
@@ -70,7 +69,7 @@ const CipherCore = (function () {
         return Object.assign({}, defaultState, JSON.parse(raw));
       }
     } catch (e) {
-      console.warn('CipherCore: Local storage unavailable, falling back to RAM defaults.');
+      console.warn('CipherCore: Local storage unavailable, falling back to defaults.');
     }
     return JSON.parse(JSON.stringify(defaultState));
   }
@@ -83,6 +82,40 @@ const CipherCore = (function () {
     }
   }
 
+  function applyPreferences() {
+    const root = document.documentElement;
+    const body = document.body;
+    const currentTheme = state.meta.theme || 'crt';
+    const currentFont = state.meta.fontSize || 'large';
+
+    // Theme Toggle
+    if (currentTheme === 'blueprint') {
+      body.classList.add('theme-blueprint');
+      root.classList.add('theme-blueprint');
+    } else {
+      body.classList.remove('theme-blueprint');
+      root.classList.remove('theme-blueprint');
+    }
+
+    // Font Sizing Tiers
+    body.classList.remove('font-regular', 'font-large', 'font-xl');
+    root.classList.remove('font-regular', 'font-large', 'font-xl');
+
+    if (currentFont === 'regular') {
+      body.classList.add('font-regular');
+      root.classList.add('font-regular');
+    } else if (currentFont === 'xl') {
+      body.classList.add('font-xl');
+      root.classList.add('font-xl');
+    } else {
+      body.classList.add('font-large');
+      root.classList.add('font-large');
+    }
+
+    // Notify listeners (e.g. map SVG canvas)
+    window.dispatchEvent(new CustomEvent('cipher-preference-change', { detail: state.meta }));
+  }
+
   return {
     getState: function () {
       return state;
@@ -91,32 +124,16 @@ const CipherCore = (function () {
     setFontSize: function (size) {
       state.meta.fontSize = size;
       persistLocal();
-      this.applyUserPreferences();
+      applyPreferences();
     },
 
     setTheme: function (theme) {
       state.meta.theme = theme;
       persistLocal();
-      this.applyUserPreferences();
+      applyPreferences();
     },
 
-    applyUserPreferences: function () {
-      const currentTheme = state.meta.theme || 'crt';
-      const currentFont = state.meta.fontSize || 'regular';
-
-      if (currentTheme === 'blueprint') {
-        document.body.classList.add('theme-blueprint');
-      } else {
-        document.body.classList.remove('theme-blueprint');
-      }
-
-      document.body.classList.remove('font-large', 'font-xl');
-      if (currentFont === 'large') {
-        document.body.classList.add('font-large');
-      } else if (currentFont === 'xl') {
-        document.body.classList.add('font-xl');
-      }
-    },
+    applyUserPreferences: applyPreferences,
 
     registerInputFailure: function () {
       state.meta.failedAttempts = (state.meta.failedAttempts || 0) + 1;
@@ -205,6 +222,8 @@ const CipherCore = (function () {
   };
 })();
 
+// Apply preferences immediately before DOM fully mounts to eliminate flash of small fonts
+CipherCore.applyUserPreferences();
 document.addEventListener('DOMContentLoaded', () => {
   CipherCore.applyUserPreferences();
 });
