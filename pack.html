@@ -1,903 +1,322 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Field Inventory & Pack</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>C.I.P.H.E.R. // Field Pack & Inventory</title>
+  <link rel="stylesheet" href="css/cipher-style.css">
   <style>
-    :root {
-      --content-scale: 1;
-      --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
-      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
-      --bg-dark: #0a0f0d;
-      --panel-bg: #121a15;
-      --panel-inner: #080d0a;
-      --border-main: #2a5a3a;
-      --border-accent: #38ef7d;
-      --accent: #38ef7d;
-      --accent-dim: #7da88d;
-      --text-bright: #ffffff;
-      --text-main: #38ef7d;
-      --text-dim: #7da88d;
-      --warning: #f7b731;
-      --danger: #eb3b5a;
-    }
-
-    body.theme-light {
-      --bg-dark: #d8ded9;
-      --panel-bg: #f4f6f4;
-      --panel-inner: #e6eae6;
-      --border-main: #405747;
-      --border-accent: #174223;
-      --accent: #144724;
-      --accent-dim: #254d33;
-      --text-bright: #050a06;
-      --text-main: #050a06;
-      --text-dim: #1f3626;
-      --warning: #874b00;
-      --danger: #a81320;
-    }
-
-    body.theme-amber {
-      --bg-dark: #120b00;
-      --panel-bg: #1f1402;
-      --panel-inner: #0f0a00;
-      --border-main: #5c3f0d;
-      --border-accent: #ffb000;
-      --accent: #ffb000;
-      --accent-dim: #ba8829;
-      --text-bright: #ffffff;
-      --text-main: #ffb000;
-      --text-dim: #ba8829;
-      --warning: #ffcf66;
-      --danger: #ff4d4d;
-    }
-
-    body.theme-hivis {
-      --bg-dark: #0a0e14;
-      --panel-bg: #131924;
-      --panel-inner: #0d121c;
-      --border-main: #2b456b;
-      --border-accent: #4ba3ff;
-      --accent: #4ba3ff;
-      --accent-dim: #8ab6e9;
-      --text-bright: #ffffff;
-      --text-main: #4ba3ff;
-      --text-dim: #8ab6e9;
-      --warning: #ffd13b;
-      --danger: #ff5252;
-    }
-
-    body.font-regular { --content-scale: 1; }
-    body.font-large { --content-scale: 1.18; }
-    body.font-trailxl { --content-scale: 1.38; }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: var(--font-ui);
-      font-size: 14px;
-      min-height: 100vh;
+    .inventory-nav-tabs {
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 10px;
+      gap: 6px;
+      margin-bottom: 4px;
+      overflow-x: auto;
     }
 
-    .app-shell {
-      width: 100%;
-      max-width: 650px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 40px;
+    .inv-tab {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-dim);
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
-    .cipher-toolbar {
-      background: var(--panel-inner);
-      border: 2px solid var(--border-main);
-      border-radius: 8px;
-      position: relative;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      display: flex;
-      flex-direction: column;
+    .inv-tab.active {
+      background-color: var(--bg-surface-raised);
+      color: var(--text-bright);
+      border-color: var(--border-bright);
     }
 
-    .tb-status-row {
+    .hardware-spec-bar {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-bright);
+      padding: 8px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 7px 10px;
-      border-bottom: 1px solid var(--border-main);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      background: var(--panel-inner);
-      white-space: nowrap;
-      overflow: hidden;
+      font-size: 0.8rem;
     }
 
-    .tb-status-badge {
-      background: var(--panel-bg);
-      color: var(--accent);
-      border: 1px solid var(--border-main);
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: bold;
-      font-size: 11px;
-      flex-shrink: 0;
+    .hardware-spec-bar strong {
+      color: var(--text-bright);
     }
 
-    .tb-nav-row {
-      display: grid;
-      grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
-      gap: 4px;
-      padding: 6px;
-      background: var(--panel-bg);
-    }
-
-    .tb-btn {
-      background: var(--panel-inner);
-      border: 1px solid var(--border-main);
-      color: var(--text-dim);
-      padding: 8px 3px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-      white-space: nowrap;
+    .items-grid {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      text-decoration: none;
-    }
-    .tb-btn:active { background: var(--border-main); }
-    .tb-btn.active {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border-color: var(--accent);
-    }
-
-    .tb-context-row {
-      padding: 6px 8px;
-      background: var(--panel-inner);
-      border-top: 1px dashed var(--border-main);
-      display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      overflow-x: auto;
-      white-space: nowrap;
     }
 
-    .tb-context-label {
-      color: var(--warning);
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-
-    .tb-context-actions {
+    .item-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 10px;
       display: flex;
+      flex-direction: column;
       gap: 6px;
-      width: 100%;
     }
 
-    .btn-context {
-      background: var(--panel-bg);
-      color: var(--text-bright);
-      border: 1px solid var(--border-main);
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: bold;
-      white-space: nowrap;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .btn-context:active {
-      border-color: var(--accent);
-      color: var(--accent);
+    .item-card.is-part {
+      border-color: var(--border-bright);
     }
 
-    .tb-menu-drawer {
-      display: none;
-      position: absolute;
-      top: calc(100% + 4px);
-      right: 6px;
-      width: 290px;
-      background: var(--panel-inner);
-      border: 2px solid var(--border-accent);
-      border-radius: 6px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-      z-index: 100;
-      padding: 8px 0;
-      font-family: var(--font-mono);
-    }
-    .tb-menu-drawer.open { display: block; }
-
-    .tb-menu-header {
-      padding: 4px 12px;
-      font-size: 10px;
-      color: var(--warning);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-weight: bold;
-      border-bottom: 1px solid var(--border-main);
-    }
-
-    .tb-menu-item {
-      padding: 9px 12px;
+    .item-header-row {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-bright);
-      font-weight: bold;
-      cursor: pointer;
-      text-decoration: none;
     }
-    .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
 
-    .tb-menu-controls {
-      padding: 6px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-    .control-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-    .btn-control-chip {
-      background: var(--panel-bg);
-      border: 1px solid var(--border-main);
+    .item-tag {
+      font-size: 0.7rem;
+      padding: 2px 4px;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
       color: var(--text-dim);
-      padding: 6px 2px;
-      font-size: 10px;
-      font-family: var(--font-mono);
       font-weight: bold;
-      text-align: center;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-    .btn-control-chip.active {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border-color: var(--accent);
     }
 
-    .tb-menu-divider { height: 1px; background: var(--border-main); margin: 5px 0; }
-
-    .deck-container {
-      background: var(--panel-bg);
-      border: 2px solid var(--border-main);
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .pack-header-card {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border-bottom: 1px solid var(--border-main);
-      background: var(--panel-inner);
-    }
-
-    .pack-meta {
-      font-size: calc(11px * var(--content-scale));
-      color: var(--warning);
-      font-family: var(--font-mono);
-      font-weight: 800;
-      letter-spacing: 0.5px;
-    }
-
-    .pack-title {
-      font-size: calc(18px * var(--content-scale));
-      font-weight: 800;
+    .item-tag.tag-part {
+      border-color: var(--border-bright);
       color: var(--text-bright);
     }
 
-    .pack-desc {
-      font-size: calc(14px * var(--content-scale));
-      line-height: 1.45;
-      color: var(--text-main);
-      font-weight: 700;
+    .item-tag.tag-key {
+      border-color: var(--accent-amber);
+      color: var(--accent-amber);
     }
 
-    .pack-list-section {
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .inventory-card {
-      background: var(--panel-inner);
-      border: 1px solid var(--border-main);
-      border-radius: 6px;
-      padding: 12px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      cursor: pointer;
-      transition: border-color 0.15s ease;
-    }
-    .inventory-card:active {
-      border-color: var(--accent);
-    }
-
-    .inv-icon {
-      font-size: 26px;
-      background: var(--panel-bg);
-      border: 1px solid var(--border-main);
-      border-radius: 6px;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .inv-content {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-    }
-
-    .inv-title {
-      font-size: calc(14px * var(--content-scale));
-      font-weight: 800;
+    .item-name {
+      font-size: 0.9rem;
+      font-weight: bold;
       color: var(--text-bright);
-      font-family: var(--font-mono);
     }
 
-    .inv-desc {
-      font-size: calc(12px * var(--content-scale));
+    .item-desc {
+      font-size: 0.75rem;
       color: var(--text-dim);
-      font-family: var(--font-mono);
-      font-weight: bold;
-      line-height: 1.4;
+      line-height: 1.3;
     }
 
-    .inv-tag {
-      display: inline-block;
-      align-self: flex-start;
-      font-size: 9px;
-      background: var(--panel-bg);
-      border: 1px solid var(--border-main);
-      color: var(--warning);
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: bold;
+    .item-action-row {
+      display: flex;
+      gap: 8px;
       margin-top: 4px;
     }
 
-    /* Structured Swag Exchange Dock */
-    .trade-card {
-      background: var(--panel-inner);
-      border-top: 1px solid var(--border-main);
-      padding: 14px;
+    .voucher-dock {
+      background-color: var(--bg-surface-raised);
+      border: 1px solid var(--border-color);
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-    }
-
-    .trade-title {
-      font-size: calc(13px * var(--content-scale));
-      font-family: var(--font-mono);
-      font-weight: 800;
-      color: var(--warning);
-    }
-
-    .trade-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .trade-select {
-      background: var(--bg-dark);
-      border: 1px solid var(--border-main);
-      color: var(--text-bright);
-      font-family: var(--font-mono);
-      font-size: calc(12px * var(--content-scale));
-      padding: 9px 8px;
-      border-radius: 4px;
-      outline: none;
-      font-weight: bold;
-    }
-    .trade-select:focus { border-color: var(--accent); }
-
-    .btn-trade {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border: none;
-      font-weight: 800;
-      font-size: calc(13px * var(--content-scale));
-      padding: 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: var(--font-mono);
-      text-align: center;
-    }
-    .btn-trade:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+      gap: 6px;
+      margin-top: 6px;
     }
   </style>
 </head>
-<body class="theme-crt font-regular">
+<body>
 
-  <div class="app-shell">
+  <div class="app-container">
+    <!-- Top System Telemetry Bar -->
+    <header class="status-header">
+      <span class="brand-title">C.I.P.H.E.R. // FIELD PACK</span>
+      <span class="telemetry-pill">STORAGE: SYNCHRONIZED</span>
+    </header>
 
-    <div class="cipher-toolbar" id="cipherToolbar">
+    <!-- Scrollable Viewport Stage -->
+    <main class="viewport-stage">
       
-      <div class="tb-status-row">
-        <div>
-          <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CATALOG</span>
-        </div>
-        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
-        <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
+      <!-- Live Terminal Hardware Specs -->
+      <div class="hardware-spec-bar">
+        <div>MAINFRAME RAM: <strong id="spec-ram">64KB</strong></div>
+        <div>BUS: <strong id="spec-bus">1.77 MHz</strong></div>
+        <div>FLOAT: <strong id="spec-voltage">12.6V</strong></div>
       </div>
 
-      <div class="tb-nav-row">
-        <a href="mission.html" class="tb-btn" id="btnNavMission">🎯 MISSION</a>
-        <a href="trail.html" class="tb-btn" id="btnNavTrail">🗺️ TRAIL</a>
-        <a href="pack.html" class="tb-btn active" id="btnNavPack">🎒 PACK</a>
-        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">≡ MENU ▾</button>
+      <!-- Inventory Category Navigation Filter -->
+      <div class="inventory-nav-tabs">
+        <button class="inv-tab active" onclick="PackController.filterTab('ALL')">[ ALL ITEMS ]</button>
+        <button class="inv-tab" onclick="PackController.filterTab('TOOL')">[ TOOLS ]</button>
+        <button class="inv-tab" onclick="PackController.filterTab('PART')">[ TECH & PARTS ]</button>
+        <button class="inv-tab" onclick="PackController.filterTab('KEY')">[ SWAG & KEYS ]</button>
       </div>
 
-      <div class="tb-context-row">
-        <span class="tb-context-label">> ACTION:</span>
-        <div class="tb-context-actions" id="contextActionsSlot">
-          <button type="button" class="btn-context" onclick="showTradeRules()">📖 Swag Trading Rule</button>
-        </div>
+      <!-- Items List -->
+      <div id="items-container" class="items-grid">
+        <!-- Rendered dynamically by PackController -->
       </div>
 
-      <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">NAVIGATION</div>
-        <a href="profile.html" class="tb-menu-item">👤 Cacher Profile</a>
-        <div class="tb-menu-item" onclick="showRulesModal()">📖 Geocaching Rules & BYOP</div>
-        
-        <div class="tb-menu-divider"></div>
-        
-        <div class="tb-menu-header">DISPLAY / ACCESSIBILITY</div>
-        <div class="tb-menu-controls">
-          <div class="control-grid-4">
-            <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
-            <button type="button" class="btn-control-chip" id="chipThemeLight" onclick="setTheme('light')">PAPER</button>
-            <button type="button" class="btn-control-chip" id="chipThemeAmber" onclick="setTheme('amber')">AMBER</button>
-            <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
-          </div>
+      <!-- Physical Container Lid & Voucher Code Redemption Dock -->
+      <div class="voucher-dock">
+        <div class="panel-header">FIELD VOUCHER REDEMPTION DOCK</div>
+        <div style="font-size: 0.72rem; color: var(--text-dim);">
+          Enter codes stamped under physical ammo can lids or washers found in the field.
         </div>
-        <div class="tb-menu-controls">
-          <div class="control-grid">
-            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
-            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
-            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">XL</button>
-          </div>
-        </div>
-
-        <div class="tb-menu-divider"></div>
-        
-        <div class="tb-menu-header">OPERATOR SESSION</div>
-        <a href="terminal.html" class="tb-menu-item">👤 Switch Cacher / Log In</a>
-        <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
-        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Progress</div>
-      </div>
-
-    </div>
-
-    <div class="deck-container" id="deckPack">
-      
-      <div class="pack-header-card">
-        <div class="pack-meta">CONTROLLED ITEM INVENTORY</div>
-        <div class="pack-title">Cacher Trail Pack</div>
-        <div class="pack-desc">
-          Official corridor permits, clues, and signature swag registered to your session. Tap an item for custody info.
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <input type="text" id="voucher-input" class="cipher-input" placeholder="STAMPED VOUCHER..." autocomplete="off">
+          <button class="btn-cipher primary" onclick="PackController.redeemVoucher()">[ CLAIM ]</button>
         </div>
       </div>
 
-      <div class="pack-list-section" id="packInventoryList">
-      </div>
+    </main>
 
-      <!-- Structured Transfer Interface: Replaced open text inputs -->
-      <div class="trade-card" id="tradeAirlock">
-        <div class="trade-title" id="tradeDockTitle">📦 CACHE TRADING: GC10001</div>
-        <div class="trade-grid">
-          <div>
-            <label style="font-size:10px; color:var(--text-dim); display:block; margin-bottom:3px;">LEAVE FROM PACK:</label>
-            <select id="selectLeaveItem" class="trade-select" style="width:100%;">
-              <option value="">-- None (Keep Pack) --</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:10px; color:var(--text-dim); display:block; margin-bottom:3px;">TAKE FROM CONTAINER:</label>
-            <select id="selectTakeItem" class="trade-select" style="width:100%;">
-              <option value="">-- None (Browse Only) --</option>
-            </select>
-          </div>
-        </div>
-        <button type="button" class="btn-trade" id="btnTradeSubmit" onclick="recordSwagTrade()">
-          CONFIRM CUSTODY TRANSFER ➔
-        </button>
-      </div>
-
-    </div>
-
+    <!-- Symmetrical 4-Anchor Bottom Navigation -->
+    <nav class="nav-anchor-strip">
+      <a href="mission.html" class="nav-tab">
+        <span>[ 🔓 ]</span>
+        <span>MISSION</span>
+      </a>
+      <a href="map.html" class="nav-tab">
+        <span>[ 🗺️ ]</span>
+        <span>MAP</span>
+      </a>
+      <a href="pack.html" class="nav-tab active">
+        <span>[ 🎒 ]</span>
+        <span>PACK</span>
+      </a>
+      <a href="profile.html" class="nav-tab">
+        <span>[ ⚙️ ]</span>
+        <span>MENU</span>
+      </a>
+    </nav>
   </div>
 
+  <script src="js/cipher-audio.js"></script>
+  <script src="js/cipher-core.js"></script>
   <script>
-    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
+    const PackController = (function () {
+      let activeFilter = 'ALL';
 
-    // MASTER GAME ASSET CATALOG (Finite, Author-Controlled Swag Inventory)
-    const MASTER_SWAG_CATALOG = {
-      "SWAG-WOODEN-01": { itemId: "SWAG-WOODEN-01", icon: "🪙", title: "3D Wooden Coin", desc: "Nezzmuk Signature Series #01", type: "Swag" },
-      "SWAG-PATHTAG-01": { itemId: "SWAG-PATHTAG-01", icon: "🏷️", title: "Cache Tales Pathtag", desc: "Official 2026 Trail Edition", type: "Swag" },
-      "SWAG-TAG-BRASS": { itemId: "SWAG-TAG-BRASS", icon: "⚙️", title: "Milled Brass Token", desc: "Heavy corridor token stamped #42", type: "Swag" },
-      "SWAG-QUARTZ-01": { itemId: "SWAG-QUARTZ-01", icon: "🪨", title: "Bonneville Bench Quartzite", desc: "Polished Lake Bonneville strata specimen", type: "Swag" }
-    };
+      return {
+        init: function () {
+          this.updateHardwareDisplay();
+          this.renderInventory();
+        },
 
-    // Cache containers starting inventory
-    const CACHE_INVENTORY = {
-      "GC10001": ["SWAG-PATHTAG-01", "SWAG-TAG-BRASS"],
-      "GC10008": ["SWAG-QUARTZ-01"],
-      "GC10017": ["SWAG-WOODEN-01"],
-      "GC10025": []
-    };
+        updateHardwareDisplay: function () {
+          const state = CipherCore.getState();
+          document.getElementById('spec-ram').textContent = `${state.hardware.ramKB}KB`;
+          document.getElementById('spec-bus').textContent = state.hardware.busSpeed;
+          document.getElementById('spec-voltage').textContent = state.hardware.floatVoltage;
+        },
 
-    let currentStage = 1;
-    let packItems = [];
-    let activeUser = "Nezzmuk";
-    let activeSyncKey = "CT-NEZZ-1605";
+        filterTab: function (category) {
+          CipherAudio.click();
+          activeFilter = category;
+          const tabs = document.querySelectorAll('.inv-tab');
+          tabs.forEach(tab => {
+            if (tab.textContent.includes(category)) {
+              tab.classList.add('active');
+            } else {
+              tab.classList.remove('active');
+            }
+          });
+          this.renderInventory();
+        },
 
-    function loadGameState() {
-      try {
-        const savedStage = localStorage.getItem('cipher_active_stage');
-        if (savedStage) currentStage = parseInt(savedStage, 10);
+        renderInventory: function () {
+          const state = CipherCore.getState();
+          const container = document.getElementById('items-container');
+          container.innerHTML = '';
 
-        const savedPack = localStorage.getItem('cipher_pack_items');
-        if (savedPack) {
-          packItems = JSON.parse(savedPack);
-        } else {
-          packItems = [
-            { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" },
-            MASTER_SWAG_CATALOG["SWAG-WOODEN-01"]
-          ];
+          const filtered = state.inventory.filter(item => {
+            if (activeFilter === 'ALL') return true;
+            return item.type === activeFilter;
+          });
+
+          if (filtered.length === 0) {
+            container.innerHTML = `
+              <div class="cipher-panel" style="text-align: center; color: var(--text-dim); font-size: 0.8rem; padding: 20px;">
+                NO ASSETS MATCHING CATEGORY [${activeFilter}]
+              </div>
+            `;
+            return;
+          }
+
+          filtered.forEach(item => {
+            const isPart = item.type === 'PART';
+            const isKey = item.type === 'KEY' || item.type === 'PERMIT';
+
+            const card = document.createElement('div');
+            card.className = `item-card ${isPart ? 'is-part' : ''}`;
+
+            card.innerHTML = `
+              <div class="item-header-row">
+                <span class="item-name">${item.name}</span>
+                <span class="item-tag ${isPart ? 'tag-part' : (isKey ? 'tag-key' : '')}">[${item.type}]</span>
+              </div>
+              <div class="item-desc">${item.desc}</div>
+              <div class="item-action-row">
+                ${isPart ? `<button class="btn-cipher primary" style="font-size: 0.75rem; padding: 4px 8px;" onclick="PackController.feedItem('${item.id}')">[ ⚡ FEED TO CIPHER ]</button>` : ''}
+                <button class="btn-cipher" style="font-size: 0.75rem; padding: 4px 8px;" onclick="PackController.inspectItem('${item.name}')">[ 🔍 INSPECT ]</button>
+              </div>
+            `;
+
+            container.appendChild(card);
+          });
+        },
+
+        feedItem: function (itemId) {
+          const result = CipherCore.feedItemToCipher(itemId);
+          if (result.success) {
+            this.updateHardwareDisplay();
+            this.renderInventory();
+          } else {
+            CipherAudio.buzz();
+            alert(result.reason);
+          }
+        },
+
+        inspectItem: function (name) {
+          CipherAudio.click();
+          alert(`[ITEM INSPECTION] // ${name}\nSerial etching and hardware marks verified authentic.`);
+        },
+
+        redeemVoucher: function () {
+          const input = document.getElementById('voucher-input');
+          const code = input.value.trim().toUpperCase();
+          if (!code) return;
+
+          // Example Field Container Lid Codes
+          if (code === "GC1-LID-ANCHOR" || code === "ANCHOR-LID-72") {
+            CipherAudio.chime();
+            const state = CipherCore.getState();
+
+            // Check if already claimed
+            if (state.inventory.some(i => i.id === 'PART_TUNING_COIL')) {
+              alert("Lid voucher already claimed in pack.");
+              return;
+            }
+
+            state.inventory.push({
+              id: 'PART_TUNING_COIL',
+              type: 'PART',
+              name: 'Antenna Tuning Coil (Surplus)',
+              desc: 'High-gain ferrite coil found inside Cache 01. Can be fed to C.I.P.H.E.R. to stabilize audio frequencies.',
+              consumable: true,
+              targetUpgrade: 'ramKB',
+              upgradeVal: 256
+            });
+
+            CipherCore.commitMilestone('VOUCHER_CLAIMED', { code: code });
+            CipherAudio.speak("Lid voucher verified. Surplus hardware added to pack.");
+            input.value = '';
+            this.renderInventory();
+          } else {
+            CipherAudio.buzz();
+            alert("INVALID VOUCHER CODE. Check the physical container stamp.");
+            input.value = '';
+          }
         }
+      };
+    })();
 
-        const user = localStorage.getItem('ct_cacher_user');
-        if (user) activeUser = user;
-
-        const key = localStorage.getItem('ct_cacher_key');
-        if (key) activeSyncKey = key;
-      } catch (e) {
-        console.warn('Local state read error:', e);
-      }
-
-      document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
-    }
-
-    function saveGameState() {
-      try {
-        localStorage.setItem('cipher_pack_items', JSON.stringify(packItems));
-      } catch (e) {
-        console.warn('Could not save pack state:', e);
-      }
-    }
-
-    function getActiveGc() {
-      const map = { 1: "GC10001", 2: "GC10008", 3: "GC10017", 4: "GC10025" };
-      return map[currentStage] || "GC10001";
-    }
-
-    function renderPackList() {
-      const listEl = document.getElementById('packInventoryList');
-      listEl.innerHTML = "";
-
-      if (packItems.length === 0) {
-        listEl.innerHTML = `
-          <div style="text-align:center; padding:20px; color:var(--text-dim); font-family:var(--font-mono);">
-            Pack is empty. Solve corridor caches to collect items and washers.
-          </div>
-        `;
-        return;
-      }
-
-      packItems.forEach((item) => {
-        const card = document.createElement('div');
-        card.className = "inventory-card";
-        card.onclick = () => {
-          playClick();
-          alert(`[${item.itemId || 'ITEM'}] ${item.title}\nType: ${item.type || 'Swag'}\n\n${item.desc}`);
-        };
-
-        card.innerHTML = `
-          <div class="inv-icon">${item.icon}</div>
-          <div class="inv-content">
-            <div class="inv-title">${item.title}</div>
-            <div class="inv-desc">${item.desc}</div>
-            <span class="inv-tag">${item.type || 'Swag'} // ${item.itemId || 'GEN-1'}</span>
-          </div>
-        `;
-        listEl.appendChild(card);
-      });
-
-      populateTradeDropdowns();
-    }
-
-    function populateTradeDropdowns() {
-      const activeGc = getActiveGc();
-      document.getElementById("tradeDockTitle").innerText = `📦 CACHE TRADING: ${activeGc}`;
-
-      const leaveSelect = document.getElementById("selectLeaveItem");
-      const takeSelect = document.getElementById("selectTakeItem");
-
-      leaveSelect.innerHTML = `<option value="">-- None (Keep Pack) --</option>`;
-      takeSelect.innerHTML = `<option value="">-- None (Browse Only) --</option>`;
-
-      // Populate items in player pack (only Swag can be traded; Permits/Keys cannot be traded)
-      packItems.forEach(item => {
-        if (item.type === "Swag") {
-          const opt = document.createElement("option");
-          opt.value = item.itemId;
-          opt.textContent = `${item.title} (${item.itemId})`;
-          leaveSelect.appendChild(opt);
-        }
-      });
-
-      // Populate items currently residing in the active cache container
-      const containerItems = CACHE_INVENTORY[activeGc] || [];
-      containerItems.forEach(id => {
-        const item = MASTER_SWAG_CATALOG[id];
-        if (item) {
-          const opt = document.createElement("option");
-          opt.value = item.itemId;
-          opt.textContent = `${item.title} (${item.itemId})`;
-          takeSelect.appendChild(opt);
-        }
-      });
-    }
-
-    async function recordSwagTrade() {
-      playClick();
-      const leaveSelect = document.getElementById("selectLeaveItem");
-      const takeSelect = document.getElementById("selectTakeItem");
-
-      const leaveId = leaveSelect.value;
-      const takeId = takeSelect.value;
-
-      if (!leaveId && !takeId) {
-        alert("Select an item to leave from your pack, an item to take from the container, or both.");
-        return;
-      }
-
-      const activeGc = getActiveGc();
-      const badge = document.getElementById("statusPlaceholder");
-      if (badge) badge.textContent = "[ 🟡 LOGGING SWAG... ]";
-
-      let droppedItemTitle = "None";
-      let takenItemTitle = "None";
-
-      // Transfer custody: Remove left item from player pack
-      if (leaveId) {
-        const idx = packItems.findIndex(i => i.itemId === leaveId);
-        if (idx !== -1) {
-          droppedItemTitle = packItems[idx].title;
-          packItems.splice(idx, 1);
-        }
-        if (!CACHE_INVENTORY[activeGc].includes(leaveId)) {
-          CACHE_INVENTORY[activeGc].push(leaveId);
-        }
-      }
-
-      // Transfer custody: Add taken item to player pack
-      if (takeId) {
-        const item = MASTER_SWAG_CATALOG[takeId];
-        if (item && !packItems.some(i => i.itemId === takeId)) {
-          takenItemTitle = item.title;
-          packItems.push(item);
-        }
-        const cIdx = CACHE_INVENTORY[activeGc].indexOf(takeId);
-        if (cIdx !== -1) {
-          CACHE_INVENTORY[activeGc].splice(cIdx, 1);
-        }
-      }
-
-      saveGameState();
-      renderPackList();
-
-      const params = new URLSearchParams({
-        action: "tradeSwag",
-        username: activeUser,
-        syncKey: activeSyncKey,
-        gc: activeGc,
-        dropped: leaveId ? `${droppedItemTitle} [${leaveId}]` : "None",
-        taken: takeId ? `${takenItemTitle} [${takeId}]` : "None"
-      });
-
-      try {
-        const response = await fetch(`${GOOGLE_SCRIPT_API_URL}?${params.toString()}`, {
-          method: "GET",
-          mode: "cors"
-        });
-
-        const result = await response.json();
-        console.log("☁️ SWAG TRADE LOGGED TO LEDGER:", result);
-        playChime();
-        if (badge) badge.textContent = "[ 🟢 ONLINE // GZ ]";
-        alert(`CUSTODY TRANSFER CONFIRMED!\nLeft in ${activeGc}: ${droppedItemTitle}\nTook into pack: ${takenItemTitle}`);
-      } catch (err) {
-        console.warn("⚠️ Network offline, trade stored locally:", err);
-        if (badge) badge.textContent = "[ 🟠 SAVED OFFLINE ]";
-        alert(`OFFLINE: Trade saved locally in memory. Cloud ledger will sync when online.`);
-      }
-    }
-
-    function showTradeRules() {
-      playClick();
-      alert("SWAG TRADING ETIQUETTE:\nIf you take an item from a cache container, you must leave something of equal or greater value.\nTrackables are not swag: they belong to owners and are meant to travel.");
-    }
-
-    function showRulesModal() {
-      playClick();
-      alert("GEOCACHING RULES:\n1. If you take something from the container, leave something of equal or greater value.\n2. Write your handle and date in the physical paper logbook (BYOP).\n3. Re-hide the cache container exactly as you found it.");
-    }
-
-    function resetDemoProgress() {
-      if (!confirm("Reset pack back to default Permit #01 and Wooden Coin?")) return;
-      packItems = [
-        { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" },
-        MASTER_SWAG_CATALOG["SWAG-WOODEN-01"]
-      ];
-      saveGameState();
-      renderPackList();
-      playClick();
-      alert("Pack inventory reset to defaults.");
-    }
-
-    function toggleMenu(e) {
-      if (e) { e.stopPropagation(); e.preventDefault(); }
-      playClick();
-      document.getElementById('menuDrawer').classList.toggle('open');
-    }
-
-    document.addEventListener('click', function(e) {
-      const toolbar = document.getElementById('cipherToolbar');
-      const drawer = document.getElementById('menuDrawer');
-      if (drawer && drawer.classList.contains('open')) {
-        if (!toolbar.contains(e.target)) drawer.classList.remove('open');
-      }
-    });
-
-    let soundActive = true;
-    let audioCtx = null;
-
-    function initAudio() {
-      try {
-        if (!audioCtx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) audioCtx = new AudioContext();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      } catch (err) {}
-    }
-
-    function playClick() {
-      if (!soundActive) return;
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
-      } catch (err) {}
-    }
-
-    function playChime() {
-      if (!soundActive) return;
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const now = audioCtx.currentTime;
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc1.type = 'square';
-        osc2.type = 'sine';
-        osc1.frequency.setValueAtTime(587.33, now);
-        osc1.frequency.setValueAtTime(880, now + 0.08);
-        osc2.frequency.setValueAtTime(1174.66, now);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.35);
-        osc2.stop(now + 0.35);
-      } catch (err) {}
-    }
-
-    function toggleSound() {
-      soundActive = !soundActive;
-      playClick();
-      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
-    }
-
-    function setTheme(themeKey) {
-      playClick();
-      document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
-      ['chipThemeCrt', 'chipThemeLight', 'chipThemeAmber', 'chipThemeHivis'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-      });
-
-      if (themeKey === 'light') {
-        document.body.classList.add('theme-light');
-        document.getElementById('chipThemeLight').classList.add('active');
-      } else if (themeKey === 'amber') {
-        document.body.classList.add('theme-amber');
-        document.getElementById('chipThemeAmber').classList.add('active');
-      } else if (themeKey === 'hivis') {
-        document.body.classList.add('theme-hivis');
-        document.getElementById('chipThemeHivis').classList.add('active');
-      } else {
-        document.body.classList.add('theme-crt');
-        document.getElementById('chipThemeCrt').classList.add('active');
-      }
-      try { localStorage.setItem('cipher_theme', themeKey); } catch (e) {}
-    }
-
-    function setFontSize(sizeKey) {
-      playClick();
-      document.body.classList.remove('font-regular', 'font-large', 'font-trailxl');
-      ['chipFontReg', 'chipFontLg', 'chipFontXl'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-      });
-
-      if (sizeKey === 'large') {
-        document.body.classList.add('font-large');
-        document.getElementById('chipFontLg').classList.add('active');
-      } else if (sizeKey === 'trailxl') {
-        document.body.classList.add('font-trailxl');
-        document.getElementById('chipFontXl').classList.add('active');
-      } else {
-        document.body.classList.add('font-regular');
-        document.getElementById('chipFontReg').classList.add('active');
-      }
-      try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadGameState();
-      try {
-        const savedTheme = localStorage.getItem('cipher_theme');
-        if (savedTheme) setTheme(savedTheme);
-        const savedFont = localStorage.getItem('cipher_font_size');
-        if (savedFont) setFontSize(savedFont);
-      } catch (e) {}
-      renderPackList();
+    document.addEventListener('DOMContentLoaded', () => {
+      PackController.init();
     });
   </script>
 </body>
