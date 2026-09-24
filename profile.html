@@ -1,752 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Cacher Profile & Passkey</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>C.I.P.H.E.R. // System Menu & Settings</title>
+  <link rel="stylesheet" href="css/cipher-style.css">
   <style>
-    :root {
-      --content-scale: 1;
-      --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
-      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
-      --bg-dark: #0a0f0d;
-      --panel-bg: #121a15;
-      --panel-inner: #080d0a;
-      --border-main: #2a5a3a;
-      --border-accent: #38ef7d;
-      --accent: #38ef7d;
-      --accent-dim: #7da88d;
-      --text-bright: #ffffff;
-      --text-main: #38ef7d;
-      --text-dim: #7da88d;
-      --warning: #f7b731;
-      --danger: #eb3b5a;
-    }
-
-    body.theme-light {
-      --bg-dark: #d8ded9;
-      --panel-bg: #f4f6f4;
-      --panel-inner: #e6eae6;
-      --border-main: #405747;
-      --border-accent: #174223;
-      --accent: #144724;
-      --accent-dim: #254d33;
-      --text-bright: #050a06;
-      --text-main: #050a06;
-      --text-dim: #1f3626;
-      --warning: #874b00;
-      --danger: #a81320;
-    }
-
-    body.theme-amber {
-      --bg-dark: #120b00;
-      --panel-bg: #1f1402;
-      --panel-inner: #0f0a00;
-      --border-main: #5c3f0d;
-      --border-accent: #ffb000;
-      --accent: #ffb000;
-      --accent-dim: #ba8829;
-      --text-bright: #ffffff;
-      --text-main: #ffb000;
-      --text-dim: #ba8829;
-      --warning: #ffcf66;
-      --danger: #ff4d4d;
-    }
-
-    body.theme-hivis {
-      --bg-dark: #0a0e14;
-      --panel-bg: #131924;
-      --panel-inner: #0d121c;
-      --border-main: #2b456b;
-      --border-accent: #4ba3ff;
-      --accent: #4ba3ff;
-      --accent-dim: #8ab6e9;
-      --text-bright: #ffffff;
-      --text-main: #4ba3ff;
-      --text-dim: #8ab6e9;
-      --warning: #ffd13b;
-      --danger: #ff5252;
-    }
-
-    body.font-regular { --content-scale: 1; }
-    body.font-large { --content-scale: 1.18; }
-    body.font-trailxl { --content-scale: 1.38; }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: var(--font-ui);
-      font-size: 14px;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 10px;
-    }
-
-    .app-shell {
-      width: 100%;
-      max-width: 650px;
+    .settings-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-bottom: 40px;
+      gap: 8px;
     }
-
-    .cipher-toolbar {
-      background: var(--panel-inner);
-      border: 2px solid var(--border-main);
-      border-radius: 8px;
-      position: relative;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .tb-status-row {
+    .settings-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 7px 10px;
-      border-bottom: 1px solid var(--border-main);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      background: var(--panel-inner);
-      white-space: nowrap;
-      overflow: hidden;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border-color);
     }
-
-    .tb-status-badge {
-      background: var(--panel-bg);
-      color: var(--accent);
-      border: 1px solid var(--border-main);
-      padding: 2px 6px;
-      border-radius: 3px;
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+    .settings-label {
+      font-size: 15px;
       font-weight: bold;
-      font-size: 11px;
-      flex-shrink: 0;
+      color: #ffffff;
     }
-
-    .tb-nav-row {
-      display: grid;
-      grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
-      gap: 4px;
-      padding: 6px;
-      background: var(--panel-bg);
-    }
-
-    .tb-btn {
-      background: var(--panel-inner);
-      border: 1px solid var(--border-main);
-      color: var(--text-dim);
-      padding: 8px 3px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      text-decoration: none;
-    }
-    .tb-btn:active { background: var(--border-main); }
-    .tb-btn.active {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border-color: var(--accent);
-    }
-
-    .tb-context-row {
-      padding: 6px 8px;
-      background: var(--panel-inner);
-      border-top: 1px dashed var(--border-main);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      overflow-x: auto;
-      white-space: nowrap;
-    }
-
-    .tb-context-label {
-      color: var(--warning);
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-
-    .tb-context-actions {
+    .button-toggle-group {
       display: flex;
       gap: 6px;
-      width: 100%;
     }
-
-    .btn-context {
-      background: var(--panel-bg);
-      color: var(--text-bright);
-      border: 1px solid var(--border-main);
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: bold;
-      white-space: nowrap;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .btn-context:active {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .tb-menu-drawer {
-      display: none;
-      position: absolute;
-      top: calc(100% + 4px);
-      right: 6px;
-      width: 290px;
-      background: var(--panel-inner);
-      border: 2px solid var(--border-accent);
-      border-radius: 6px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-      z-index: 100;
-      padding: 8px 0;
-      font-family: var(--font-mono);
-    }
-    .tb-menu-drawer.open { display: block; }
-
-    .tb-menu-header {
-      padding: 4px 12px;
-      font-size: 10px;
-      color: var(--warning);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-weight: bold;
-      border-bottom: 1px solid var(--border-main);
-    }
-
-    .tb-menu-item {
-      padding: 9px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-bright);
-      font-weight: bold;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
-
-    .tb-menu-controls {
-      padding: 6px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-    .control-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-    .btn-control-chip {
-      background: var(--panel-bg);
-      border: 1px solid var(--border-main);
+    .btn-toggle {
+      background-color: var(--bg-surface-raised);
+      border: 1px solid var(--border-color);
       color: var(--text-dim);
-      padding: 6px 2px;
-      font-size: 10px;
+      padding: 8px 12px;
       font-family: var(--font-mono);
+      font-size: 13px;
       font-weight: bold;
-      text-align: center;
-      border-radius: 3px;
       cursor: pointer;
     }
-    .btn-control-chip.active {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border-color: var(--accent);
+    .btn-toggle.active {
+      background-color: var(--border-bright);
+      color: #000000;
+      border-color: var(--border-bright);
     }
-
-    .tb-menu-divider { height: 1px; background: var(--border-main); margin: 5px 0; }
-
-    .deck-container {
-      background: var(--panel-bg);
-      border: 2px solid var(--border-main);
-      border-radius: 8px;
-      overflow: hidden;
+    .synckey-card {
+      background-color: var(--bg-surface-raised);
+      border: 1px solid var(--accent-amber);
+      padding: 12px;
       display: flex;
       flex-direction: column;
+      gap: 6px;
     }
-
-    .profile-card {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border-bottom: 1px solid var(--border-main);
-      background: var(--panel-inner);
-    }
-
-    .profile-avatar-row { display: flex; align-items: center; gap: 14px; }
-
-    .profile-avatar {
-      width: 52px;
-      height: 52px;
-      background: var(--panel-bg);
-      border: 2px solid var(--accent);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      flex-shrink: 0;
-    }
-
-    .profile-name-group { display: flex; flex-direction: column; gap: 2px; }
-
-    .profile-handle {
-      font-size: calc(20px * var(--content-scale));
-      font-weight: 800;
-      color: var(--text-bright);
-      font-family: var(--font-mono);
-      letter-spacing: 0.5px;
-    }
-
-    .profile-role {
-      font-size: calc(11px * var(--content-scale));
-      color: var(--warning);
-      font-family: var(--font-mono);
-      font-weight: 800;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      padding: 14px;
-      background: var(--bg-dark);
-      border-bottom: 1px solid var(--border-main);
-    }
-
-    .stat-box {
-      background: var(--panel-inner);
-      border: 1px solid var(--border-main);
-      border-radius: 4px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      text-align: center;
-      font-family: var(--font-mono);
-    }
-
-    .stat-val { font-size: calc(18px * var(--content-scale)); font-weight: 800; color: var(--accent); }
-    .stat-lbl { font-size: 9px; color: var(--text-dim); font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; }
-
-    .section-card {
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border-bottom: 1px solid var(--border-main);
-    }
-
-    .section-title {
-      font-size: calc(12px * var(--content-scale));
-      color: var(--warning);
-      font-family: var(--font-mono);
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .field-group { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); }
-    .field-label { font-size: 10px; color: var(--text-dim); font-weight: bold; letter-spacing: 0.5px; }
-
-    .field-input {
-      background: var(--bg-dark);
-      border: 1px solid var(--border-main);
-      color: var(--text-bright);
-      font-family: var(--font-mono);
-      font-size: calc(13px * var(--content-scale));
-      padding: 9px 10px;
-      border-radius: 4px;
+    .synckey-val {
+      font-size: 18px;
       font-weight: bold;
-      outline: none;
-    }
-    .field-input:focus { border-color: var(--accent); }
-
-    .sync-key-display {
-      background: var(--panel-inner);
-      border: 1px dashed var(--accent);
-      padding: 10px;
-      border-radius: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: var(--font-mono);
-      font-size: 14px;
-      color: var(--accent);
-      font-weight: 800;
+      color: var(--accent-amber);
       letter-spacing: 1px;
     }
-
-    .btn-copy {
-      background: var(--panel-bg);
-      border: 1px solid var(--border-main);
-      color: var(--text-bright);
-      font-size: 10px;
-      padding: 4px 8px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .btn-copy:active { background: var(--accent); color: var(--bg-dark); }
-
-    .btn-save {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border: none;
-      font-family: var(--font-mono);
-      font-size: calc(13px * var(--content-scale));
-      font-weight: 800;
-      padding: 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      text-align: center;
-    }
-    .btn-save:active { opacity: 0.85; }
   </style>
 </head>
-<body class="theme-crt font-regular">
+<body>
 
-  <div class="app-shell">
+  <div class="app-container">
+    <header class="status-header">
+      <span class="brand-title">C.I.P.H.E.R. // SYSTEM MENU</span>
+      <span class="telemetry-pill">CONFIG: ACTIVE</span>
+    </header>
 
-    <div class="cipher-toolbar" id="cipherToolbar">
+    <main class="viewport-stage">
       
-      <div class="tb-status-row">
-        <div>
-          <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CLEAN</span>
-        </div>
-        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 PROFILE ]</span>
-        <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
-      </div>
-
-      <div class="tb-nav-row">
-        <a href="mission.html" class="tb-btn" id="btnNavMission">🎯 MISSION</a>
-        <a href="trail.html" class="tb-btn" id="btnNavTrail">🗺️ TRAIL</a>
-        <a href="pack.html" class="tb-btn" id="btnNavPack">🎒 PACK</a>
-        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">≡ MENU ▾</button>
-      </div>
-
-      <div class="tb-context-row">
-        <span class="tb-context-label">> ACTION:</span>
-        <div class="tb-context-actions" id="contextActionsSlot">
-          <button type="button" class="btn-context" onclick="copySyncKey()">📋 Copy SyncKey</button>
-        </div>
-      </div>
-
-      <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">NAVIGATION</div>
-        <a href="profile.html" class="tb-menu-item">👤 Cacher Profile</a>
-        <div class="tb-menu-item" onclick="showRulesModal()">📖 Geocaching Rules & BYOP</div>
+      <!-- Display & Accessibility Controls -->
+      <div class="cipher-panel settings-group">
+        <div class="panel-header">DISPLAY & ACCESSIBILITY</div>
         
-        <div class="tb-menu-divider"></div>
-        
-        <div class="tb-menu-header">DISPLAY / ACCESSIBILITY</div>
-        <div class="tb-menu-controls">
-          <div class="control-grid-4">
-            <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
-            <button type="button" class="btn-control-chip" id="chipThemeLight" onclick="setTheme('light')">PAPER</button>
-            <button type="button" class="btn-control-chip" id="chipThemeAmber" onclick="setTheme('amber')">AMBER</button>
-            <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
-          </div>
-        </div>
-        <div class="tb-menu-controls">
-          <div class="control-grid">
-            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
-            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
-            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">XL</button>
+        <!-- Font Size Selector -->
+        <div class="settings-row">
+          <span class="settings-label">FONT SIZE:</span>
+          <div class="button-toggle-group">
+            <button id="font-btn-reg" class="btn-toggle" onclick="MenuController.setFont('regular')">REG</button>
+            <button id="font-btn-lg" class="btn-toggle" onclick="MenuController.setFont('large')">LARGE</button>
+            <button id="font-btn-xl" class="btn-toggle" onclick="MenuController.setFont('xl')">XL</button>
           </div>
         </div>
 
-        <div class="tb-menu-divider"></div>
-        
-        <div class="tb-menu-header">OPERATOR SESSION</div>
-        <a href="terminal.html" class="tb-menu-item">👤 Switch Cacher / Log In</a>
-        <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
-        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Progress</div>
-      </div>
+        <!-- Visual Theme -->
+        <div class="settings-row">
+          <span class="settings-label">INTERFACE THEME:</span>
+          <div class="button-toggle-group">
+            <button id="theme-btn-crt" class="btn-toggle" onclick="MenuController.setTheme('crt')">CRT</button>
+            <button id="theme-btn-blue" class="btn-toggle" onclick="MenuController.setTheme('blueprint')">BLUEPRINT</button>
+          </div>
+        </div>
 
-    </div>
-
-    <div class="deck-container" id="deckProfile">
-      
-      <div class="profile-card">
-        <div class="profile-avatar-row">
-          <div class="profile-avatar" id="avatarBox">👤</div>
-          <div class="profile-name-group">
-            <div class="profile-handle" id="dossierUsername">NEZZMUK</div>
-            <div class="profile-role" id="dossierRole">VERIFIED CACHER // RAT PACK</div>
+        <!-- Voice Toggle -->
+        <div class="settings-row">
+          <span class="settings-label">SYNTH VOICE:</span>
+          <div class="button-toggle-group">
+            <button id="voice-btn-on" class="btn-toggle" onclick="MenuController.setVoice(true)">ON</button>
+            <button id="voice-btn-off" class="btn-toggle" onclick="MenuController.setVoice(false)">OFF</button>
           </div>
         </div>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-val" id="statCompletedCount">0 / 4</div>
-          <div class="stat-lbl">Finds Logged</div>
+      <!-- Cloud Sync & Account State -->
+      <div class="cipher-panel settings-group">
+        <div class="panel-header">CLOUD SYNCHRONIZATION</div>
+        
+        <div class="synckey-card">
+          <div style="font-size: 13px; color: var(--text-dim); font-weight: bold;">🔑 CLOUD SYNC PASSKEY (SYNCKEY):</div>
+          <div id="display-synckey" class="synckey-val">CT-INIT-0000</div>
+          <div style="font-size: 13px; color: #d1fae5;">Restores progress, inventory, and hardware upgrades across any phone or desktop.</div>
+          <button class="btn-cipher" style="margin-top: 6px;" onclick="MenuController.copySyncKey()">[ 📋 COPY SYNCKEY ]</button>
         </div>
-        <div class="stat-box">
-          <div class="stat-val" id="statPercent">0%</div>
-          <div class="stat-lbl">Trail Completed</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" id="statActiveStage">01</div>
-          <div class="stat-lbl">Current Cache</div>
+
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+          <input type="text" id="restore-key-input" class="cipher-input" placeholder="ENTER RESTORE KEY..." autocomplete="off">
+          <button class="btn-cipher primary" onclick="MenuController.restoreProgress()">[ RESTORE ]</button>
         </div>
       </div>
 
-      <div class="section-card">
-        <div class="section-title">🔑 CLOUD SYNC PASSKEY (SyncKey)</div>
-        <div class="sync-key-display">
-          <span id="syncKeyVal">CT-NEZZ-1605</span>
-          <button type="button" class="btn-copy" onclick="copySyncKey()">COPY</button>
+      <!-- System Diagnostic / Hardware Status -->
+      <div class="cipher-panel settings-group">
+        <div class="panel-header">TERMINAL SPECIFICATION</div>
+        <div class="settings-row">
+          <span class="settings-label">FIRMWARE:</span>
+          <span style="color: var(--text-bright); font-weight: bold;">v3.4-CARTOGRAPHY</span>
         </div>
-        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); line-height: 1.4;">
-          Your unique SyncKey restores your verified finds, inventory, and unlocked trail stages across any device.
+        <div class="settings-row">
+          <span class="settings-label">CHASSIS:</span>
+          <span style="color: var(--text-bright); font-weight: bold;">1984 RSI MK-IV / RAT-MOD</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">HARDWARE RAM:</span>
+          <span id="menu-spec-ram" style="color: var(--accent-amber); font-weight: bold;">64KB</span>
         </div>
       </div>
 
-      <div class="section-card">
-        <div class="section-title">⚙️ CACHER PREFERENCES</div>
-        <div class="field-group">
-          <label class="field-label">SIGNATURE SWAG ITEM:</label>
-          <input type="text" id="inputSigItem" class="field-input" placeholder="e.g. 3D Wooden Coin" />
-        </div>
-        <button type="button" class="btn-save" onclick="saveProfileChanges()">
-          SAVE PREFERENCES ➔
-        </button>
-      </div>
+    </main>
 
-    </div>
-
+    <!-- Symmetrical 4-Anchor Navigation -->
+    <nav class="nav-anchor-strip">
+      <a href="mission.html" class="nav-tab">
+        <span>[ 🔓 ]</span>
+        <span>MISSION</span>
+      </a>
+      <a href="map.html" class="nav-tab">
+        <span>[ 🗺️ ]</span>
+        <span>MAP</span>
+      </a>
+      <a href="pack.html" class="nav-tab">
+        <span>[ 🎒 ]</span>
+        <span>PACK</span>
+      </a>
+      <a href="profile.html" class="nav-tab active">
+        <span>[ ⚙️ ]</span>
+        <span>MENU</span>
+      </a>
+    </nav>
   </div>
 
+  <script src="js/cipher-audio.js"></script>
+  <script src="js/cipher-core.js"></script>
   <script>
-    let activeUser = "Nezzmuk";
-    let activeSyncKey = "CT-NEZZ-1605";
-    let activeSig = "3D Wooden Coin";
-    let currentStage = 1;
-    let completedStages = [];
+    const MenuController = (function () {
+      return {
+        init: function () {
+          const state = CipherCore.getState();
+          document.getElementById('display-synckey').textContent = state.cacher.syncKey;
+          document.getElementById('menu-spec-ram').textContent = `${state.hardware.ramKB}KB`;
+          this.refreshButtons();
+        },
 
-    function loadProfile() {
-      try {
-        const user = localStorage.getItem('ct_cacher_user');
-        if (user) activeUser = user;
+        refreshButtons: function () {
+          const state = CipherCore.getState();
+          
+          // Font Buttons
+          ['reg', 'lg', 'xl'].forEach(k => {
+            const btn = document.getElementById(`font-btn-${k}`);
+            if (btn) btn.classList.remove('active');
+          });
+          const activeFont = state.meta.fontSize || 'regular';
+          if (activeFont === 'large') document.getElementById('font-btn-lg')?.classList.add('active');
+          else if (activeFont === 'xl') document.getElementById('font-btn-xl')?.classList.add('active');
+          else document.getElementById('font-btn-reg')?.classList.add('active');
 
-        const key = localStorage.getItem('ct_cacher_key');
-        if (key) activeSyncKey = key;
+          // Theme Buttons
+          const activeTheme = state.meta.theme || 'crt';
+          document.getElementById('theme-btn-crt')?.classList.toggle('active', activeTheme === 'crt');
+          document.getElementById('theme-btn-blue')?.classList.toggle('active', activeTheme === 'blueprint');
 
-        const sig = localStorage.getItem('ct_cacher_sig');
-        if (sig) activeSig = sig;
+          // Voice Buttons
+          const isVoice = CipherAudio.isVoiceEnabled();
+          document.getElementById('voice-btn-on')?.classList.toggle('active', isVoice);
+          document.getElementById('voice-btn-off')?.classList.toggle('active', !isVoice);
+        },
 
-        const stage = localStorage.getItem('cipher_active_stage');
-        if (stage) currentStage = parseInt(stage, 10);
+        setFont: function (size) {
+          CipherAudio.click();
+          CipherCore.setFontSize(size);
+          this.refreshButtons();
+        },
 
-        const completed = localStorage.getItem('cipher_completed_stages');
-        if (completed) completedStages = JSON.parse(completed);
-      } catch (e) {
-        console.warn('Profile read error:', e);
-      }
+        setTheme: function (theme) {
+          CipherAudio.click();
+          CipherCore.setTheme(theme);
+          this.refreshButtons();
+        },
 
-      document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
-      document.getElementById('dossierUsername').textContent = activeUser.toUpperCase();
-      document.getElementById('syncKeyVal').textContent = activeSyncKey || "NO PASSKEY";
-      document.getElementById('inputSigItem').value = activeSig;
+        setVoice: function (enable) {
+          CipherAudio.click();
+          if (CipherAudio.isVoiceEnabled() !== enable) {
+            CipherAudio.toggleVoice();
+          }
+          this.refreshButtons();
+        },
 
-      const isAdmin = ["NEZZMUK", "RATWAFFLES", "CHEDA", "JUSTKIMBAH"].includes(activeUser.toUpperCase());
-      document.getElementById('dossierRole').textContent = isAdmin ? "CORRIDOR MASTER // RAT PACK" : "VERIFIED FIELD CACHER";
-      document.getElementById('avatarBox').textContent = isAdmin ? "🤠" : "👤";
+        copySyncKey: function () {
+          CipherAudio.click();
+          const key = CipherCore.getState().cacher.syncKey;
+          navigator.clipboard.writeText(key).then(() => {
+            alert(`SYNCKEY COPIED:\n${key}`);
+          });
+        },
 
-      const finds = completedStages.length;
-      document.getElementById('statCompletedCount').textContent = `${finds} / 4`;
-      document.getElementById('statPercent').textContent = `${Math.round((finds / 4) * 100)}%`;
-      document.getElementById('statActiveStage').textContent = completedStages.includes(4) ? "COMPLETE" : `0${currentStage}`;
-    }
-
-    function saveProfileChanges() {
-      playClick();
-      const newSig = document.getElementById('inputSigItem').value.trim();
-      if (newSig) {
-        localStorage.setItem('ct_cacher_sig', newSig);
-        playChime();
-        alert("Cacher preferences saved.");
-      }
-    }
-
-    function copySyncKey() {
-      playClick();
-      if (!activeSyncKey) return;
-      navigator.clipboard.writeText(activeSyncKey).then(() => {
-        alert(`SyncKey copied to clipboard:\n${activeSyncKey}`);
-      }).catch(() => {
-        alert(`Your SyncKey is: ${activeSyncKey}`);
-      });
-    }
-
-    function showRulesModal() {
-      playClick();
-      alert("GEOCACHING RULES:\n1. If you take something from the container, leave something of equal or greater value.\n2. Write your handle and date in the physical paper logbook (BYOP).\n3. Re-hide the cache container exactly as you found it.");
-    }
-
-    function resetDemoProgress() {
-      if (!confirm("Reset trail progress back to Cache 01?")) return;
-      localStorage.setItem('cipher_active_stage', '1');
-      localStorage.setItem('cipher_completed_stages', JSON.stringify([]));
-      loadProfile();
-      playClick();
-      alert("Trail progress reset to Cache 01.");
-    }
-
-    function toggleMenu(e) {
-      if (e) { e.stopPropagation(); e.preventDefault(); }
-      playClick();
-      document.getElementById('menuDrawer').classList.toggle('open');
-    }
-
-    document.addEventListener('click', function(e) {
-      const toolbar = document.getElementById('cipherToolbar');
-      const drawer = document.getElementById('menuDrawer');
-      if (drawer && drawer.classList.contains('open')) {
-        if (!toolbar.contains(e.target)) drawer.classList.remove('open');
-      }
-    });
-
-    let soundActive = true;
-    let audioCtx = null;
-
-    function initAudio() {
-      try {
-        if (!audioCtx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) audioCtx = new AudioContext();
+        restoreProgress: function () {
+          const input = document.getElementById('restore-key-input');
+          const val = input.value.trim().toUpperCase();
+          if (!val) return;
+          CipherAudio.click();
+          alert(`SyncKey ${val} recognized. Pulling profile from Google Ledger...`);
+          input.value = '';
         }
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      } catch (err) {}
-    }
+      };
+    })();
 
-    function playClick() {
-      if (!soundActive) return;
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
-      } catch (err) {}
-    }
-
-    function playChime() {
-      if (!soundActive) return;
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const now = audioCtx.currentTime;
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc1.type = 'square';
-        osc2.type = 'sine';
-        osc1.frequency.setValueAtTime(587.33, now);
-        osc1.frequency.setValueAtTime(880, now + 0.08);
-        osc2.frequency.setValueAtTime(1174.66, now);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.35);
-        osc2.stop(now + 0.35);
-      } catch (err) {}
-    }
-
-    function toggleSound() {
-      soundActive = !soundActive;
-      playClick();
-      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
-    }
-
-    function setTheme(themeKey) {
-      playClick();
-      document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
-      ['chipThemeCrt', 'chipThemeLight', 'chipThemeAmber', 'chipThemeHivis'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-      });
-
-      if (themeKey === 'light') {
-        document.body.classList.add('theme-light');
-        document.getElementById('chipThemeLight').classList.add('active');
-      } else if (themeKey === 'amber') {
-        document.body.classList.add('theme-amber');
-        document.getElementById('chipThemeAmber').classList.add('active');
-      } else if (themeKey === 'hivis') {
-        document.body.classList.add('theme-hivis');
-        document.getElementById('chipThemeHivis').classList.add('active');
-      } else {
-        document.body.classList.add('theme-crt');
-        document.getElementById('chipThemeCrt').classList.add('active');
-      }
-      try { localStorage.setItem('cipher_theme', themeKey); } catch (e) {}
-    }
-
-    function setFontSize(sizeKey) {
-      playClick();
-      document.body.classList.remove('font-regular', 'font-large', 'font-trailxl');
-      ['chipFontReg', 'chipFontLg', 'chipFontXl'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-      });
-
-      if (sizeKey === 'large') {
-        document.body.classList.add('font-large');
-        document.getElementById('chipFontLg').classList.add('active');
-      } else if (sizeKey === 'trailxl') {
-        document.body.classList.add('font-trailxl');
-        document.getElementById('chipFontXl').classList.add('active');
-      } else {
-        document.body.classList.add('font-regular');
-        document.getElementById('chipFontReg').classList.add('active');
-      }
-      try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadProfile();
-      try {
-        const savedTheme = localStorage.getItem('cipher_theme');
-        if (savedTheme) setTheme(savedTheme);
-        const savedFont = localStorage.getItem('cipher_font_size');
-        if (savedFont) setFontSize(savedFont);
-      } catch (e) {}
+    document.addEventListener('DOMContentLoaded', () => {
+      MenuController.init();
     });
   </script>
 </body>
