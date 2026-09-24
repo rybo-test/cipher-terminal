@@ -18,15 +18,42 @@
   --accent-amber: #ffb300;     /* High-vis gold/amber */
   --accent-alert: #ff5252;     /* High-vis red */
   
-  /* Restored Font Sizes (Matching Legacy UI) */
+  /* Font Families */
   --font-mono: 'Courier New', Courier, monospace;
+
+  /* Font Scaling Defaults (Regular) */
   --font-size-base: 16px;
   --font-size-sm: 13px;
+  --font-size-md: 15px;
   --font-size-lg: 18px;
   --font-size-xl: 22px;
+  --map-town-size: 14px;
+  --map-pin-size: 13px;
 }
 
-/* Blueprint Theme */
+/* Accessibility: Font Size Tier Large */
+body.font-large {
+  --font-size-base: 18px;
+  --font-size-sm: 15px;
+  --font-size-md: 17px;
+  --font-size-lg: 21px;
+  --font-size-xl: 25px;
+  --map-town-size: 16px;
+  --map-pin-size: 15px;
+}
+
+/* Accessibility: Font Size Tier Extra Large */
+body.font-xl {
+  --font-size-base: 21px;
+  --font-size-sm: 17px;
+  --font-size-md: 19px;
+  --font-size-lg: 24px;
+  --font-size-xl: 28px;
+  --map-town-size: 19px;
+  --map-pin-size: 17px;
+}
+
+/* Theme: Vintage Topo Blueprint */
 body.theme-blueprint {
   --bg-primary: #060d17;
   --bg-surface: #0c1829;
@@ -94,7 +121,7 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   font-weight: bold;
 }
 
@@ -104,7 +131,7 @@ body::before {
 
 .status-header .telemetry-pill {
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 /* Viewport Scroll Stage */
@@ -125,7 +152,7 @@ body::before {
 }
 
 .panel-header {
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: bold;
   color: var(--accent-amber);
   text-transform: uppercase;
@@ -136,7 +163,7 @@ body::before {
   padding-bottom: 4px;
 }
 
-/* Legacy Hardware Spec Bar */
+/* Hardware Spec Bar */
 .hardware-spec-bar {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -144,12 +171,12 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .hardware-spec-bar strong {
   color: var(--text-bright);
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 /* Action Buttons (Large, Legible Touch Targets) */
@@ -159,7 +186,7 @@ body::before {
   border: 1px solid var(--border-color);
   padding: 10px 16px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-weight: bold;
   cursor: pointer;
   text-transform: uppercase;
@@ -187,6 +214,12 @@ body::before {
   color: var(--text-bright);
 }
 
+.btn-cipher:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--border-color);
+}
+
 /* Pack & Inventory Items */
 .item-card {
   background-color: var(--bg-surface);
@@ -208,13 +241,13 @@ body::before {
 }
 
 .item-name {
-  font-size: 17px;
+  font-size: var(--font-size-lg);
   font-weight: bold;
   color: #ffffff;
 }
 
 .item-tag {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   padding: 3px 6px;
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -233,8 +266,8 @@ body::before {
 }
 
 .item-desc {
-  font-size: 14px;
-  color: #d1fae5;     /* High contrast light mint */
+  font-size: var(--font-size-base);
+  color: #d1fae5;
   line-height: 1.4;
 }
 
@@ -258,7 +291,7 @@ body::before {
   color: var(--text-dim);
   padding: 8px 12px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: bold;
   cursor: pointer;
   white-space: nowrap;
@@ -277,7 +310,7 @@ body::before {
   border: 1px solid var(--border-bright);
   color: #000000;
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: var(--font-size-md);
   font-weight: bold;
   padding: 10px 12px;
   text-transform: uppercase;
@@ -332,7 +365,7 @@ body::before {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .rat-comms-channel {
@@ -373,4 +406,15 @@ body::before {
   text-overflow: ellipsis;
   color: #ffffff;
   font-weight: bold;
+}
+
+/* Error Flash */
+.glitch-flash {
+  animation: glitch-anim 0.3s ease-in-out;
+}
+
+@keyframes glitch-anim {
+  0% { filter: hue-rotate(0deg); }
+  50% { filter: invert(0.8) hue-rotate(180deg); }
+  100% { filter: hue-rotate(0deg); }
 }
