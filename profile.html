@@ -9,20 +9,20 @@
     .settings-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
     .settings-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 0;
+      padding: 8px 0;
       border-bottom: 1px dashed var(--border-color);
     }
     .settings-row:last-child {
       border-bottom: none;
     }
     .settings-label {
-      font-size: 15px;
+      font-size: var(--font-size-md);
       font-weight: bold;
       color: #ffffff;
     }
@@ -36,7 +36,7 @@
       color: var(--text-dim);
       padding: 8px 12px;
       font-family: var(--font-mono);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       font-weight: bold;
       cursor: pointer;
     }
@@ -54,7 +54,7 @@
       gap: 6px;
     }
     .synckey-val {
-      font-size: 18px;
+      font-size: var(--font-size-lg);
       font-weight: bold;
       color: var(--accent-amber);
       letter-spacing: 1px;
@@ -109,9 +109,9 @@
         <div class="panel-header">CLOUD SYNCHRONIZATION</div>
         
         <div class="synckey-card">
-          <div style="font-size: 13px; color: var(--text-dim); font-weight: bold;">🔑 CLOUD SYNC PASSKEY (SYNCKEY):</div>
+          <div style="font-size: var(--font-size-sm); color: var(--text-dim); font-weight: bold;">🔑 CLOUD SYNC PASSKEY (SYNCKEY):</div>
           <div id="display-synckey" class="synckey-val">CT-INIT-0000</div>
-          <div style="font-size: 13px; color: #d1fae5;">Restores progress, inventory, and hardware upgrades across any phone or desktop.</div>
+          <div style="font-size: var(--font-size-base); color: #d1fae5;">Restores progress, inventory, and hardware upgrades across any phone or desktop.</div>
           <button class="btn-cipher" style="margin-top: 6px;" onclick="MenuController.copySyncKey()">[ 📋 COPY SYNCKEY ]</button>
         </div>
 
@@ -126,21 +126,20 @@
         <div class="panel-header">TERMINAL SPECIFICATION</div>
         <div class="settings-row">
           <span class="settings-label">FIRMWARE:</span>
-          <span style="color: var(--text-bright); font-weight: bold;">v3.4-CARTOGRAPHY</span>
+          <span style="color: var(--text-bright); font-weight: bold; font-size: var(--font-size-md);">v3.4-CARTOGRAPHY</span>
         </div>
         <div class="settings-row">
           <span class="settings-label">CHASSIS:</span>
-          <span style="color: var(--text-bright); font-weight: bold;">1984 RSI MK-IV / RAT-MOD</span>
+          <span style="color: var(--text-bright); font-weight: bold; font-size: var(--font-size-md);">1984 RSI MK-IV / RAT-MOD</span>
         </div>
         <div class="settings-row">
           <span class="settings-label">HARDWARE RAM:</span>
-          <span id="menu-spec-ram" style="color: var(--accent-amber); font-weight: bold;">64KB</span>
+          <span id="menu-spec-ram" style="color: var(--accent-amber); font-weight: bold; font-size: var(--font-size-md);">64KB</span>
         </div>
       </div>
 
     </main>
 
-    <!-- Symmetrical 4-Anchor Navigation -->
     <nav class="nav-anchor-strip">
       <a href="mission.html" class="nav-tab">
         <span>[ 🔓 ]</span>
@@ -176,7 +175,6 @@
         refreshButtons: function () {
           const state = CipherCore.getState();
           
-          // Font Buttons
           ['reg', 'lg', 'xl'].forEach(k => {
             const btn = document.getElementById(`font-btn-${k}`);
             if (btn) btn.classList.remove('active');
@@ -186,12 +184,10 @@
           else if (activeFont === 'xl') document.getElementById('font-btn-xl')?.classList.add('active');
           else document.getElementById('font-btn-reg')?.classList.add('active');
 
-          // Theme Buttons
           const activeTheme = state.meta.theme || 'crt';
           document.getElementById('theme-btn-crt')?.classList.toggle('active', activeTheme === 'crt');
           document.getElementById('theme-btn-blue')?.classList.toggle('active', activeTheme === 'blueprint');
 
-          // Voice Buttons
           const isVoice = CipherAudio.isVoiceEnabled();
           document.getElementById('voice-btn-on')?.classList.toggle('active', isVoice);
           document.getElementById('voice-btn-off')?.classList.toggle('active', !isVoice);
