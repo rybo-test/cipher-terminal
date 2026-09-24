@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>C.I.P.H.E.R. // Regional Cartography</title>
+  <link rel="stylesheet" href="css/cipher-style.css">
+  <style>
+    /* Inline Map Viewport Geometry & SVG Layers */
+    .map-stage {
+      flex: 1;
+      position: relative;
+      background-color: var(--bg-primary);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-controls-strip {
+      padding: 6px 10px;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      z-index: 5;
+    }
+
+    .sector-select-dropdown {
+      background-color: var(--bg-surface-raised);
+      color: var(--text-bright);
+      border: 1px solid var(--border-bright);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 4px 6px;
+      font-weight: bold;
+    }
+
+    .svg-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    #map-svg-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Vector Geometry Tokens */
+    .map-vector-hwy {
+      stroke: var(--text-bright);
+      stroke-width: 3.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .map-vector-road {
+      stroke: var(--border-bright);
+      stroke-width: 1.5;
+      stroke-dasharray: 4, 3;
+      fill: none;
+    }
+
+    .map-vector-water {
+      stroke: #4ba3ff;
+      stroke-width: 2.5;
+      fill: none;
+      opacity: 0.85;
+    }
+
+    .map-vector-topo {
+      stroke: var(--text-dim);
+      stroke-width: 1;
+      fill: none;
+      opacity: 0.6;
+    }
+
+    .map-vector-topo-subtle {
+      stroke: var(--border-color);
+      stroke-width: 0.8;
+      stroke-dasharray: 2, 4;
+      fill: none;
+    }
+
+    .map-town-dot {
+      fill: var(--text-bright);
+    }
+
+    .map-town-label {
+      fill: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 1px;
+      font-weight: bold;
+    }
+
+    /* Interactive Location Pins */
+    .map-location-pin {
+      cursor: pointer;
+    }
+
+    .pin-ring {
+      fill: var(--bg-surface);
+      stroke: var(--border-bright);
+      stroke-width: 1.5;
+    }
+
+    .pin-core {
+      fill: var(--text-bright);
+    }
+
+    .pin-label {
+      fill: var(--text-bright);
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .pin-pulse {
+      fill: none;
+      stroke: var(--text-bright);
+      stroke-width: 1;
+      opacity: 0.7;
+      animation: pulse-ring 2s infinite ease-out;
+    }
+
+    .pin-secret .pin-ring {
+      stroke: var(--accent-amber);
+    }
+
+    .pin-secret .pin-core {
+      fill: var(--accent-amber);
+    }
+
+    .pin-secret .pin-label {
+      fill: var(--accent-amber);
+    }
+
+    @keyframes pulse-ring {
+      0% { r: 6; opacity: 1; }
+      100% { r: 16; opacity: 0; }
+    }
+
+    /* Fog of War Shroud */
+    .shroud-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        rgba(8, 13, 10, 0.95),
+        rgba(8, 13, 10, 0.95) 10px,
+        rgba(21, 36, 27, 0.95) 10px,
+        rgba(21, 36, 27, 0.95) 20px
+      );
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      z-index: 4;
+    }
+
+    .shroud-card {
+      background-color: var(--bg-surface);
+      border: 1px dashed var(--accent-alert);
+      padding: 18px;
+      max-width: 320px;
+    }
+
+    .shroud-alert {
+      color: var(--accent-alert);
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .shroud-title {
+      color: var(--text-bright);
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+
+    .shroud-desc {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+    }
+
+    /* POI Slide-Up Drawer */
+    .poi-drawer {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background-color: var(--bg-surface-raised);
+      border-top: 2px solid var(--border-bright);
+      padding: 12px;
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .poi-drawer.open {
+      transform: translateY(0);
+    }
+
+    .poi-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .poi-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .poi-meta {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .poi-details-box {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      font-size: 0.8rem;
+      line-height: 1.3;
+    }
+
+    .poi-action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    /* Travel Modal */
+    .travel-modal-backdrop {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(8, 13, 10, 0.85);
+      z-index: 8;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .travel-modal-card {
+      background-color: var(--bg-surface-raised);
+      border: 1px solid var(--border-bright);
+      width: 100%;
+      max-width: 360px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .travel-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .travel-option-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      padding: 10px;
+      justify-content: flex-start;
+    }
+
+    .travel-icon {
+      font-size: 1.3rem;
+    }
+
+    .travel-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .travel-title {
+      font-size: 0.85rem;
+      color: var(--text-bright);
+    }
+
+    .travel-desc {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Top System Telemetry Bar -->
+    <header class="status-header">
+      <span class="brand-title">C.I.P.H.E.R. // MAP v3.4</span>
+      <span class="telemetry-pill">12.6V FLOAT: OK</span>
+    </header>
+
+    <!-- Map Viewport Stage -->
+    <main class="map-stage">
+      <!-- Top Map Controls Strip -->
+      <div class="map-controls-strip">
+        <select id="sector-select" class="sector-select-dropdown">
+          <option value="SECTOR_01">SECTOR 01: CACHE VALLEY</option>
+          <option value="SECTOR_02">SECTOR 02: BOX ELDER</option>
+          <option value="SECTOR_03">SECTOR 03: BEAR LAKE</option>
+          <option value="SECTOR_04">SECTOR 04: SE IDAHO</option>
+        </select>
+        <button id="btn-theme-toggle" class="btn-cipher" style="padding: 4px 8px; font-size: 0.72rem;">[ CRT VECTOR ]</button>
+      </div>
+
+      <!-- Vector Map Canvas (0 0 500 500 Aspect Ratio) -->
+      <div class="svg-container">
+        <svg id="map-svg-canvas" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet"></svg>
+        
+        <!-- Fog of War Overlay -->
+        <div id="map-shroud-overlay" class="shroud-overlay"></div>
+
+        <!-- POI Slide-Up Drawer -->
+        <div id="poi-drawer" class="poi-drawer">
+          <div class="poi-header-row">
+            <div>
+              <div id="poi-name" class="poi-title">Location Name</div>
+              <div id="poi-type" class="poi-meta">Container // Difficulty</div>
+            </div>
+            <button id="btn-close-drawer" class="btn-cipher" style="padding: 2px 6px; font-size: 0.75rem;">✕</button>
+          </div>
+          <div class="poi-details-box">
+            <div><strong>COORDS:</strong> <span id="poi-coords">N 00° 00.000 W 000° 00.000</span></div>
+            <div><strong>TERRAIN:</strong> <span id="poi-terrain">Terrain description</span></div>
+          </div>
+          <div class="poi-action-grid">
+            <button class="btn-cipher primary" onclick="window.location.href='mission.html'">[ 🔓 CRACK ]</button>
+            <button class="btn-cipher" onclick="CipherMap.openTravelModal()">[ ➔ TRAVEL ]</button>
+          </div>
+        </div>
+
+        <!-- Travel Mode Selector Modal -->
+        <div id="travel-modal" class="travel-modal-backdrop">
+          <div class="travel-modal-card">
+            <div class="panel-header">SELECT TRAVEL MODE</div>
+            <div id="travel-options-list" class="travel-options-list">
+              <!-- Dynamically populated via cipher-map.js -->
+            </div>
+            <button class="btn-cipher" onclick="CipherMap.closeTravelModal()">[ CANCEL ]</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Docked CB Radio / Scanner Bar (RAT-COMMS) -->
+      <div class="rat-comms-dock">
+        <div class="rat-comms-channel">CH 19</div>
+        <div class="s-meter-block">
+          <span>SIG:</span>
+          <div class="s-meter-bar">
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+          </div>
+        </div>
+        <div id="comms-ticker" class="rat-comms-ticker">[SCANNING RAT CH 19...]</div>
+      </div>
+    </main>
+
+    <!-- Symmetrical 4-Anchor Bottom Navigation Strip -->
+    <nav class="nav-anchor-strip">
+      <a href="mission.html" class="nav-tab">
+        <span>[ 🔓 ]</span>
+        <span>MISSION</span>
+      </a>
+      <a href="map.html" class="nav-tab active">
+        <span>[ 🗺️ ]</span>
+        <span>MAP</span>
+      </a>
+      <a href="pack.html" class="nav-tab">
+        <span>[ 🎒 ]</span>
+        <span>PACK</span>
+      </a>
+      <a href="profile.html" class="nav-tab">
+        <span>[ ⚙️ ]</span>
+        <span>MENU</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Shared Engine Dependencies -->
+  <script src="js/cipher-audio.js"></script>
+  <script src="js/cipher-core.js"></script>
+  <script src="js/cipher-map.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      CipherMap.init();
+    });
+  </script>
+</body>
+</html>
