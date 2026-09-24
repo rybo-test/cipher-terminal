@@ -1,895 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>C.I.P.H.E.R. // Active Cache Mission</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>C.I.P.H.E.R. // Mission Terminal</title>
+  <link rel="stylesheet" href="css/cipher-style.css">
   <style>
-    :root {
-      --content-scale: 1;
-      --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
-      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
-      --bg-dark: #0a0f0d;
-      --panel-bg: #121a15;
-      --panel-inner: #080d0a;
-      --border-main: #2a5a3a;
-      --border-accent: #38ef7d;
-      --accent: #38ef7d;
-      --accent-dim: #7da88d;
-      --text-bright: #ffffff;
-      --text-main: #38ef7d;
-      --text-dim: #7da88d;
-      --warning: #f7b731;
-      --danger: #eb3b5a;
-    }
-
-    body.theme-light {
-      --bg-dark: #d8ded9;
-      --panel-bg: #f4f6f4;
-      --panel-inner: #e6eae6;
-      --border-main: #405747;
-      --border-accent: #174223;
-      --accent: #144724;
-      --accent-dim: #254d33;
-      --text-bright: #050a06;
-      --text-main: #050a06;
-      --text-dim: #1f3626;
-      --warning: #874b00;
-      --danger: #a81320;
-    }
-
-    body.theme-amber {
-      --bg-dark: #120b00;
-      --panel-bg: #1f1402;
-      --panel-inner: #0f0a00;
-      --border-main: #5c3f0d;
-      --border-accent: #ffb000;
-      --accent: #ffb000;
-      --accent-dim: #ba8829;
-      --text-bright: #ffffff;
-      --text-main: #ffb000;
-      --text-dim: #ba8829;
-      --warning: #ffcf66;
-      --danger: #ff4d4d;
-    }
-
-    body.theme-hivis {
-      --bg-dark: #0a0e14;
-      --panel-bg: #131924;
-      --panel-inner: #0d121c;
-      --border-main: #2b456b;
-      --border-accent: #4ba3ff;
-      --accent: #4ba3ff;
-      --accent-dim: #8ab6e9;
-      --text-bright: #ffffff;
-      --text-main: #4ba3ff;
-      --text-dim: #8ab6e9;
-      --warning: #ffd13b;
-      --danger: #ff5252;
-    }
-
-    body.font-regular { --content-scale: 1; }
-    body.font-large { --content-scale: 1.18; }
-    body.font-trailxl { --content-scale: 1.38; }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: var(--font-ui);
-      font-size: 14px;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 10px;
-    }
-
-    .app-shell {
-      width: 100%;
-      max-width: 650px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 40px;
-    }
-
-    .cipher-toolbar {
-      background: var(--panel-inner);
-      border: 2px solid var(--border-main);
-      border-radius: 8px;
-      position: relative;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .tb-status-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 7px 10px;
-      border-bottom: 1px solid var(--border-main);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      background: var(--panel-inner);
-      white-space: nowrap;
-      overflow: hidden;
-    }
-
-    .tb-status-badge {
-      background: var(--panel-bg);
-      color: var(--accent);
-      border: 1px solid var(--border-main);
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: bold;
-      font-size: 11px;
-      flex-shrink: 0;
-    }
-
-    .tb-nav-row {
-      display: grid;
-      grid-template-columns: 1.15fr 1fr 1fr 0.85fr;
-      gap: 4px;
-      padding: 6px;
-      background: var(--panel-bg);
-    }
-
-    .tb-btn {
-      background: var(--panel-inner);
-      border: 1px solid var(--border-main);
-      color: var(--text-dim);
-      padding: 8px 3px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      text-decoration: none;
-    }
-    .tb-btn:active { background: var(--border-main); }
-    .tb-btn.active {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border-color: var(--accent);
-    }
-
-    .tb-context-row {
-      padding: 6px 8px;
-      background: var(--panel-inner);
-      border-top: 1px dashed var(--border-main);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      overflow-x: auto;
-      white-space: nowrap;
-    }
-
-    .tb-context-label {
-      color: var(--warning);
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-
-    .tb-context-actions {
-      display: flex;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .btn-context {
-      background: var(--panel-bg);
-      color: var(--text-bright);
-      border: 1px solid var(--border-main);
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: bold;
-      white-space: nowrap;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .btn-context:active {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .tb-menu-drawer {
-      display: none;
-      position: absolute;
-      top: calc(100% + 4px);
-      right: 6px;
-      width: 290px;
-      background: var(--panel-inner);
-      border: 2px solid var(--border-accent);
-      border-radius: 6px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-      z-index: 100;
-      padding: 8px 0;
-      font-family: var(--font-mono);
-    }
-    .tb-menu-drawer.open { display: block; }
-
-    .tb-menu-header {
-      padding: 4px 12px;
-      font-size: 10px;
-      color: var(--warning);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-weight: bold;
-      border-bottom: 1px solid var(--border-main);
-    }
-
-    .tb-menu-item {
-      padding: 9px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-bright);
-      font-weight: bold;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .tb-menu-item:active { background: var(--panel-bg); color: var(--accent); }
-
-    .tb-menu-controls {
-      padding: 6px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-    .control-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-    .btn-control-chip {
-      background: var(--panel-bg);
-      border: 1px solid var(--border-main);
-      color: var(--text-dim);
-      padding: 6px 2px;
-      font-size: 10px;
-      font-family: var(--font-mono);
-      font-weight: bold;
-      text-align: center;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-    .btn-control-chip.active {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border-color: var(--accent);
-    }
-
-    .tb-menu-divider { height: 1px; background: var(--border-main); margin: 5px 0; }
-
-    .deck-container {
-      background: var(--panel-bg);
-      border: 2px solid var(--border-main);
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .dialogue-card {
-      padding: 14px;
-      background: var(--panel-inner);
-      border-bottom: 1px solid var(--border-main);
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .terminal-avatar {
-      width: 42px;
-      height: 42px;
-      background: var(--panel-bg);
-      border: 1px solid var(--border-main);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
-    }
-
-    .terminal-speech {
-      font-family: var(--font-mono);
-      font-size: calc(15px * var(--content-scale));
-      line-height: 1.45;
-      color: var(--text-bright);
-      font-weight: 700;
-      letter-spacing: 0.3px;
-    }
-
     .mission-card {
-      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .mission-meta {
-      font-size: calc(12px * var(--content-scale));
-      color: var(--warning);
-      font-family: var(--font-mono);
-      font-weight: 800;
-      letter-spacing: 0.5px;
+    .mission-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 6px;
     }
 
     .mission-title {
-      font-size: calc(18px * var(--content-scale));
-      font-weight: 800;
+      font-size: 1rem;
+      font-weight: bold;
       color: var(--text-bright);
     }
 
-    .mission-desc {
-      font-size: calc(16px * var(--content-scale));
-      line-height: 1.45;
-      color: var(--text-main);
-      font-weight: 700;
+    .mission-code {
+      font-size: 0.8rem;
+      color: var(--accent-amber);
     }
 
-    .quick-status-box {
-      margin-top: 6px;
+    .cipher-terminal-window {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
       padding: 10px;
-      background: var(--panel-inner);
-      border: 1px solid var(--border-main);
-      border-radius: 4px;
+      font-size: 0.85rem;
+      min-height: 90px;
+      color: var(--text-main);
       display: flex;
-      justify-content: space-between;
-      font-family: var(--font-mono);
-      font-size: 11px;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    .unlock-dock {
-      background: var(--panel-inner);
-      border-top: 1px solid var(--border-main);
-      padding: 14px;
+    .terminal-speaker-tag {
+      color: var(--text-bright);
+      font-weight: bold;
+    }
+
+    .terminal-line {
+      line-height: 1.35;
+    }
+
+    .puzzle-box {
+      background-color: var(--bg-surface-raised);
+      border: 1px solid var(--border-bright);
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    .input-row { display: flex; gap: 8px; }
+    .puzzle-prompt {
+      font-size: 0.85rem;
+      color: var(--text-bright);
+    }
 
-    .key-input {
+    .puzzle-cipher-text {
+      background-color: var(--bg-primary);
+      padding: 8px;
+      font-size: 0.95rem;
+      letter-spacing: 2px;
+      border: 1px dashed var(--border-color);
+      color: var(--accent-amber);
+      word-break: break-all;
+    }
+
+    .dock-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .cipher-input {
       flex: 1;
-      background: var(--bg-dark);
-      border: 1px solid var(--border-main);
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
       color: var(--text-bright);
       font-family: var(--font-mono);
-      font-size: calc(16px * var(--content-scale));
-      padding: 10px 12px;
-      border-radius: 4px;
+      font-size: 0.95rem;
+      padding: 8px 10px;
       text-transform: uppercase;
-      font-weight: 800;
-      letter-spacing: 1px;
       outline: none;
     }
-    .key-input:focus { border-color: var(--accent); }
 
-    .btn-submit {
-      background: var(--accent);
-      color: var(--bg-dark);
-      border: none;
-      font-weight: 800;
-      font-size: calc(14px * var(--content-scale));
-      padding: 0 18px;
-      border-radius: 4px;
-      cursor: pointer;
+    .cipher-input:focus {
+      border-color: var(--border-bright);
     }
-    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .solution-unlocked-card {
+      background-color: var(--bg-surface-raised);
+      border: 1px solid var(--border-bright);
+      padding: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .solution-header {
+      color: var(--text-bright);
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .solution-coords {
+      font-size: 1.1rem;
+      color: var(--accent-amber);
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .solution-meta {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .hint-container {
+      display: none;
+      background-color: var(--bg-primary);
+      border: 1px dashed var(--border-color);
+      padding: 8px;
+      font-size: 0.8rem;
+      color: var(--text-bright);
+    }
   </style>
 </head>
-<body class="theme-crt font-regular">
+<body>
 
-  <div class="app-shell">
+  <div class="app-container">
+    <!-- Top System Telemetry Bar -->
+    <header class="status-header">
+      <span class="brand-title">C.I.P.H.E.R. // MISSION TERMINAL</span>
+      <span id="top-ram-status" class="telemetry-pill">RAM: 64KB</span>
+    </header>
 
-    <div class="cipher-toolbar" id="cipherToolbar">
-      
-      <div class="tb-status-row">
-        <div>
-          <span style="color: var(--text-dim); font-weight: bold;">C.I.P.H.E.R. //</span>
-          <span style="color: var(--accent-dim); font-weight: bold;">v2.7-CATALOG</span>
+    <!-- Scrollable Mission Content -->
+    <main class="viewport-stage">
+      <div class="cipher-panel mission-card">
+        <div class="mission-header-row">
+          <span class="mission-title" id="stage-title">Cache Tales #01: The Welded Anchor</span>
+          <span class="mission-code" id="stage-code">GC10001</span>
         </div>
-        <span class="tb-status-badge" id="statusPlaceholder">[ 🟢 ONLINE // GZ ]</span>
-        <span style="color: var(--text-bright); font-weight: bold;" id="cacherHandleSlot">NEZZMUK 👤</span>
-      </div>
 
-      <div class="tb-nav-row">
-        <a href="mission.html" class="tb-btn active" id="btnNavMission">🎯 MISSION</a>
-        <a href="trail.html" class="tb-btn" id="btnNavTrail">🗺️ TRAIL</a>
-        <a href="pack.html" class="tb-btn" id="btnNavPack">🎒 PACK</a>
-        <button type="button" class="tb-btn" id="btnNavMenu" onclick="toggleMenu(event)">≡ MENU ▾</button>
-      </div>
-
-      <div class="tb-context-row">
-        <span class="tb-context-label">> ACTION:</span>
-        <div class="tb-context-actions" id="contextActionsSlot">
-          <button type="button" class="btn-context" id="btnToggleHint" onclick="revealHint()">💡 Show Hint</button>
-          <button type="button" class="btn-context" onclick="launchPhoneGps()">🧭 Navigate to GZ</button>
-        </div>
-      </div>
-
-      <div class="tb-menu-drawer" id="menuDrawer">
-        <div class="tb-menu-header">NAVIGATION</div>
-        <a href="profile.html" class="tb-menu-item">👤 Cacher Profile</a>
-        <div class="tb-menu-item" onclick="showRulesModal()">📖 Geocaching Rules & BYOP</div>
-        
-        <div class="tb-menu-divider"></div>
-        
-        <div class="tb-menu-header">DISPLAY / ACCESSIBILITY</div>
-        <div class="tb-menu-controls">
-          <div class="control-grid-4">
-            <button type="button" class="btn-control-chip active" id="chipThemeCrt" onclick="setTheme('crt')">CRT</button>
-            <button type="button" class="btn-control-chip" id="chipThemeLight" onclick="setTheme('light')">PAPER</button>
-            <button type="button" class="btn-control-chip" id="chipThemeAmber" onclick="setTheme('amber')">AMBER</button>
-            <button type="button" class="btn-control-chip" id="chipThemeHivis" onclick="setTheme('hivis')">HI-VIS</button>
-          </div>
-        </div>
-        <div class="tb-menu-controls">
-          <div class="control-grid">
-            <button type="button" class="btn-control-chip active" id="chipFontReg" onclick="setFontSize('regular')">REG</button>
-            <button type="button" class="btn-control-chip" id="chipFontLg" onclick="setFontSize('large')">LARGE</button>
-            <button type="button" class="btn-control-chip" id="chipFontXl" onclick="setFontSize('trailxl')">XL</button>
+        <!-- C.I.P.H.E.R. Dialogue Teletype Window -->
+        <div class="cipher-terminal-window">
+          <div class="terminal-speaker-tag">[C.I.P.H.E.R. TELETYPE]</div>
+          <div class="terminal-line" id="dialogue-line">
+            > "RSI drop site located off highway turnout. Iron casing welded shut. Enter frequency bypass offset to calculate real-world GZ coordinates."
           </div>
         </div>
 
-        <div class="tb-menu-divider"></div>
-        
-        <div class="tb-menu-header">OPERATOR SESSION</div>
-        <a href="terminal.html" class="tb-menu-item">👤 Switch Cacher / Log In</a>
-        <div class="tb-menu-item" onclick="toggleSound()" id="drawerSoundLabel">🔊 Sound: ON</div>
-        <div class="tb-menu-item" onclick="resetDemoProgress()" style="color: var(--warning);">🔄 Reset Progress</div>
-      </div>
+        <!-- The Active Puzzle Subroutine -->
+        <div id="puzzle-box" class="puzzle-box">
+          <div class="puzzle-prompt">CIPHER SUBROUTINE // ROT-13 OFFSET:</div>
+          <div class="puzzle-cipher-text" id="cipher-display">GUF-SYNAP-HAX-89</div>
+          
+          <div class="dock-input-row">
+            <input type="text" id="solution-input" class="cipher-input" placeholder="ENTER CODEWORD..." autocomplete="off">
+            <button id="btn-crack" class="btn-cipher primary" onclick="MissionController.submitCrack()">[ 🔓 CRACK ]</button>
+          </div>
 
-    </div>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button id="btn-hint" class="btn-cipher" style="flex: 1;" onclick="MissionController.toggleHint()">[ 💡 HINT ]</button>
+          </div>
 
-    <div class="deck-container" id="deckMission">
-      
-      <div class="dialogue-card">
-        <div class="terminal-avatar">📟</div>
-        <div class="terminal-speech" id="cypherSpeechText">
-          "Signal acquired. Ready for field operations."
+          <div id="hint-text" class="hint-container">
+            HINT: Standard letter shift 13 places forward. Inspect the ROT-13 card inside your PACK if needed.
+          </div>
+        </div>
+
+        <!-- Field Coordinates Unlocked Card -->
+        <div id="solution-card" class="solution-unlocked-card">
+          <div class="solution-header">✔ GZ COORDINATES UNLOCKED // FIELD ACCESS GRANTED</div>
+          <div class="solution-coords">N 41° 39.120 W 111° 55.450</div>
+          <div class="solution-meta">
+            Target container: Regular Heavy-Gauge Welded Ammo Can. Bring a 3/4 socket and signed trade swag. Bonus voucher code stamped inside lid.
+          </div>
+          <button class="btn-cipher primary" onclick="window.location.href='map.html'">[ ➔ PLOT ON MAP ]</button>
         </div>
       </div>
 
-      <div class="mission-card">
-        <div class="mission-meta" id="missionMetaText">CACHE 1 OF 4</div>
-        <div class="mission-title" id="missionTitleText">Cache Tales #01: The Welded Anchor</div>
-        <div class="mission-desc" id="missionDescText">
-          Locate the container secured at the turnaround. Inspect the inside lid for the stamped verification codeword.
+      <!-- Docked CB Radio / Scanner Bar (RAT-COMMS) -->
+      <div class="rat-comms-dock" style="margin-top: auto;">
+        <div class="rat-comms-channel">CH 19</div>
+        <div class="s-meter-block">
+          <span>SIG:</span>
+          <div class="s-meter-bar">
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+            <div class="s-meter-seg"></div>
+          </div>
         </div>
-
-        <div class="quick-status-box">
-          <span id="boxGcLabel" style="color: var(--accent); font-weight: bold;">GC10001 // Ammo Can</span>
-          <span id="boxDtLabel" style="color: var(--text-dim);">D 2.0 / T 2.5</span>
-        </div>
+        <div id="comms-ticker" class="rat-comms-ticker">[MONITORING RAT-PACK COMMS]</div>
       </div>
+    </main>
 
-      <div class="unlock-dock">
-        <div style="font-size: calc(13px * var(--content-scale)); color: var(--text-dim); font-family: var(--font-mono); font-weight: 800;">ENTER LOG CODEWORD:</div>
-        <div class="input-row">
-          <input type="text" id="unlockInput" class="key-input" placeholder="CODE..." autocomplete="off" />
-          <button type="button" class="btn-submit" id="btnUnlockSubmit" onclick="submitUnlockCode()">UNLOCK</button>
-        </div>
-      </div>
-
-    </div>
-
+    <!-- Symmetrical 4-Anchor Bottom Navigation -->
+    <nav class="nav-anchor-strip">
+      <a href="mission.html" class="nav-tab active">
+        <span>[ 🔓 ]</span>
+        <span>MISSION</span>
+      </a>
+      <a href="map.html" class="nav-tab">
+        <span>[ 🗺️ ]</span>
+        <span>MAP</span>
+      </a>
+      <a href="pack.html" class="nav-tab">
+        <span>[ 🎒 ]</span>
+        <span>PACK</span>
+      </a>
+      <a href="profile.html" class="nav-tab">
+        <span>[ ⚙️ ]</span>
+        <span>MENU</span>
+      </a>
+    </nav>
   </div>
 
+  <script src="js/cipher-audio.js"></script>
+  <script src="js/cipher-core.js"></script>
   <script>
-    const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec";
-
-    // Corridor Master Cache Directory with Test Unlock Codes embedded directly in hint
-    const CORRIDOR_DATA = {
-      1: {
-        id: 1,
-        title: "Cache Tales #01: The Welded Anchor",
-        gc: "GC10001",
-        container: "Ammo Can",
-        dt: "D 2.0 / T 2.5",
-        lat: "41.7380",
-        lng: "-111.8410",
-        hintDec: "Under the large gravel road turnaround boulder. [TEST UNLOCK CODE: ANCHOR]",
-        missionDesc: "Locate the 50-cal ammo can secured at the turnaround. Inspect the inside lid for the stamped verification code.",
-        unlockCode: "ANCHOR",
-        speechActive: "\"Cache #1 is in the gravel turnaround. Sign the paper scroll and enter the stamped lid code.\"",
-        speechCompleted: "\"Cache #1 verified. Paper scroll signed and lid sealed tight.\"",
-        reward: { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" }
-      },
-      2: {
-        id: 2,
-        title: "Cache Tales #08: Canal Trickle",
-        gc: "GC10008",
-        container: "Lock-and-Lock",
-        dt: "D 2.5 / T 3.0",
-        lat: "41.7420",
-        lng: "-111.8360",
-        hintDec: "Magnetically anchored under the south steel cross-beam. [TEST UNLOCK CODE: 384]",
-        missionDesc: "Cross the irrigation ditch. Locate the locked container under the bridge and enter the padlock combination.",
-        unlockCode: "384",
-        speechActive: "\"Watch your footing on the steel bridge and enter the padlock combination.\"",
-        speechCompleted: "\"Padlock cracked. EPDM gasket held up against the canal spray.\"",
-        reward: { itemId: "WASH-02", icon: "⚙️", title: "Brass Washer #02", desc: "Stamped Word: POST", type: "Clue/Washer" }
-      },
-      3: {
-        id: 3,
-        title: "Cache Tales #17: Gravel Pit Strata",
-        gc: "GC10017",
-        container: "EarthCache (None)",
-        dt: "D 1.5 / T 2.0",
-        lat: "41.7470",
-        lng: "-111.8316",
-        hintDec: "Count the visible sediment strata layers on the exposed north cut. [TEST UNLOCK CODE: STRATA]",
-        missionDesc: "Observe the geological strata wall. Count the distinctive gravel bands to deduce the logging word.",
-        unlockCode: "STRATA",
-        speechActive: "\"Lake Bonneville bench gravels exposed right in front of you.\"",
-        speechCompleted: "\"Geological audit confirmed. Proceed to the cedar repeater.\"",
-        reward: { itemId: "SWAG-101", icon: "🪨", title: "Sediment Specimen", desc: "Lake Bonneville Bench Quartzite", type: "Swag" }
-      },
-      4: {
-        id: 4,
-        title: "Cache Tales #25: The Cedar Repeater",
-        gc: "GC10025",
-        container: "Ammo Can",
-        dt: "D 3.0 / T 3.5",
-        lat: "41.7520",
-        lng: "-111.8250",
-        hintDec: "Interior hollow of the split cedar post. [TEST UNLOCK CODE: REPEATER]",
-        missionDesc: "Locate the cedar repeater tree. Find the stamped codeword inside the chamber.",
-        unlockCode: "REPEATER",
-        speechActive: "\"Repeater node detected. Sign the physical log and enter the chamber codeword.\"",
-        speechCompleted: "\"CORRIDOR TRAIL CLEARED! All 4 caches logged.\"",
-        reward: { itemId: "TAG-001", icon: "🏆", title: "Corridor Finisher Tag", desc: "Cache Tales Cluster Master", type: "Trackable" }
-      }
-    };
-
-    let currentStage = 1;
-    let completedStages = [];
-    let packItems = [];
-    let activeUser = "Nezzmuk";
-    let activeSyncKey = "CT-NEZZ-1605";
-
-    function loadGameState() {
-      try {
-        const savedStage = localStorage.getItem('cipher_active_stage');
-        if (savedStage) currentStage = parseInt(savedStage, 10);
-
-        const savedCompleted = localStorage.getItem('cipher_completed_stages');
-        if (savedCompleted) completedStages = JSON.parse(savedCompleted);
-
-        const savedPack = localStorage.getItem('cipher_pack_items');
-        if (savedPack) {
-          packItems = JSON.parse(savedPack);
-        } else {
-          packItems = [
-            { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" }
-          ];
-        }
-
-        const user = localStorage.getItem('ct_cacher_user');
-        if (user) activeUser = user;
-
-        const key = localStorage.getItem('ct_cacher_key');
-        if (key) activeSyncKey = key;
-      } catch (e) {
-        console.warn('Local state read error:', e);
-      }
-
-      document.getElementById('cacherHandleSlot').textContent = `${activeUser.toUpperCase()} 👤`;
-    }
-
-    function saveGameState() {
-      try {
-        localStorage.setItem('cipher_active_stage', currentStage);
-        localStorage.setItem('cipher_completed_stages', JSON.stringify(completedStages));
-        localStorage.setItem('cipher_pack_items', JSON.stringify(packItems));
-      } catch (e) {
-        console.warn('Could not save state to localStorage:', e);
-      }
-    }
-
-    async function syncFindToGoogleSheet(stageNumber, stageData, codeEntered) {
-      const badge = document.getElementById("statusPlaceholder");
-      if (badge) badge.textContent = "[ 🟡 SYNCING... ]";
-
-      const profilePayload = {
-        activeStage: currentStage,
-        completedStages: completedStages,
-        packItems: packItems,
-        preferences: {
-          theme: localStorage.getItem('cipher_theme') || 'crt',
-          fontSize: localStorage.getItem('cipher_font_size') || 'regular'
-        }
+    const MissionController = (function () {
+      const activeStage = {
+        solution: "THS-FLANC-UNK-89",
+        coords: "N 41° 39.120 W 111° 55.450",
+        gcCode: "GC10001"
       };
 
-      const params = new URLSearchParams({
-        action: "logFind",
-        username: activeUser,
-        syncKey: activeSyncKey,
-        gc: stageData.gc,
-        status: "Found It",
-        codeEntered: codeEntered,
-        notes: `Cache ${stageNumber} unlocked via code: ${codeEntered}`,
-        profileDataJSON: JSON.stringify(profilePayload)
-      });
+      return {
+        init: function () {
+          const state = CipherCore.getState();
+          document.getElementById('top-ram-status').textContent = `RAM: ${state.hardware.ramKB}KB`;
 
-      try {
-        const response = await fetch(`${GOOGLE_SCRIPT_API_URL}?${params.toString()}`, {
-          method: "GET",
-          mode: "cors"
-        });
+          // If stage already solved in state, show coordinates directly
+          if (state.campaign.completedCaches && state.campaign.completedCaches.includes(activeStage.gcCode)) {
+            this.showSolvedState();
+          }
+        },
 
-        const result = await response.json();
-        console.log("☁️ GOOGLE SHEET SYNC CONFIRMED:", result);
-        if (badge) badge.textContent = "[ 🟢 ONLINE // GZ ]";
-      } catch (err) {
-        console.warn("⚠️ Signal dropped, saved offline:", err);
-        if (badge) badge.textContent = "[ 🟠 SAVED OFFLINE ]";
-      }
-    }
+        submitCrack: function () {
+          const input = document.getElementById('solution-input');
+          const val = input.value.trim().toUpperCase();
 
-    function submitUnlockCode() {
-      playClick();
-      const inputEl = document.getElementById('unlockInput');
-      const enteredCode = inputEl.value.trim().toUpperCase();
-      const stage = CORRIDOR_DATA[currentStage];
+          if (!val) return;
 
-      if (!stage) {
-        alert("All corridor caches completed!");
-        return;
-      }
+          if (val === activeStage.solution) {
+            // Correct verification
+            CipherAudio.chime();
+            CipherCore.resetFailureCounter();
+            CipherAudio.speak("Verification successful. Real world coordinates decrypted.");
 
-      if (enteredCode === stage.unlockCode.toUpperCase()) {
-        playChime();
+            const state = CipherCore.getState();
+            if (!state.campaign.completedCaches.includes(activeStage.gcCode)) {
+              state.campaign.completedCaches.push(activeStage.gcCode);
+            }
+            CipherCore.commitMilestone('STAGE_CRACKED', { gcCode: activeStage.gcCode });
 
-        if (!completedStages.includes(currentStage)) {
-          completedStages.push(currentStage);
+            this.showSolvedState();
+          } else {
+            // Failure registration & 3-strike snark routing
+            const failure = CipherCore.registerInputFailure();
+            document.getElementById('dialogue-line').textContent = failure.message;
+            document.body.classList.add('glitch-flash');
+            setTimeout(() => document.body.classList.remove('glitch-flash'), 300);
+            input.value = '';
+          }
+        },
+
+        toggleHint: function () {
+          CipherAudio.click();
+          const hint = document.getElementById('hint-text');
+          hint.style.display = hint.style.display === 'block' ? 'none' : 'block';
+        },
+
+        showSolvedState: function () {
+          document.getElementById('puzzle-box').style.display = 'none';
+          document.getElementById('solution-card').style.display = 'flex';
+          document.getElementById('dialogue-line').textContent = '> "Stage complete. Real-world coordinates logged below. Enter container lid voucher in PACK for bonus digital telemetry."';
         }
+      };
+    })();
 
-        // Add reward to pack catalog if not already present
-        if (stage.reward && !packItems.some(item => item.itemId === stage.reward.itemId)) {
-          packItems.push(stage.reward);
-        }
-
-        inputEl.value = "";
-
-        if (currentStage < Object.keys(CORRIDOR_DATA).length) {
-          currentStage += 1;
-        }
-
-        saveGameState();
-        renderMission();
-
-        syncFindToGoogleSheet(stage.id, stage, enteredCode);
-        alert(`CACHE ${stage.id} LOGGED!\nCoordinates for next waypoint unlocked.`);
-      } else {
-        playErrorBuzz();
-        alert(`INCORRECT CODE: "${enteredCode}"\nHint: ${stage.hintDec}`);
-      }
-    }
-
-    function renderMission() {
-      const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[4];
-      const isComplete = completedStages.includes(4);
-
-      document.getElementById('missionMetaText').innerText = isComplete ? "CORRIDOR COMPLETE // 4 OF 4 LOGGED" : `CACHE ${currentStage} OF 4`;
-      document.getElementById('missionTitleText').innerText = stage.title;
-      document.getElementById('missionDescText').innerText = stage.missionDesc;
-      document.getElementById('cypherSpeechText').innerText = isComplete ? stage.speechCompleted : stage.speechActive;
-      document.getElementById('boxGcLabel').innerText = `${stage.gc} // ${stage.container}`;
-      document.getElementById('boxDtLabel').innerText = stage.dt;
-
-      const unlockInput = document.getElementById('unlockInput');
-      const unlockBtn = document.getElementById('btnUnlockSubmit');
-
-      if (isComplete) {
-        unlockInput.disabled = true;
-        unlockInput.placeholder = "TRAIL COMPLETE";
-        unlockBtn.disabled = true;
-      } else {
-        unlockInput.disabled = false;
-        unlockInput.placeholder = "CODE...";
-        unlockBtn.disabled = false;
-      }
-    }
-
-    function revealHint() {
-      playClick();
-      const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[1];
-      alert(`CACHE ${currentStage} HINT:\n${stage.hintDec}`);
-    }
-
-    function launchPhoneGps() {
-      playClick();
-      const stage = CORRIDOR_DATA[currentStage] || CORRIDOR_DATA[1];
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${stage.lat},${stage.lng}`;
-      window.open(url, '_blank');
-    }
-
-    function showRulesModal() {
-      playClick();
-      alert("GEOCACHING RULES:\n1. If you take something from the container, leave something of equal or greater value.\n2. Write your handle and date in the physical paper logbook (BYOP).\n3. Re-hide the cache container exactly as you found it.");
-    }
-
-    function resetDemoProgress() {
-      if (!confirm("Reset trail progress back to Cache 01?")) return;
-      currentStage = 1;
-      completedStages = [];
-      packItems = [
-        { itemId: "PERMIT-01", icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4", type: "Permit" }
-      ];
-      saveGameState();
-      renderMission();
-      playClick();
-      alert("Progress reset to Cache 01.");
-    }
-
-    function toggleMenu(e) {
-      if (e) { e.stopPropagation(); e.preventDefault(); }
-      playClick();
-      document.getElementById('menuDrawer').classList.toggle('open');
-    }
-
-    document.addEventListener('click', function(e) {
-      const toolbar = document.getElementById('cipherToolbar');
-      const drawer = document.getElementById('menuDrawer');
-      if (drawer && drawer.classList.contains('open')) {
-        if (!toolbar.contains(e.target)) drawer.classList.remove('open');
-      }
-    });
-
-    let soundActive = true;
-    let audioCtx = null;
-
-    function initAudio() {
-      try {
-        if (!audioCtx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) audioCtx = new AudioContext();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      } catch (err) {}
-    }
-
-    function playClick() {
-      if (!soundActive) return;
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
-      } catch (err) {}
-    }
-
-    function playChime() {
-      if (!soundActive) return;
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const now = audioCtx.currentTime;
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc1.type = 'square';
-        osc2.type = 'sine';
-        osc1.frequency.setValueAtTime(587.33, now);
-        osc1.frequency.setValueAtTime(880, now + 0.08);
-        osc2.frequency.setValueAtTime(1174.66, now);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.35);
-        osc2.stop(now + 0.35);
-      } catch (err) {}
-    }
-
-    function playErrorBuzz() {
-      if (!soundActive) return;
-      initAudio();
-      if (!audioCtx) return;
-      try {
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(110, now);
-        osc.frequency.setValueAtTime(95, now + 0.1);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.22);
-      } catch (err) {}
-    }
-
-    function toggleSound() {
-      soundActive = !soundActive;
-      playClick();
-      document.getElementById('drawerSoundLabel').innerText = soundActive ? "🔊 Sound: ON" : "🔇 Sound: OFF";
-    }
-
-    function setTheme(themeKey) {
-      playClick();
-      document.body.classList.remove('theme-crt', 'theme-light', 'theme-amber', 'theme-hivis');
-      ['chipThemeCrt', 'chipThemeLight', 'chipThemeAmber', 'chipThemeHivis'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-      });
-
-      if (themeKey === 'light') {
-        document.body.classList.add('theme-light');
-        document.getElementById('chipThemeLight').classList.add('active');
-      } else if (themeKey === 'amber') {
-        document.body.classList.add('theme-amber');
-        document.getElementById('chipThemeAmber').classList.add('active');
-      } else if (themeKey === 'hivis') {
-        document.body.classList.add('theme-hivis');
-        document.getElementById('chipThemeHivis').classList.add('active');
-      } else {
-        document.body.classList.add('theme-crt');
-        document.getElementById('chipThemeCrt').classList.add('active');
-      }
-      try { localStorage.setItem('cipher_theme', themeKey); } catch (e) {}
-    }
-
-    function setFontSize(sizeKey) {
-      playClick();
-      document.body.classList.remove('font-regular', 'font-large', 'font-trailxl');
-      ['chipFontReg', 'chipFontLg', 'chipFontXl'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-      });
-
-      if (sizeKey === 'large') {
-        document.body.classList.add('font-large');
-        document.getElementById('chipFontLg').classList.add('active');
-      } else if (sizeKey === 'trailxl') {
-        document.body.classList.add('font-trailxl');
-        document.getElementById('chipFontXl').classList.add('active');
-      } else {
-        document.body.classList.add('font-regular');
-        document.getElementById('chipFontReg').classList.add('active');
-      }
-      try { localStorage.setItem('cipher_font_size', sizeKey); } catch (e) {}
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadGameState();
-      try {
-        const savedTheme = localStorage.getItem('cipher_theme');
-        if (savedTheme) setTheme(savedTheme);
-        const savedFont = localStorage.getItem('cipher_font_size');
-        if (savedFont) setFontSize(savedFont);
-      } catch (e) {}
-      renderMission();
+    document.addEventListener('DOMContentLoaded', () => {
+      MissionController.init();
     });
   </script>
 </body>
