@@ -6,7 +6,6 @@
   <title>C.I.P.H.E.R. // Regional Cartography</title>
   <link rel="stylesheet" href="css/cipher-style.css">
   <style>
-    /* Inline Map Viewport Geometry & SVG Layers */
     .map-stage {
       flex: 1;
       position: relative;
@@ -17,7 +16,7 @@
     }
 
     .map-controls-strip {
-      padding: 6px 10px;
+      padding: 8px 12px;
       background-color: var(--bg-surface);
       border-bottom: 1px solid var(--border-color);
       display: flex;
@@ -32,8 +31,8 @@
       color: var(--text-bright);
       border: 1px solid var(--border-bright);
       font-family: var(--font-mono);
-      font-size: 0.78rem;
-      padding: 4px 6px;
+      font-size: var(--font-size-sm);
+      padding: 6px 10px;
       font-weight: bold;
     }
 
@@ -52,7 +51,7 @@
     /* Vector Geometry Tokens */
     .map-vector-hwy {
       stroke: var(--text-bright);
-      stroke-width: 3.5;
+      stroke-width: 4;
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
@@ -60,40 +59,40 @@
 
     .map-vector-road {
       stroke: var(--border-bright);
-      stroke-width: 1.5;
-      stroke-dasharray: 4, 3;
+      stroke-width: 2;
+      stroke-dasharray: 5, 4;
       fill: none;
     }
 
     .map-vector-water {
-      stroke: #4ba3ff;
-      stroke-width: 2.5;
+      stroke: #38bdf8;
+      stroke-width: 3;
       fill: none;
       opacity: 0.85;
     }
 
     .map-vector-topo {
       stroke: var(--text-dim);
-      stroke-width: 1;
+      stroke-width: 1.2;
       fill: none;
       opacity: 0.6;
     }
 
     .map-vector-topo-subtle {
       stroke: var(--border-color);
-      stroke-width: 0.8;
+      stroke-width: 1;
       stroke-dasharray: 2, 4;
       fill: none;
     }
 
     .map-town-dot {
-      fill: var(--text-bright);
+      fill: #ffffff;
     }
 
     .map-town-label {
-      fill: var(--text-dim);
+      fill: #ffffff;
       font-family: var(--font-mono);
-      font-size: 9px;
+      font-size: var(--map-town-size);
       letter-spacing: 1px;
       font-weight: bold;
     }
@@ -106,7 +105,7 @@
     .pin-ring {
       fill: var(--bg-surface);
       stroke: var(--border-bright);
-      stroke-width: 1.5;
+      stroke-width: 2;
     }
 
     .pin-core {
@@ -116,7 +115,7 @@
     .pin-label {
       fill: var(--text-bright);
       font-family: var(--font-mono);
-      font-size: 8.5px;
+      font-size: var(--map-pin-size);
       font-weight: bold;
       letter-spacing: 0.5px;
     }
@@ -124,8 +123,8 @@
     .pin-pulse {
       fill: none;
       stroke: var(--text-bright);
-      stroke-width: 1;
-      opacity: 0.7;
+      stroke-width: 1.5;
+      opacity: 0.8;
       animation: pulse-ring 2s infinite ease-out;
     }
 
@@ -142,8 +141,8 @@
     }
 
     @keyframes pulse-ring {
-      0% { r: 6; opacity: 1; }
-      100% { r: 16; opacity: 0; }
+      0% { r: 8; opacity: 1; }
+      100% { r: 20; opacity: 0; }
     }
 
     /* Fog of War Shroud */
@@ -152,10 +151,10 @@
       top: 0; left: 0; right: 0; bottom: 0;
       background: repeating-linear-gradient(
         -45deg,
-        rgba(8, 13, 10, 0.95),
-        rgba(8, 13, 10, 0.95) 10px,
-        rgba(21, 36, 27, 0.95) 10px,
-        rgba(21, 36, 27, 0.95) 20px
+        rgba(5, 10, 6, 0.95),
+        rgba(5, 10, 6, 0.95) 10px,
+        rgba(17, 32, 21, 0.95) 10px,
+        rgba(17, 32, 21, 0.95) 20px
       );
       display: none;
       flex-direction: column;
@@ -176,19 +175,19 @@
     .shroud-alert {
       color: var(--accent-alert);
       font-weight: bold;
-      font-size: 0.9rem;
+      font-size: var(--font-size-md);
       margin-bottom: 8px;
     }
 
     .shroud-title {
       color: var(--text-bright);
-      font-size: 0.85rem;
+      font-size: var(--font-size-sm);
       margin-bottom: 6px;
     }
 
     .shroud-desc {
       color: var(--text-dim);
-      font-size: 0.75rem;
+      font-size: var(--font-size-sm);
     }
 
     /* POI Slide-Up Drawer */
@@ -197,13 +196,13 @@
       left: 0; right: 0; bottom: 0;
       background-color: var(--bg-surface-raised);
       border-top: 2px solid var(--border-bright);
-      padding: 12px;
+      padding: 14px;
       transform: translateY(100%);
       transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
       z-index: 6;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .poi-drawer.open {
@@ -217,28 +216,28 @@
     }
 
     .poi-title {
-      font-size: 0.95rem;
+      font-size: var(--font-size-lg);
       font-weight: bold;
-      color: var(--text-bright);
+      color: #ffffff;
     }
 
     .poi-meta {
-      font-size: 0.75rem;
+      font-size: var(--font-size-sm);
       color: var(--text-dim);
     }
 
     .poi-details-box {
       background-color: var(--bg-primary);
       border: 1px solid var(--border-color);
-      padding: 8px;
-      font-size: 0.8rem;
-      line-height: 1.3;
+      padding: 10px;
+      font-size: var(--font-size-base);
+      line-height: 1.4;
     }
 
     .poi-action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
       margin-top: 4px;
     }
 
@@ -246,7 +245,7 @@
     .travel-modal-backdrop {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(8, 13, 10, 0.85);
+      background: rgba(5, 10, 6, 0.85);
       z-index: 8;
       display: none;
       align-items: center;
@@ -258,17 +257,17 @@
       background-color: var(--bg-surface-raised);
       border: 1px solid var(--border-bright);
       width: 100%;
-      max-width: 360px;
-      padding: 14px;
+      max-width: 380px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .travel-options-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .travel-option-btn {
@@ -276,12 +275,12 @@
       align-items: center;
       gap: 12px;
       text-align: left;
-      padding: 10px;
+      padding: 12px;
       justify-content: flex-start;
     }
 
     .travel-icon {
-      font-size: 1.3rem;
+      font-size: 1.5rem;
     }
 
     .travel-meta {
@@ -290,12 +289,12 @@
     }
 
     .travel-title {
-      font-size: 0.85rem;
-      color: var(--text-bright);
+      font-size: var(--font-size-md);
+      color: #ffffff;
     }
 
     .travel-desc {
-      font-size: 0.7rem;
+      font-size: var(--font-size-sm);
       color: var(--text-dim);
     }
   </style>
@@ -303,15 +302,12 @@
 <body>
 
   <div class="app-container">
-    <!-- Top System Telemetry Bar -->
     <header class="status-header">
       <span class="brand-title">C.I.P.H.E.R. // MAP v3.4</span>
       <span class="telemetry-pill">12.6V FLOAT: OK</span>
     </header>
 
-    <!-- Map Viewport Stage -->
     <main class="map-stage">
-      <!-- Top Map Controls Strip -->
       <div class="map-controls-strip">
         <select id="sector-select" class="sector-select-dropdown">
           <option value="SECTOR_01">SECTOR 01: CACHE VALLEY</option>
@@ -319,28 +315,25 @@
           <option value="SECTOR_03">SECTOR 03: BEAR LAKE</option>
           <option value="SECTOR_04">SECTOR 04: SE IDAHO</option>
         </select>
-        <button id="btn-theme-toggle" class="btn-cipher" style="padding: 4px 8px; font-size: 0.72rem;">[ CRT VECTOR ]</button>
+        <button id="btn-theme-toggle" class="btn-cipher" style="padding: 6px 10px; font-size: var(--font-size-sm);">[ CRT VECTOR ]</button>
       </div>
 
-      <!-- Vector Map Canvas (0 0 500 500 Aspect Ratio) -->
       <div class="svg-container">
         <svg id="map-svg-canvas" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet"></svg>
         
-        <!-- Fog of War Overlay -->
         <div id="map-shroud-overlay" class="shroud-overlay"></div>
 
-        <!-- POI Slide-Up Drawer -->
         <div id="poi-drawer" class="poi-drawer">
           <div class="poi-header-row">
             <div>
               <div id="poi-name" class="poi-title">Location Name</div>
               <div id="poi-type" class="poi-meta">Container // Difficulty</div>
             </div>
-            <button id="btn-close-drawer" class="btn-cipher" style="padding: 2px 6px; font-size: 0.75rem;">✕</button>
+            <button id="btn-close-drawer" class="btn-cipher" style="padding: 4px 8px; font-size: var(--font-size-sm);">✕</button>
           </div>
           <div class="poi-details-box">
-            <div><strong>COORDS:</strong> <span id="poi-coords">N 00° 00.000 W 000° 00.000</span></div>
-            <div><strong>TERRAIN:</strong> <span id="poi-terrain">Terrain description</span></div>
+            <div><strong>COORDS:</strong> <span id="poi-coords" style="color: var(--accent-amber); font-weight: bold;">N 00° 00.000 W 000° 00.000</span></div>
+            <div style="margin-top: 4px;"><strong>TERRAIN:</strong> <span id="poi-terrain">Terrain description</span></div>
           </div>
           <div class="poi-action-grid">
             <button class="btn-cipher primary" onclick="window.location.href='mission.html'">[ 🔓 CRACK ]</button>
@@ -348,19 +341,15 @@
           </div>
         </div>
 
-        <!-- Travel Mode Selector Modal -->
         <div id="travel-modal" class="travel-modal-backdrop">
           <div class="travel-modal-card">
             <div class="panel-header">SELECT TRAVEL MODE</div>
-            <div id="travel-options-list" class="travel-options-list">
-              <!-- Dynamically populated via cipher-map.js -->
-            </div>
+            <div id="travel-options-list" class="travel-options-list"></div>
             <button class="btn-cipher" onclick="CipherMap.closeTravelModal()">[ CANCEL ]</button>
           </div>
         </div>
       </div>
 
-      <!-- Docked CB Radio / Scanner Bar (RAT-COMMS) -->
       <div class="rat-comms-dock">
         <div class="rat-comms-channel">CH 19</div>
         <div class="s-meter-block">
@@ -377,7 +366,6 @@
       </div>
     </main>
 
-    <!-- Symmetrical 4-Anchor Bottom Navigation Strip -->
     <nav class="nav-anchor-strip">
       <a href="mission.html" class="nav-tab">
         <span>[ 🔓 ]</span>
@@ -398,13 +386,17 @@
     </nav>
   </div>
 
-  <!-- Shared Engine Dependencies -->
   <script src="js/cipher-audio.js"></script>
   <script src="js/cipher-core.js"></script>
   <script src="js/cipher-map.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       CipherMap.init();
+      const state = CipherCore.getState();
+      const themeToggle = document.getElementById('btn-theme-toggle');
+      if (themeToggle) {
+        themeToggle.textContent = (state.meta.theme || 'crt') === 'crt' ? '[ CRT VECTOR ]' : '[ TOPO BLUEPRINT ]';
+      }
     });
   </script>
 </body>
