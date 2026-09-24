@@ -6,12 +6,6 @@
   <title>C.I.P.H.E.R. // Mission Terminal</title>
   <link rel="stylesheet" href="css/cipher-style.css">
   <style>
-    .mission-card {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
     .mission-header-row {
       display: flex;
       justify-content: space-between;
@@ -21,35 +15,19 @@
     }
 
     .mission-title {
-      font-size: 1rem;
+      font-size: 16px;
       font-weight: bold;
-      color: var(--text-bright);
-    }
-
-    .mission-code {
-      font-size: 0.8rem;
-      color: var(--accent-amber);
+      color: #ffffff;
+      font-family: var(--font-ui);
     }
 
     .cipher-terminal-window {
       background-color: var(--bg-primary);
       border: 1px solid var(--border-color);
-      padding: 10px;
-      font-size: 0.85rem;
-      min-height: 90px;
-      color: var(--text-main);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .terminal-speaker-tag {
-      color: var(--text-bright);
-      font-weight: bold;
-    }
-
-    .terminal-line {
-      line-height: 1.35;
+      padding: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #d1fae5;
     }
 
     .puzzle-box {
@@ -58,139 +36,109 @@
       padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-    }
-
-    .puzzle-prompt {
-      font-size: 0.85rem;
-      color: var(--text-bright);
+      gap: 10px;
     }
 
     .puzzle-cipher-text {
       background-color: var(--bg-primary);
-      padding: 8px;
-      font-size: 0.95rem;
+      padding: 10px;
+      font-size: 18px;
       letter-spacing: 2px;
       border: 1px dashed var(--border-color);
       color: var(--accent-amber);
-      word-break: break-all;
+      text-align: center;
+      font-weight: bold;
     }
 
     .dock-input-row {
       display: flex;
       gap: 8px;
-      margin-top: 4px;
     }
 
     .cipher-input {
       flex: 1;
-      background-color: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      color: var(--text-bright);
+      background-color: #ffffff;
+      border: 2px solid var(--border-bright);
+      color: #000000;
       font-family: var(--font-mono);
-      font-size: 0.95rem;
-      padding: 8px 10px;
+      font-size: 15px;
+      font-weight: bold;
+      padding: 10px 12px;
       text-transform: uppercase;
       outline: none;
-    }
-
-    .cipher-input:focus {
-      border-color: var(--border-bright);
     }
 
     .solution-unlocked-card {
       background-color: var(--bg-surface-raised);
       border: 1px solid var(--border-bright);
-      padding: 12px;
+      padding: 14px;
       display: none;
       flex-direction: column;
       gap: 8px;
     }
 
-    .solution-header {
-      color: var(--text-bright);
-      font-weight: bold;
-      font-size: 0.85rem;
-    }
-
     .solution-coords {
-      font-size: 1.1rem;
+      font-size: 20px;
       color: var(--accent-amber);
       font-weight: bold;
       letter-spacing: 1px;
-    }
-
-    .solution-meta {
-      font-size: 0.78rem;
-      color: var(--text-dim);
-    }
-
-    .hint-container {
-      display: none;
-      background-color: var(--bg-primary);
-      border: 1px dashed var(--border-color);
-      padding: 8px;
-      font-size: 0.8rem;
-      color: var(--text-bright);
     }
   </style>
 </head>
 <body>
 
   <div class="app-container">
-    <!-- Top System Telemetry Bar -->
     <header class="status-header">
-      <span class="brand-title">C.I.P.H.E.R. // MISSION TERMINAL</span>
-      <span id="top-ram-status" class="telemetry-pill">RAM: 64KB</span>
+      <span class="brand-title">C.I.P.H.E.R. // MISSION</span>
+      <span id="top-ram-status" class="telemetry-pill">RAM: 128KB</span>
     </header>
 
-    <!-- Scrollable Mission Content -->
     <main class="viewport-stage">
-      <div class="cipher-panel mission-card">
+      <div class="cipher-panel" style="display: flex; flex-direction: column; gap: 10px;">
         <div class="mission-header-row">
           <span class="mission-title" id="stage-title">Cache Tales #01: The Welded Anchor</span>
-          <span class="mission-code" id="stage-code">GC10001</span>
+          <span style="color: var(--accent-amber); font-weight: bold;" id="stage-code">GC10001</span>
         </div>
 
-        <!-- C.I.P.H.E.R. Dialogue Teletype Window -->
         <div class="cipher-terminal-window">
-          <div class="terminal-speaker-tag">[C.I.P.H.E.R. TELETYPE]</div>
-          <div class="terminal-line" id="dialogue-line">
+          <div style="color: var(--text-bright); font-weight: bold; margin-bottom: 4px;">[C.I.P.H.E.R. TELETYPE]</div>
+          <div id="dialogue-line">
             > "RSI drop site located off highway turnout. Iron casing welded shut. Enter frequency bypass offset to calculate real-world GZ coordinates."
           </div>
         </div>
 
-        <!-- The Active Puzzle Subroutine -->
         <div id="puzzle-box" class="puzzle-box">
-          <div class="puzzle-prompt">CIPHER SUBROUTINE // ROT-13 OFFSET:</div>
+          <div style="font-size: 12px; color: var(--text-dim); font-weight: bold;">CIPHER SUBROUTINE // ROT-13 OFFSET:</div>
           <div class="puzzle-cipher-text" id="cipher-display">GUF-SYNAP-HAX-89</div>
           
           <div class="dock-input-row">
             <input type="text" id="solution-input" class="cipher-input" placeholder="ENTER CODEWORD..." autocomplete="off">
-            <button id="btn-crack" class="btn-cipher primary" onclick="MissionController.submitCrack()">[ 🔓 CRACK ]</button>
+            <button id="btn-crack" class="btn-cipher primary" onclick="MissionController.submitCrack()">
+              <svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>CRACK</span>
+            </button>
           </div>
 
-          <div style="display: flex; gap: 8px; margin-top: 4px;">
-            <button id="btn-hint" class="btn-cipher" style="flex: 1;" onclick="MissionController.toggleHint()">[ 💡 HINT ]</button>
-          </div>
+          <button id="btn-hint" class="btn-cipher" onclick="MissionController.toggleHint()">
+            <svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>
+            <span>HINT</span>
+          </button>
 
-          <div id="hint-text" class="hint-container">
-            HINT: Standard letter shift 13 places forward. Inspect the ROT-13 card inside your PACK if needed.
+          <div id="hint-text" style="display: none; background-color: var(--bg-primary); border: 1px dashed var(--border-color); padding: 8px; font-size: 13px; color: #a7f3d0;">
+            HINT: Letter shift 13 places forward. Check the ROT-13 Card inside your PACK.
           </div>
         </div>
 
-        <!-- Field Coordinates Unlocked Card -->
         <div id="solution-card" class="solution-unlocked-card">
-          <div class="solution-header">✔ GZ COORDINATES UNLOCKED // FIELD ACCESS GRANTED</div>
+          <div style="color: var(--text-bright); font-weight: bold; font-size: 14px;">✔ GZ COORDINATES UNLOCKED</div>
           <div class="solution-coords">N 41° 39.120 W 111° 55.450</div>
-          <div class="solution-meta">
-            Target container: Regular Heavy-Gauge Welded Ammo Can. Bring a 3/4 socket and signed trade swag. Bonus voucher code stamped inside lid.
+          <div style="font-size: 13px; color: #d1fae5; line-height: 1.4;">
+            Target: Heavy Ammo Can. Bring 3/4 socket wrench. Lid voucher inside awards digital trophy.
           </div>
           <button class="btn-cipher primary" onclick="window.location.href='map.html'">[ ➔ PLOT ON MAP ]</button>
         </div>
       </div>
 
-      <!-- Docked CB Radio / Scanner Bar (RAT-COMMS) -->
       <div class="rat-comms-dock" style="margin-top: auto;">
         <div class="rat-comms-channel">CH 19</div>
         <div class="s-meter-block">
@@ -207,22 +155,21 @@
       </div>
     </main>
 
-    <!-- Symmetrical 4-Anchor Bottom Navigation -->
     <nav class="nav-anchor-strip">
       <a href="mission.html" class="nav-tab active">
-        <span>[ 🔓 ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         <span>MISSION</span>
       </a>
       <a href="map.html" class="nav-tab">
-        <span>[ 🗺️ ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
         <span>MAP</span>
       </a>
       <a href="pack.html" class="nav-tab">
-        <span>[ 🎒 ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10z"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
         <span>PACK</span>
       </a>
       <a href="profile.html" class="nav-tab">
-        <span>[ ⚙️ ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span>MENU</span>
       </a>
     </nav>
@@ -243,7 +190,6 @@
           const state = CipherCore.getState();
           document.getElementById('top-ram-status').textContent = `RAM: ${state.hardware.ramKB}KB`;
 
-          // If stage already solved in state, show coordinates directly
           if (state.campaign.completedCaches && state.campaign.completedCaches.includes(activeStage.gcCode)) {
             this.showSolvedState();
           }
@@ -252,11 +198,9 @@
         submitCrack: function () {
           const input = document.getElementById('solution-input');
           const val = input.value.trim().toUpperCase();
-
           if (!val) return;
 
           if (val === activeStage.solution) {
-            // Correct verification
             CipherAudio.chime();
             CipherCore.resetFailureCounter();
             CipherAudio.speak("Verification successful. Real world coordinates decrypted.");
@@ -266,14 +210,10 @@
               state.campaign.completedCaches.push(activeStage.gcCode);
             }
             CipherCore.commitMilestone('STAGE_CRACKED', { gcCode: activeStage.gcCode });
-
             this.showSolvedState();
           } else {
-            // Failure registration & 3-strike snark routing
             const failure = CipherCore.registerInputFailure();
             document.getElementById('dialogue-line').textContent = failure.message;
-            document.body.classList.add('glitch-flash');
-            setTimeout(() => document.body.classList.remove('glitch-flash'), 300);
             input.value = '';
           }
         },
@@ -287,7 +227,7 @@
         showSolvedState: function () {
           document.getElementById('puzzle-box').style.display = 'none';
           document.getElementById('solution-card').style.display = 'flex';
-          document.getElementById('dialogue-line').textContent = '> "Stage complete. Real-world coordinates logged below. Enter container lid voucher in PACK for bonus digital telemetry."';
+          document.getElementById('dialogue-line').textContent = '> "Stage complete. Real-world coordinates logged below."';
         }
       };
     })();
