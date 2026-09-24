@@ -3,391 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>C.I.P.H.E.R. // Field Pack</title>
-  <link rel="stylesheet" href="css/cipher-style.css?v=3.60">
+  <title>C.I.P.H.E.R. // Cacher Trail Pack</title>
+  <link rel="stylesheet" href="css/cipher-style.css?v=3.70">
   <style>
-    :root {
-      --bg-primary: #050a06;
-      --bg-surface: #0a140d;
-      --bg-surface-raised: #112015;
-      --border-color: #1b3822;
-      --border-bright: #00e676;
-      --text-main: #ffffff;
-      --text-bright: #00e676;
-      --text-dim: #a7f3d0;
-      --accent-amber: #ffb300;
-      --font-mono: 'Courier New', Courier, monospace;
-      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      
-      --fs-base: 16px;
-      --fs-sm: 14px;
-      --fs-md: 17px;
-      --fs-lg: 20px;
-      --fs-xl: 24px;
-    }
-
-    html.font-large, body.font-large {
-      --fs-base: 18px;
-      --fs-sm: 15px;
-      --fs-md: 19px;
-      --fs-lg: 22px;
-      --fs-xl: 26px;
-    }
-
-    html.font-xl, body.font-xl {
-      --fs-base: 20px;
-      --fs-sm: 17px;
-      --fs-md: 22px;
-      --fs-lg: 25px;
-      --fs-xl: 29px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body {
-      width: 100%;
-      height: 100dvh;
-      background-color: var(--bg-primary);
-      color: var(--text-main);
-      font-family: var(--font-mono);
-      font-size: var(--fs-base);
-      line-height: 1.45;
-      overflow: hidden;
-      touch-action: manipulation;
-    }
-
-    .app-container {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      max-width: 600px;
-      height: 100dvh;
-      margin: 0 auto;
-      background-color: var(--bg-primary);
-      position: relative;
-    }
-
-    .status-header {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border-color);
+    .trading-dock-card {
       background-color: var(--bg-surface);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-    }
-    .status-header h1.brand-title {
-      color: var(--text-bright);
-      font-family: var(--font-ui);
-      font-size: var(--fs-md);
-      letter-spacing: 0.5px;
-      margin: 0;
-    }
-    .status-header .telemetry-pill {
-      color: var(--text-dim);
-      font-size: var(--fs-sm);
-      font-weight: bold;
-    }
-
-    .viewport-stage {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
       padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
+      margin-top: auto;
     }
-
-    .hardware-spec-bar {
-      background-color: var(--bg-surface);
-      border: 2px solid var(--border-bright);
-      padding: 12px 14px;
+    .trading-select-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      text-align: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .hardware-spec-bar .spec-item-title {
-      color: var(--text-dim);
-      font-size: var(--fs-sm);
-    }
-    .hardware-spec-bar .spec-item-val {
-      color: var(--text-bright);
-      font-size: var(--fs-lg);
-      font-weight: bold;
-      margin-top: 2px;
-    }
-
-    .inventory-nav-tabs {
-      display: flex;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
-      scrollbar-width: none;
-      flex-shrink: 0;
     }
-    .inventory-nav-tabs::-webkit-scrollbar { display: none; }
-
-    .inv-tab {
-      flex: 1 0 auto;
-      min-width: 85px;
-      min-height: 48px;
-      background-color: var(--bg-surface);
-      border: 1.5px solid var(--border-color);
-      color: var(--text-dim);
-      padding: 0 16px;
-      font-family: var(--font-ui);
-      font-size: var(--fs-md);
-      font-weight: bold;
-      text-align: center;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: manipulation;
-    }
-    .inv-tab.active {
-      background-color: var(--bg-surface-raised);
-      color: var(--text-bright);
-      border-color: var(--border-bright);
-    }
-
-    .item-card {
-      background-color: var(--bg-surface);
-      border: 1.5px solid var(--border-color);
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .item-card.is-part { border-color: var(--border-bright); }
-
-    .item-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .item-name {
-      font-size: var(--fs-lg);
-      font-weight: bold;
+    .trading-select {
+      background-color: #06110a;
+      border: 1px solid var(--border-color);
       color: #ffffff;
-      margin: 0;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: var(--font-sm);
+      min-height: 44px;
       font-family: var(--font-ui);
-    }
-    .item-tag {
-      font-size: var(--fs-sm);
-      padding: 3px 8px;
-      background-color: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      color: var(--text-dim);
-      font-weight: bold;
-    }
-    .item-tag.tag-part {
-      border-color: var(--border-bright);
-      color: var(--text-bright);
-    }
-    .item-desc {
-      font-size: var(--fs-base);
-      color: #d1fae5;
-      line-height: 1.45;
-    }
-
-    .cipher-panel {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      padding: 16px;
-    }
-    .panel-header {
-      font-size: var(--fs-sm);
-      font-weight: bold;
-      color: var(--accent-amber);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px dashed var(--border-color);
-      padding-bottom: 6px;
-    }
-
-    .voucher-dock-form {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .cipher-input {
-      flex: 1;
-      min-height: 48px;
-      background-color: #ffffff;
-      border: 2px solid var(--border-bright);
-      color: #000000;
-      font-family: var(--font-mono);
-      font-size: var(--fs-md);
-      font-weight: bold;
-      padding: 0 14px;
-      text-transform: uppercase;
-      outline: none;
-    }
-
-    .btn-cipher {
-      background-color: var(--bg-surface-raised);
-      color: var(--text-main);
-      border: 1.5px solid var(--border-color);
-      min-height: 48px;
-      padding: 10px 18px;
-      font-family: var(--font-ui);
-      font-size: var(--fs-md);
-      font-weight: bold;
-      cursor: pointer;
-      text-transform: uppercase;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      white-space: nowrap;
-      touch-action: manipulation;
-    }
-    .btn-cipher.primary { border-color: var(--border-bright); color: var(--text-bright); }
-
-    .ui-icon {
-      width: 22px;
-      height: 22px;
-      stroke: currentColor;
-      stroke-width: 2.2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-      flex-shrink: 0;
-    }
-
-    .nav-anchor-strip {
-      display: flex;
-      width: 100%;
-      height: calc(62px + env(safe-area-inset-bottom, 0px));
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      border-top: 1px solid var(--border-color);
-      background-color: var(--bg-surface);
-      z-index: 10;
-      flex-shrink: 0;
-    }
-    .nav-tab {
-      flex: 1 1 25%;
-      min-height: 48px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      border-right: 1px solid var(--border-color);
-      color: var(--text-dim);
-      font-family: var(--font-ui);
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      text-transform: uppercase;
-      text-decoration: none;
-    }
-    .nav-tab:last-child { border-right: none; }
-    .nav-tab.active {
-      color: var(--text-bright);
-      background-color: var(--bg-surface-raised);
-      border-top: 3px solid var(--border-bright);
-    }
-    .nav-tab.active .ui-icon { stroke: var(--text-bright); }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
     }
   </style>
 </head>
 <body>
 
   <div class="app-container">
+    <!-- Legacy Header Lockup -->
     <header class="status-header">
-      <h1 class="brand-title">C.I.P.H.E.R. // FIELD PACK</h1>
-      <div class="telemetry-pill" role="status" aria-label="Storage Status">STORAGE: SYNCED</div>
+      <span class="brand-title">C.I.P.H.E.R. // v3.7-CATALOG</span>
+      <div class="header-status-pill" role="status" aria-label="Device Status">
+        <span class="dot"></span>
+        <span>ONLINE // GZ</span>
+      </div>
+      <span class="header-user-tag" id="cacher-name-display">NEZZMUK 👤</span>
     </header>
 
     <main class="viewport-stage">
-      <section class="hardware-spec-bar" aria-label="Mainframe Hardware Status">
-        <div>
-          <div class="spec-item-title">MAINFRAME RAM</div>
-          <div class="spec-item-val" id="spec-ram">128KB</div>
-        </div>
-        <div>
-          <div class="spec-item-title">BUS SPEED</div>
-          <div class="spec-item-val" id="spec-bus">1.77 MHz</div>
-        </div>
-        <div>
-          <div class="spec-item-title">FLOAT VOLTAGE</div>
-          <div class="spec-item-val" id="spec-voltage">12.6V</div>
-        </div>
-      </section>
-
-      <section aria-label="Inventory Category Filters">
-        <div class="inventory-nav-tabs" role="tablist">
-          <button role="tab" aria-selected="true" class="inv-tab active" onclick="PackController.filterTab('ALL')">ALL</button>
-          <button role="tab" aria-selected="false" class="inv-tab" onclick="PackController.filterTab('TOOL')">TOOLS</button>
-          <button role="tab" aria-selected="false" class="inv-tab" onclick="PackController.filterTab('PART')">PARTS</button>
-          <button role="tab" aria-selected="false" class="inv-tab" onclick="PackController.filterTab('KEY')">SWAG</button>
-        </div>
-      </section>
-
-      <section id="items-container" aria-label="Equipment Deck" style="display: flex; flex-direction: column; gap: 10px;"></section>
-
-      <section class="cipher-panel" style="margin-top: auto;" aria-labelledby="voucher-dock-title">
-        <h2 id="voucher-dock-title" class="panel-header">FIELD VOUCHER REDEMPTION DOCK</h2>
-        <p id="voucher-instructions" style="font-size: var(--fs-sm); color: #a7f3d0; line-height: 1.4;">
-          Enter codes stamped under physical ammo can lids or washers found in the field.
+      
+      <!-- Top Title Banner -->
+      <section class="page-title-banner" aria-label="Inventory Header">
+        <div class="section-category-tag">CONTROLLED ITEM INVENTORY</div>
+        <h1 class="page-main-heading">Cacher Trail Pack</h1>
+        <p class="page-description">
+          Official corridor permits, clues, and signature swag registered to your session. Tap an item for custody info.
         </p>
-        <form class="voucher-dock-form" onsubmit="event.preventDefault(); PackController.redeemVoucher();">
-          <label for="voucher-input" class="sr-only">Stamped Field Voucher Code</label>
-          <input 
-            type="text" 
-            id="voucher-input" 
-            name="voucherCode"
-            class="cipher-input" 
-            placeholder="STAMPED VOUCHER..." 
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="characters"
-            spellcheck="false"
-            inputmode="text"
-            enterkeyhint="go"
-            required
-            aria-describedby="voucher-instructions"
-          >
-          <button type="submit" class="btn-cipher primary">[ CLAIM ]</button>
-        </form>
       </section>
+
+      <!-- Controlled Item Cards (v2.7 Parity with Graphic Tile Anchors) -->
+      <section id="items-container" aria-label="Pack Items Deck" style="display: flex; flex-direction: column; gap: 10px;">
+        
+        <!-- Corridor Permit #01 -->
+        <article class="item-card" onclick="PackController.inspectItem('Corridor Permit #01')">
+          <div class="item-icon-tile" aria-hidden="true">🏷️</div>
+          <div class="item-content">
+            <h2 class="item-title">Corridor Permit #01</h2>
+            <div class="item-subtitle">Stamped Shackle Combo: 3-8-4</div>
+            <div class="item-badge-pill">Swag // GEN-1</div>
+          </div>
+        </article>
+
+        <!-- Brass Washer #02 -->
+        <article class="item-card" onclick="PackController.inspectItem('Brass Washer #02')">
+          <div class="item-icon-tile" aria-hidden="true">⚙️</div>
+          <div class="item-content">
+            <h2 class="item-title">Brass Washer #02</h2>
+            <div class="item-subtitle">Stamped Word: POST</div>
+            <div class="item-badge-pill">Swag // GEN-1</div>
+          </div>
+        </article>
+
+        <!-- Corridor Finisher Tag -->
+        <article class="item-card" onclick="PackController.inspectItem('Corridor Finisher Tag')">
+          <div class="item-icon-tile" aria-hidden="true">🏆</div>
+          <div class="item-content">
+            <h2 class="item-title">Corridor Finisher Tag</h2>
+            <div class="item-subtitle">Cache Tales Cluster Master</div>
+            <div class="item-badge-pill" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">Trackable // TAG-001</div>
+          </div>
+        </article>
+
+        <!-- Swag Trade Asset -->
+        <article class="item-card" onclick="PackController.inspectItem('Signature Geocoin')">
+          <div class="item-icon-tile" aria-hidden="true">🎁</div>
+          <div class="item-content">
+            <h2 class="item-title">Signature Geocoin</h2>
+            <div class="item-subtitle">Swag traded at GC10025</div>
+            <div class="item-badge-pill">Swag // GEN-1</div>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- Cache Trading & Custody Transfer Dock -->
+      <section class="trading-dock-card" aria-label="Cache Custody Transfer Dock">
+        <div class="section-category-tag">📦 CACHE TRADING: GC10025</div>
+        <div class="trading-select-grid">
+          <div>
+            <label for="select-leave" class="sr-only">Leave From Pack</label>
+            <select id="select-leave" class="trading-select" style="width: 100%;">
+              <option value="">-- None (Keep Pack) --</option>
+              <option value="PERMIT_01">Corridor Permit #01</option>
+              <option value="WASHER_02">Brass Washer #02</option>
+            </select>
+          </div>
+          <div>
+            <label for="select-take" class="sr-only">Take From Container</label>
+            <select id="select-take" class="trading-select" style="width: 100%;">
+              <option value="">-- None (Browse Only) --</option>
+              <option value="WOOD_NICKEL">Wooden Nickel #14</option>
+              <option value="SIGNAL_PAT">Pathtag Signal</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-cipher primary-solid" onclick="PackController.confirmTransfer()">
+          CONFIRM CUSTODY TRANSFER ➔
+        </button>
+      </section>
+
     </main>
 
+    <!-- Solid Green Pill Bottom Navigation Strip -->
     <nav class="nav-anchor-strip" aria-label="Primary Navigation">
       <a href="mission.html" class="nav-tab">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <svg class="ui-icon-nav" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         <span>MISSION</span>
       </a>
       <a href="map.html" class="nav-tab">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-        <span>MAP</span>
+        <svg class="ui-icon-nav" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+        <span>TRAIL</span>
       </a>
       <a href="pack.html" class="nav-tab active" aria-current="page">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10z"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
+        <svg class="ui-icon-nav" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10z"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
         <span>PACK</span>
       </a>
       <a href="profile.html" class="nav-tab">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <svg class="ui-icon-nav" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span>MENU</span>
       </a>
     </nav>
@@ -396,157 +155,22 @@
   <script src="js/cipher-audio.js"></script>
   <script src="js/cipher-core.js"></script>
   <script>
-    const PackController = (function () {
-      let activeFilter = 'ALL';
-
-      const defaultItems = [
-        {
-          id: 'TOOL_ROT13',
-          type: 'TOOL',
-          name: 'Rot13 Cipher Card',
-          desc: 'Standard field rotation tool for deciphering log hints.',
-          consumable: false
-        },
-        {
-          id: 'PART_RAM64',
-          type: 'PART',
-          name: '64KB RAM Expansion Board',
-          desc: 'Surplus aerospace board. Can be fed to C.I.P.H.E.R. to boost memory.',
-          consumable: true,
-          targetUpgrade: 'ramKB',
-          upgradeVal: 128
+    const PackController = {
+      inspectItem: function(name) {
+        if (typeof CipherAudio !== 'undefined') CipherAudio.click();
+        alert(`[ITEM CUSTODY] // ${name}\nSerial hash verified against field session ledger.`);
+      },
+      confirmTransfer: function() {
+        const leave = document.getElementById('select-leave').value;
+        const take = document.getElementById('select-take').value;
+        if (!leave && !take) {
+          alert("Select an item to leave or take from container.");
+          return;
         }
-      ];
-
-      return {
-        init: function () {
-          this.updateHardwareDisplay();
-          this.renderInventory();
-        },
-
-        updateHardwareDisplay: function () {
-          const state = (typeof CipherCore !== 'undefined') ? CipherCore.getState() : { hardware: { ramKB: 128, busSpeed: '1.77 MHz', floatVoltage: '12.6V' } };
-          document.getElementById('spec-ram').textContent = `${state.hardware.ramKB}KB`;
-          document.getElementById('spec-bus').textContent = state.hardware.busSpeed;
-          document.getElementById('spec-voltage').textContent = state.hardware.floatVoltage;
-        },
-
-        filterTab: function (category) {
-          if (typeof CipherAudio !== 'undefined') CipherAudio.click();
-          activeFilter = category;
-          document.querySelectorAll('.inv-tab').forEach(tab => {
-            const isMatch = tab.textContent.includes(category);
-            tab.classList.toggle('active', isMatch);
-            tab.setAttribute('aria-selected', isMatch ? 'true' : 'false');
-          });
-          this.renderInventory();
-        },
-
-        renderInventory: function () {
-          const state = (typeof CipherCore !== 'undefined') ? CipherCore.getState() : { inventory: defaultItems };
-          const items = state.inventory || defaultItems;
-          const container = document.getElementById('items-container');
-          container.innerHTML = '';
-
-          const filtered = items.filter(item => {
-            if (activeFilter === 'ALL') return true;
-            return item.type === activeFilter;
-          });
-
-          if (filtered.length === 0) {
-            container.innerHTML = `
-              <div class="cipher-panel" style="text-align: center; color: var(--text-dim); padding: 22px; font-size: var(--fs-md);">
-                NO ASSETS IN PACK UNDER [${activeFilter}]
-              </div>
-            `;
-            return;
-          }
-
-          filtered.forEach(item => {
-            const isPart = item.type === 'PART';
-            const card = document.createElement('article');
-            card.className = `item-card ${isPart ? 'is-part' : ''}`;
-
-            card.innerHTML = `
-              <div class="item-header-row">
-                <h3 class="item-name">${item.name}</h3>
-                <span class="item-tag ${isPart ? 'tag-part' : ''}">[${item.type}]</span>
-              </div>
-              <p class="item-desc">${item.desc}</p>
-              <div style="display: flex; gap: 10px; margin-top: 6px;">
-                ${isPart ? `<button class="btn-cipher primary" style="font-size: var(--fs-sm); min-height: 48px; padding: 0 16px;" onclick="PackController.feedItem('${item.id}')">[ ⚡ FEED TO CIPHER ]</button>` : ''}
-                <button class="btn-cipher" style="font-size: var(--fs-sm); min-height: 48px; padding: 0 16px;" onclick="PackController.inspectItem('${item.name}')">[ 🔍 INSPECT ]</button>
-              </div>
-            `;
-
-            container.appendChild(card);
-          });
-        },
-
-        feedItem: function (itemId) {
-          if (typeof CipherCore !== 'undefined') {
-            const result = CipherCore.feedItemToCipher(itemId);
-            if (result.success) {
-              this.updateHardwareDisplay();
-              this.renderInventory();
-            } else {
-              if (typeof CipherAudio !== 'undefined') CipherAudio.buzz();
-              alert(result.reason);
-            }
-          }
-        },
-
-        inspectItem: function (name) {
-          if (typeof CipherAudio !== 'undefined') CipherAudio.click();
-          alert(`[INSPECTOR] // ${name}\nSerial markings verified authentic.`);
-        },
-
-        redeemVoucher: function () {
-          const input = document.getElementById('voucher-input');
-          const code = input.value.trim().toUpperCase();
-          if (!code) return;
-
-          if (code === "GC1-LID-ANCHOR" || code === "ANCHOR-LID-72") {
-            if (typeof CipherAudio !== 'undefined') CipherAudio.chime();
-            const state = (typeof CipherCore !== 'undefined') ? CipherCore.getState() : { inventory: [] };
-
-            if (state.inventory && state.inventory.some(i => i.id === 'PART_TUNING_COIL')) {
-              alert("Lid voucher already claimed in pack.");
-              return;
-            }
-
-            if (state.inventory) {
-              state.inventory.push({
-                id: 'PART_TUNING_COIL',
-                type: 'PART',
-                name: 'Antenna Tuning Coil (Surplus)',
-                desc: 'High-gain ferrite coil found in Cache 01. Feed to C.I.P.H.E.R. to boost RAM to 256KB.',
-                consumable: true,
-                targetUpgrade: 'ramKB',
-                upgradeVal: 256
-              });
-            }
-
-            if (typeof CipherCore !== 'undefined') {
-              CipherCore.commitMilestone('VOUCHER_CLAIMED', { code: code });
-            }
-            if (typeof CipherAudio !== 'undefined') {
-              CipherAudio.speak("Lid voucher verified. Surplus hardware added to pack.");
-            }
-            input.value = '';
-            this.renderInventory();
-          } else {
-            if (typeof CipherAudio !== 'undefined') CipherAudio.buzz();
-            alert("INVALID VOUCHER CODE. Check the physical ammo can lid stamp.");
-            input.value = '';
-          }
-        }
-      };
-    })();
-
-    document.addEventListener('DOMContentLoaded', () => {
-      PackController.init();
-    });
+        if (typeof CipherAudio !== 'undefined') CipherAudio.chime();
+        alert("Custody transfer verified! Physical container trade recorded in ledger.");
+      }
+    };
   </script>
 </body>
 </html>
