@@ -30,7 +30,7 @@
       background-color: var(--bg-surface-raised);
       color: var(--text-bright);
       border: 1px solid var(--border-bright);
-      font-family: var(--font-mono);
+      font-family: var(--font-ui);
       font-size: var(--font-size-sm);
       padding: 6px 10px;
       font-weight: bold;
@@ -91,9 +91,9 @@
 
     .map-town-label {
       fill: #ffffff;
-      font-family: var(--font-mono);
-      font-size: var(--map-town-size);
-      letter-spacing: 1px;
+      font-family: var(--font-ui);
+      font-size: var(--map-town-size, 14px);
+      letter-spacing: 0.5px;
       font-weight: bold;
     }
 
@@ -115,7 +115,7 @@
     .pin-label {
       fill: var(--text-bright);
       font-family: var(--font-mono);
-      font-size: var(--map-pin-size);
+      font-size: var(--map-pin-size, 13px);
       font-weight: bold;
       letter-spacing: 0.5px;
     }
@@ -219,6 +219,7 @@
       font-size: var(--font-size-lg);
       font-weight: bold;
       color: #ffffff;
+      font-family: var(--font-ui);
     }
 
     .poi-meta {
@@ -302,12 +303,14 @@
 <body>
 
   <div class="app-container">
+    <!-- Single-Line Status Header -->
     <header class="status-header">
       <span class="brand-title">C.I.P.H.E.R. // MAP v3.4</span>
       <span class="telemetry-pill">12.6V FLOAT: OK</span>
     </header>
 
     <main class="map-stage">
+      <!-- Sector & Theme Controls -->
       <div class="map-controls-strip">
         <select id="sector-select" class="sector-select-dropdown">
           <option value="SECTOR_01">SECTOR 01: CACHE VALLEY</option>
@@ -318,11 +321,14 @@
         <button id="btn-theme-toggle" class="btn-cipher" style="padding: 6px 10px; font-size: var(--font-size-sm);">[ CRT VECTOR ]</button>
       </div>
 
+      <!-- Vector Canvas Area -->
       <div class="svg-container">
         <svg id="map-svg-canvas" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet"></svg>
         
+        <!-- Fog of War Shroud -->
         <div id="map-shroud-overlay" class="shroud-overlay"></div>
 
+        <!-- POI Slide-Up Drawer -->
         <div id="poi-drawer" class="poi-drawer">
           <div class="poi-header-row">
             <div>
@@ -333,14 +339,21 @@
           </div>
           <div class="poi-details-box">
             <div><strong>COORDS:</strong> <span id="poi-coords" style="color: var(--accent-amber); font-weight: bold;">N 00° 00.000 W 000° 00.000</span></div>
-            <div style="margin-top: 4px;"><strong>TERRAIN:</strong> <span id="poi-terrain">Terrain description</span></div>
+            <div style="margin-top: 4px;"><strong>TERRAIN:</strong> <span id="poi-terrain" style="color: #d1fae5;">Terrain description</span></div>
           </div>
           <div class="poi-action-grid">
-            <button class="btn-cipher primary" onclick="window.location.href='mission.html'">[ 🔓 CRACK ]</button>
-            <button class="btn-cipher" onclick="CipherMap.openTravelModal()">[ ➔ TRAVEL ]</button>
+            <button class="btn-cipher primary" onclick="window.location.href='mission.html'">
+              <svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>CRACK</span>
+            </button>
+            <button class="btn-cipher" onclick="CipherMap.openTravelModal()">
+              <svg class="ui-icon" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+              <span>TRAVEL</span>
+            </button>
           </div>
         </div>
 
+        <!-- Travel Mode Selector Modal -->
         <div id="travel-modal" class="travel-modal-backdrop">
           <div class="travel-modal-card">
             <div class="panel-header">SELECT TRAVEL MODE</div>
@@ -350,6 +363,7 @@
         </div>
       </div>
 
+      <!-- Docked CB Radio Scanner Bar -->
       <div class="rat-comms-dock">
         <div class="rat-comms-channel">CH 19</div>
         <div class="s-meter-block">
@@ -366,21 +380,22 @@
       </div>
     </main>
 
+    <!-- Symmetrical 4-Anchor Nav with Dedicated SVG Icons -->
     <nav class="nav-anchor-strip">
       <a href="mission.html" class="nav-tab">
-        <span>[ 🔓 ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         <span>MISSION</span>
       </a>
       <a href="map.html" class="nav-tab active">
-        <span>[ 🗺️ ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
         <span>MAP</span>
       </a>
       <a href="pack.html" class="nav-tab">
-        <span>[ 🎒 ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10z"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
         <span>PACK</span>
       </a>
       <a href="profile.html" class="nav-tab">
-        <span>[ ⚙️ ]</span>
+        <svg class="ui-icon ui-icon-nav" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span>MENU</span>
       </a>
     </nav>
