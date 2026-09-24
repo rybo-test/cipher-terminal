@@ -1,10 +1,10 @@
 /* ==========================================================================
-   C.I.P.H.E.R. SYSTEM STYLESHEET (v3.4-HEURISTIC-MATCH)
-   Restores Legacy UI Contrast, Structural Typography & Vector Icons
+   C.I.P.H.E.R. SYSTEM STYLESHEET (v3.4-MOBILE-ERGONOMIC)
+   High-Contrast, WCAG 2.2 AA Compliant, Touch & 100dvh Optimized
    ========================================================================== */
 
 :root {
-  /* High-Contrast Palette (Legacy Parity) */
+  /* High-Contrast Palette */
   --bg-primary: #050a06;
   --bg-surface: #0a140d;
   --bg-surface-raised: #112015;
@@ -12,22 +12,24 @@
   --border-bright: #00e676;
   
   /* Text Contrast Hierarchy (WCAG AAA Compliant) */
-  --text-main: #ffffff;        /* Pure white for primary body & titles */
-  --text-bright: #00e676;      /* High-vis terminal green for accents */
-  --text-dim: #a7f3d0;         /* High-contrast mint for readable secondary text */
-  --accent-amber: #ffb300;     /* High-vis gold */
-  --accent-alert: #ff5252;     /* High-vis red */
+  --text-main: #ffffff;
+  --text-bright: #00e676;
+  --text-dim: #a7f3d0;
+  --accent-amber: #ffb300;
+  --accent-alert: #ff5252;
   
   /* Typography */
   --font-mono: 'Courier New', Courier, monospace;
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  /* Font Sizes */
+  /* Font Scaling Defaults (Regular) */
   --font-size-base: 15px;
   --font-size-sm: 13px;
   --font-size-md: 16px;
   --font-size-lg: 19px;
   --font-size-xl: 24px;
+  --map-town-size: 14px;
+  --map-pin-size: 13px;
 }
 
 body.font-large {
@@ -36,6 +38,8 @@ body.font-large {
   --font-size-md: 18px;
   --font-size-lg: 21px;
   --font-size-xl: 26px;
+  --map-town-size: 16px;
+  --map-pin-size: 15px;
 }
 
 body.font-xl {
@@ -44,6 +48,8 @@ body.font-xl {
   --font-size-md: 20px;
   --font-size-lg: 24px;
   --font-size-xl: 29px;
+  --map-town-size: 18px;
+  --map-pin-size: 17px;
 }
 
 body.theme-blueprint {
@@ -68,7 +74,7 @@ body.theme-blueprint {
 
 html, body {
   width: 100%;
-  height: 100%;
+  height: 100dvh;
   background-color: var(--bg-primary);
   color: var(--text-main);
   font-family: var(--font-mono);
@@ -76,6 +82,19 @@ html, body {
   line-height: 1.45;
   overflow: hidden;
   user-select: none;
+  touch-action: manipulation;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .app-container {
@@ -83,7 +102,7 @@ html, body {
   flex-direction: column;
   width: 100%;
   max-width: 600px;
-  height: 100%;
+  height: 100dvh;
   margin: 0 auto;
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
@@ -91,7 +110,7 @@ html, body {
   background-color: var(--bg-primary);
 }
 
-/* Single-Line Top Status Bar */
+/* Header */
 .status-header {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border-color);
@@ -99,15 +118,16 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
-  font-weight: bold;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.status-header .brand-title {
+.status-header h1.brand-title {
   color: var(--text-bright);
   font-family: var(--font-ui);
+  font-size: 14px;
   letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .status-header .telemetry-pill {
@@ -115,9 +135,11 @@ html, body {
   font-size: 12px;
 }
 
+/* Stage Viewport */
 .viewport-stage {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -152,7 +174,7 @@ html, body {
   grid-template-columns: 1fr 1fr 1fr;
   text-align: center;
   gap: 6px;
-  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .hardware-spec-bar .spec-item-title {
@@ -167,11 +189,12 @@ html, body {
   margin-top: 2px;
 }
 
-/* Action Buttons */
+/* Action Buttons (Fitts's Law 44px Minimum Touch Box) */
 .btn-cipher {
   background-color: var(--bg-surface-raised);
   color: var(--text-main);
   border: 1px solid var(--border-color);
+  min-height: 44px;
   padding: 10px 16px;
   font-family: var(--font-mono);
   font-size: var(--font-size-md);
@@ -183,6 +206,7 @@ html, body {
   justify-content: center;
   gap: 8px;
   white-space: nowrap;
+  touch-action: manipulation;
 }
 
 .btn-cipher:hover, .btn-cipher:focus {
@@ -201,7 +225,12 @@ html, body {
   color: var(--text-bright);
 }
 
-/* Vector SVG Icon Primitives */
+.btn-cipher:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Vector SVG Icons */
 .ui-icon {
   width: 20px;
   height: 20px;
@@ -210,27 +239,31 @@ html, body {
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
+  flex-shrink: 0;
 }
 
 .ui-icon-nav {
   width: 22px;
   height: 22px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
-/* Symmetrical 4-Tab Bottom Navigation Strip */
+/* Symmetrical 4-Tab Bottom Navigation Strip (Safe-Area Inset Aware) */
 .nav-anchor-strip {
   display: flex;
   width: 100%;
-  height: 60px;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   border-top: 1px solid var(--border-color);
   background-color: var(--bg-surface);
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .nav-tab {
   flex: 1 1 25%;
   width: 25%;
+  min-height: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -245,6 +278,7 @@ html, body {
   cursor: pointer;
   text-transform: uppercase;
   text-decoration: none;
+  touch-action: manipulation;
 }
 
 .nav-tab:last-child {
@@ -270,6 +304,7 @@ html, body {
   align-items: center;
   gap: 10px;
   font-size: 13px;
+  flex-shrink: 0;
 }
 
 .rat-comms-channel {
@@ -279,6 +314,7 @@ html, body {
   color: var(--accent-amber);
   font-weight: bold;
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .s-meter-block {
@@ -287,6 +323,7 @@ html, body {
   gap: 3px;
   font-size: 11px;
   color: var(--text-dim);
+  flex-shrink: 0;
 }
 
 .s-meter-bar {
