@@ -1,200 +1,186 @@
-// ========================================================
-// C.I.P.H.E.R. // MASTER STATE, TOOLBAR & LEDGER SYNC CONTROLLER
-// ========================================================
-const CipherCore = (function() {
-  // Shared System Version stamped across all pages after "C.I.P.H.E.R. //"
-  const SYSTEM_VERSION = "v2.6-RSI";
+/**
+ * C.I.P.H.E.R. Core State & Cloud Ledger Sync Engine (v3.4)
+ * Local-First architecture managing hardware state, error snark counters,
+ * inventory protection rules, and milestone Apps Script commitments.
+ */
 
-  // Google Apps Script Web App Deployment URL (Replace with your live Web App URL)
-  const API_URL = "https://script.google.com/macros/s/AKfycbw9e3JqXQ1s7H_89K2-fQx_Lz4p6O6VqF3t0j/exec";
+const CipherCore = (function () {
+  const STORAGE_KEY = 'CIPHER_STATE_V34';
+  const CLOUD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec';
 
-  const AppState = {
-    user: localStorage.getItem("ct_cacher_user") || "Guest",
-    syncKey: localStorage.getItem("ct_cacher_key") || "",
-    sigItem: localStorage.getItem("ct_cacher_sig") || "Signature Wooden Nickel",
-    isAdmin: localStorage.getItem("ct_cacher_admin") === "true",
-    activeStage: parseInt(localStorage.getItem("cipher_active_stage") || "1", 10),
-    completedStages: JSON.parse(localStorage.getItem("cipher_completed_stages") || "[]"),
-    packItems: JSON.parse(localStorage.getItem("cipher_pack_items") || JSON.stringify([
-      { icon: "🏷️", title: "Corridor Permit #01", desc: "Stamped Shackle Combo: 3-8-4 (Used at Cache 02)" }
-    ]))
+  // Default Single Source of Truth Initial State
+  const defaultState = {
+    cacher: {
+      username: 'GUEST_CACHER',
+      syncKey: 'CT-INIT-0000',
+      totalFinds: 0
+    },
+    hardware: {
+      ramKB: 64,               // Upgrade tiers: 64 -> 128 -> 256
+      busSpeed: '1.77 MHz',
+      floatVoltage: '12.6V',
+      status: 'FLOAT_OK'
+    },
+    campaign: {
+      currentSector: 'SECTOR_01',
+      currentLocationId: 'LOC_01_TURNAROUND',
+      activeStageIndex: 0,
+      completedCaches: [],     // Array of GC Codes (e.g. ['GC10001'])
+      unlockedWaypoints: ['LOC_01_TURNAROUND']
+    },
+    inventory: [
+      {
+        id: 'TOOL_ROT13',
+        type: 'TOOL',          // 'TOOL' | 'PART' | 'SWAG' | 'KEY'
+        name: 'Rot13 Cipher Card',
+        desc: 'Standard field rotation tool for deciphering log hints.',
+        consumable: false
+      },
+      {
+        id: 'PART_RAM64',
+        type: 'PART',
+        name: '64KB RAM Expansion Board',
+        desc: 'Surplus aerospace board. Can be fed to C.I.P.H.E.R. to boost memory.',
+        consumable: true,
+        targetUpgrade: 'ramKB',
+        upgradeVal: 128
+      }
+    ],
+    dailyMission: {
+      lastCompletedDate: null,
+      currentStreak: 0
+    },
+    secrets: {
+      ratLairDiscovered: false,
+      ratLabUnlocked: false,
+      ratBrainUnlocked: false
+    },
+    meta: {
+      failedAttempts: 0,
+      theme: 'crt',
+      fontSize: 'regular'
+    }
   };
 
-  function saveState() {
+  let state = loadLocalState();
+
+  function loadLocalState() {
     try {
-      localStorage.setItem("cipher_active_stage", AppState.activeStage);
-      localStorage.setItem("cipher_completed_stages", JSON.stringify(AppState.completedStages));
-      localStorage.setItem("cipher_pack_items", JSON.stringify(AppState.packItems));
-    } catch (e) {
-      console.warn("Could not save state to localStorage:", e);
-    }
-  }
-
-  // Applies themes and font sizes across any page
-  function applySavedPreferences() {
-    const theme = localStorage.getItem("cipher_theme") || "crt";
-    const font = localStorage.getItem("cipher_font_size") || "regular";
-    document.body.className = `theme-${theme} font-${font}`;
-  }
-
-  function setTheme(themeKey) {
-    if (window.CipherAudio) CipherAudio.playClick();
-    localStorage.setItem("cipher_theme", themeKey);
-    applySavedPreferences();
-    document.querySelectorAll(".btn-control-chip[id^='chipTheme']").forEach(el => el.classList.remove("active"));
-    const activeChip = document.getElementById(`chipTheme${themeKey.charAt(0).toUpperCase() + themeKey.slice(1)}`);
-    if (activeChip) activeChip.classList.add("active");
-  }
-
-  function setFontSize(sizeKey) {
-    if (window.CipherAudio) CipherAudio.playClick();
-    localStorage.setItem("cipher_font_size", sizeKey);
-    applySavedPreferences();
-    document.querySelectorAll(".btn-control-chip[id^='chipFont']").forEach(el => el.classList.remove("active"));
-    const activeChip = document.getElementById(`chipFont${sizeKey.charAt(0).toUpperCase() + sizeKey.slice(1)}`);
-    if (activeChip) activeChip.classList.add("active");
-  }
-
-  // Initializes the shared top toolbar across all pages
-  function initToolbar(activePageKey) {
-    applySavedPreferences();
-
-    // 1. Inject Universal Version stamping after "C.I.P.H.E.R. //"
-    const versionEl = document.getElementById("cipherVersionStamp");
-    if (versionEl) {
-      versionEl.textContent = SYSTEM_VERSION;
-    }
-
-    // 2. Update cacher handle in status row
-    const userDisplay = document.getElementById("cacherHandleSlot");
-    if (userDisplay) {
-      userDisplay.textContent = `${AppState.user.toUpperCase()} 👤`;
-    }
-
-    // 3. Update pack inventory count badge
-    const packLabel = document.getElementById("packNavLabel");
-    if (packLabel) {
-      packLabel.textContent = `🎒 PACK (${AppState.packItems.length})`;
-    }
-
-    // 4. Highlight current page anchor in navigation row
-    const navButtons = {
-      mission: document.getElementById("btnNavMission"),
-      trail: document.getElementById("btnNavTrail"),
-      pack: document.getElementById("btnNavPack")
-    };
-    Object.values(navButtons).forEach(btn => btn?.classList.remove("active"));
-    if (activePageKey && navButtons[activePageKey]) {
-      navButtons[activePageKey].classList.add("active");
-    }
-
-    // 5. Sync active chip button states in Drawer
-    const currentTheme = localStorage.getItem("cipher_theme") || "crt";
-    const currentFont = localStorage.getItem("cipher_font_size") || "regular";
-    document.getElementById(`chipTheme${currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}`)?.classList.add("active");
-    document.getElementById(`chipFont${currentFont.charAt(0).toUpperCase() + currentFont.slice(1)}`)?.classList.add("active");
-
-    // 6. Check and flush any queued offline logs if connection is available
-    flushOfflineQueue();
-  }
-
-  function toggleMenu(e) {
-    if (e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-    if (window.CipherAudio) CipherAudio.playClick();
-    const drawer = document.getElementById("menuDrawer");
-    if (drawer) drawer.classList.toggle("open");
-  }
-
-  // Close menu drawer on outside tap
-  document.addEventListener("click", function(e) {
-    const toolbar = document.getElementById("cipherToolbar");
-    const drawer = document.getElementById("menuDrawer");
-    if (drawer && drawer.classList.contains("open") && toolbar && !toolbar.contains(e.target)) {
-      drawer.classList.remove("open");
-    }
-  });
-
-  // ========================================================
-  // GOOGLE SHEET LEDGER SYNC & OFFLINE RESILIENCE
-  // ========================================================
-  async function syncFindToLedger(stageNumber, stageData) {
-    const payload = {
-      action: "logFind",
-      username: AppState.user,
-      syncKey: AppState.syncKey,
-      gc: stageData.gc,
-      status: "Found It",
-      notes: `Stage ${stageNumber} unlocked via code: ${stageData.unlockCode}`,
-      timestamp: new Date().toISOString()
-    };
-
-    updateStatusBadge("[ 🟡 SYNCING... ]");
-
-    try {
-      // Use text/plain to avoid CORS preflight failures on mobile
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-      console.log("☁️ LEDGER SYNC CONFIRMED:", result);
-      updateStatusBadge("[ 🟢 ONLINE // GZ ]");
-      return result;
-    } catch (err) {
-      console.warn("⚠️ Signal dropped at GZ. Queuing log locally...", err);
-      updateStatusBadge("[ 🟠 SAVED OFFLINE ]");
-      
-      let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
-      queue.push(payload);
-      localStorage.setItem("cipher_offline_queue", JSON.stringify(queue));
-    }
-  }
-
-  async function flushOfflineQueue() {
-    let queue = JSON.parse(localStorage.getItem("cipher_offline_queue") || "[]");
-    if (queue.length === 0) return;
-
-    console.log(`📡 Back in range. Flushing ${queue.length} offline log(s)...`);
-    updateStatusBadge(`[ 🟡 SYNCING (${queue.length}) ]`);
-
-    const remainingQueue = [];
-
-    for (const item of queue) {
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(item)
-        });
-      } catch (err) {
-        remainingQueue.push(item);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        return Object.assign({}, defaultState, JSON.parse(raw));
       }
+    } catch (e) {
+      console.warn('CipherCore: Local storage unavailable, falling back to RAM defaults.');
     }
-
-    localStorage.setItem("cipher_offline_queue", JSON.stringify(remainingQueue));
-    updateStatusBadge(remainingQueue.length === 0 ? "[ 🟢 ONLINE // GZ ]" : "[ 🟠 OFFLINE QUEUE ]");
+    return JSON.parse(JSON.stringify(defaultState));
   }
 
-  function updateStatusBadge(statusText) {
-    const badge = document.getElementById("statusPlaceholder");
-    if (badge) badge.textContent = statusText;
+  function persistLocal() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error('CipherCore: Failed saving local state.', e);
+    }
   }
 
   return {
-    version: SYSTEM_VERSION,
-    apiUrl: API_URL,
-    state: AppState,
-    saveState,
-    initToolbar,
-    setTheme,
-    setFontSize,
-    toggleMenu,
-    syncFindToLedger,
-    flushOfflineQueue
+    getState: function () {
+      return state;
+    },
+
+    // Consecutive Input Failure Counter & "Human Bean" Snark Gate
+    registerInputFailure: function () {
+      state.meta.failedAttempts = (state.meta.failedAttempts || 0) + 1;
+      persistLocal();
+
+      if (state.meta.failedAttempts >= 3) {
+        // Trigger Snark + Voice
+        if (typeof CipherAudio !== 'undefined') {
+          CipherAudio.buzz();
+          CipherAudio.speak("Nice try, human bean. That code did not compute.");
+        }
+        return {
+          snark: true,
+          message: '> "Nice try, human bean. That code didn\'t even come close. Check your math or review the hint."'
+        };
+      } else {
+        if (typeof CipherAudio !== 'undefined') {
+          CipherAudio.buzz();
+        }
+        return {
+          snark: false,
+          message: `> "Invalid code entered. Verification failed. (Attempt ${state.meta.failedAttempts} of 3)"`
+        };
+      }
+    },
+
+    resetFailureCounter: function () {
+      state.meta.failedAttempts = 0;
+      persistLocal();
+    },
+
+    // Feed Part to C.I.P.H.E.R. (Soft-Lock Protected)
+    feedItemToCipher: function (itemId) {
+      const itemIndex = state.inventory.findIndex(i => i.id === itemId);
+      if (itemIndex === -1) return { success: false, reason: 'Item not in pack.' };
+
+      const item = state.inventory[itemIndex];
+
+      // Anti-Softlock Rule: Block KEYS and TOOLS
+      if (item.type !== 'PART' || !item.consumable) {
+        return { success: false, reason: 'Terminal rejects item. Only [PART] components can be fed to C.I.P.H.E.R.' };
+      }
+
+      // Upgrade hardware
+      if (item.targetUpgrade === 'ramKB') {
+        state.hardware.ramKB = item.upgradeVal;
+      }
+
+      // Remove from pack
+      state.inventory.splice(itemIndex, 1);
+      persistLocal();
+
+      if (typeof CipherAudio !== 'undefined') {
+        CipherAudio.chime();
+        CipherAudio.speak(`Hardware upgraded. System RAM now ${state.hardware.ramKB} kilobytes.`);
+      }
+
+      // Milestone commit
+      this.commitMilestone('FEED_HARDWARE', { itemId: item.id, newRam: state.hardware.ramKB });
+
+      return {
+        success: true,
+        message: `> HARDWARE ACCEPTED. Installed ${item.name}. RAM upgraded to ${state.hardware.ramKB}KB.`
+      };
+    },
+
+    // Milestone Cloud Commit (Local-First Guard against Apps Script Race Conditions)
+    commitMilestone: function (actionType, payload) {
+      persistLocal();
+
+      const commitBody = {
+        action: 'logFind',
+        syncKey: state.cacher.syncKey,
+        username: state.cacher.username,
+        actionType: actionType,
+        telemetry: JSON.stringify({
+          milestone: actionType,
+          payload: payload,
+          hardware: state.hardware,
+          timestamp: new Date().toISOString()
+        })
+      };
+
+      // Background Non-blocking commit
+      fetch(CLOUD_ENDPOINT, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(commitBody)
+      }).catch(err => {
+        console.warn('CipherCore: Cloud ledger sync queued for next connection.', err);
+      });
+    }
   };
 })();
