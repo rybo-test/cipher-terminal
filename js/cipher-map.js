@@ -1,7 +1,6 @@
 /**
- * C.I.P.H.E.R. Cartography Engine (v3.4-CARTOGRAPHY)
- * Handles sector rendering (Vector CRT vs Blueprint), authentic geocacher travel modes,
- * docked CB radio scanner banter, progressive fog of war, and secret Rat Lair reveals.
+ * C.I.P.H.E.R. Cartography Engine (v3.4-MOBILE-ERGONOMIC)
+ * Accessible sector rendering with full keyboard focus, ARIA tags, and authentic travel modes.
  */
 
 const CipherMap = (function () {
@@ -15,7 +14,7 @@ const CipherMap = (function () {
         { d: "M 180 290 L 110 240 L 90 180 L 130 110", class: "map-vector-road", title: "West Bench Byway" },
         { d: "M 480 160 Q 360 210 290 270 T 160 360 T 40 450", class: "map-vector-water", title: "Logan River Flow" },
         { d: "M 30 500 L 70 360 L 110 270 L 150 160 L 210 50", class: "map-vector-topo", title: "Wellsville Ridge Contour" },
-        { d: "M 40 500 L 85 370 L 125 280 L 165 170 L 225 60", class: "map-vector-topo-subtle" }
+        { d: "M 40 500 L 85 370 L 125 280 L 165 170 L 225 60", class: "map-vector-topo-subtle", title: "Wellsville Secondary Contour" }
       ],
       towns: [
         { name: "WELLSVILLE", x: 135, y: 412 },
@@ -184,7 +183,7 @@ const CipherMap = (function () {
         if (shroud) {
           shroud.style.display = 'flex';
           shroud.innerHTML = `
-            <div class="shroud-card">
+            <div class="shroud-card" role="alert">
               <div class="shroud-alert">⚠ NO TELEMETRY CARRIER ⚠</div>
               <div class="shroud-title">${sec.name}</div>
               <div class="shroud-desc">${sec.reason}</div>
@@ -197,12 +196,12 @@ const CipherMap = (function () {
       if (shroud) shroud.style.display = 'none';
 
       let pathsSvg = sec.svgPaths.map(p => {
-        return `<path d="${p.d}" class="${p.class}" data-title="${p.title || ''}" />`;
+        return `<path d="${p.d}" class="${p.class}" aria-label="${p.title || ''}" />`;
       }).join('');
 
       let townsSvg = sec.towns.map(t => {
         return `
-          <g class="map-town-group" transform="translate(${t.x}, ${t.y})">
+          <g class="map-town-group" transform="translate(${t.x}, ${t.y})" aria-hidden="true">
             <circle r="4" class="map-town-dot" />
             <text x="8" y="5" class="map-town-label">${t.name}</text>
           </g>
@@ -220,22 +219,26 @@ const CipherMap = (function () {
         const pinClass = isSecret ? 'pin-secret' : (loc.unlocked ? (isCurrent ? 'pin-current' : 'pin-active') : 'pin-locked');
 
         return `
-          <g class="map-location-pin ${pinClass}" transform="translate(${loc.x}, ${loc.y})" onclick="CipherMap.selectLocation('${loc.id}')">
-            <circle r="${isSecret ? 11 : 9}" class="pin-ring" />
-            <circle r="4" class="pin-core" />
-            ${isCurrent ? '<circle r="16" class="pin-pulse" />' : ''}
-            <text x="14" y="5" class="pin-label">${loc.type.toUpperCase()}</text>
+          <g 
+            class="map-location-pin ${pinClass}" 
+            transform="translate(${loc.x}, ${loc.y})"
+            role="button"
+            tabindex="0"
+            aria-label="${loc.name}, Container: ${loc.type}, Difficulty: ${loc.difficulty}"
+            onclick="CipherMap.selectLocation('${loc.id}')"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();CipherMap.selectLocation('${loc.id}');}"
+          >
+            <circle r="${isSecret ? 11 : 9}" class="pin-ring" aria-hidden="true" />
+            <circle r="4" class="pin-core" aria-hidden="true" />
+            ${isCurrent ? '<circle r="16" class="pin-pulse" aria-hidden="true" />' : ''}
+            <text x="14" y="5" class="pin-label" aria-hidden="true">${loc.type.toUpperCase()}</text>
           </g>
         `;
       }).join('');
 
       canvas.innerHTML = `
-        <defs>
-          <filter id="vector-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
+        <title>${sec.name} Sector Map</title>
+        <desc>Tactical map showing highways, elevation, towns, and cache coordinates.</desc>
         ${pathsSvg}
         ${townsSvg}
         ${locationsSvg}
@@ -263,7 +266,11 @@ const CipherMap = (function () {
       }
 
       const drawer = document.getElementById('poi-drawer');
-      if (drawer) drawer.classList.add('open');
+      if (drawer) {
+        drawer.classList.add('open');
+        const crackBtn = drawer.querySelector('button.primary');
+        if (crackBtn) crackBtn.focus();
+      }
     },
 
     closeDrawer: function () {
@@ -284,7 +291,7 @@ const CipherMap = (function () {
         let icon = m.mode === 'drive' ? '🚗' : (m.mode === 'ride' ? '🚲' : (m.mode === 'paddle' ? '🛶' : '🥾'));
         return `
           <button class="btn-cipher travel-option-btn" onclick="CipherMap.executeTravel('${m.mode}', '${m.label}')">
-            <span class="travel-icon">${icon}</span>
+            <span class="travel-icon" aria-hidden="true">${icon}</span>
             <div class="travel-meta">
               <div class="travel-title">${m.label} (${m.time})</div>
               <div class="travel-desc">${m.desc}</div>
@@ -294,6 +301,8 @@ const CipherMap = (function () {
       }).join('');
 
       modal.style.display = 'flex';
+      const firstOpt = list.querySelector('button');
+      if (firstOpt) firstOpt.focus();
     },
 
     closeTravelModal: function () {
