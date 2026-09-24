@@ -1,14 +1,13 @@
 /**
  * C.I.P.H.E.R. Core State & Cloud Ledger Sync Engine (v3.4)
  * Local-First architecture managing hardware state, error snark counters,
- * inventory protection rules, and milestone Apps Script commitments.
+ * inventory protection rules, UI preferences, and milestone Apps Script commitments.
  */
 
 const CipherCore = (function () {
   const STORAGE_KEY = 'CIPHER_STATE_V34';
   const CLOUD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzrzQ2MAKNRt79dW478pfcX0A0n3InlojyfEPIZoTkq9c34N74z5hkwheYMz4MCRz60/exec';
 
-  // Default Single Source of Truth Initial State
   const defaultState = {
     cacher: {
       username: 'GUEST_CACHER',
@@ -16,7 +15,7 @@ const CipherCore = (function () {
       totalFinds: 0
     },
     hardware: {
-      ramKB: 64,               // Upgrade tiers: 64 -> 128 -> 256
+      ramKB: 64,
       busSpeed: '1.77 MHz',
       floatVoltage: '12.6V',
       status: 'FLOAT_OK'
@@ -25,13 +24,13 @@ const CipherCore = (function () {
       currentSector: 'SECTOR_01',
       currentLocationId: 'LOC_01_TURNAROUND',
       activeStageIndex: 0,
-      completedCaches: [],     // Array of GC Codes (e.g. ['GC10001'])
+      completedCaches: [],
       unlockedWaypoints: ['LOC_01_TURNAROUND']
     },
     inventory: [
       {
         id: 'TOOL_ROT13',
-        type: 'TOOL',          // 'TOOL' | 'PART' | 'SWAG' | 'KEY'
+        type: 'TOOL',
         name: 'Rot13 Cipher Card',
         desc: 'Standard field rotation tool for deciphering log hints.',
         consumable: false
@@ -89,13 +88,41 @@ const CipherCore = (function () {
       return state;
     },
 
-    // Consecutive Input Failure Counter & "Human Bean" Snark Gate
+    setFontSize: function (size) {
+      state.meta.fontSize = size;
+      persistLocal();
+      this.applyUserPreferences();
+    },
+
+    setTheme: function (theme) {
+      state.meta.theme = theme;
+      persistLocal();
+      this.applyUserPreferences();
+    },
+
+    applyUserPreferences: function () {
+      const currentTheme = state.meta.theme || 'crt';
+      const currentFont = state.meta.fontSize || 'regular';
+
+      if (currentTheme === 'blueprint') {
+        document.body.classList.add('theme-blueprint');
+      } else {
+        document.body.classList.remove('theme-blueprint');
+      }
+
+      document.body.classList.remove('font-large', 'font-xl');
+      if (currentFont === 'large') {
+        document.body.classList.add('font-large');
+      } else if (currentFont === 'xl') {
+        document.body.classList.add('font-xl');
+      }
+    },
+
     registerInputFailure: function () {
       state.meta.failedAttempts = (state.meta.failedAttempts || 0) + 1;
       persistLocal();
 
       if (state.meta.failedAttempts >= 3) {
-        // Trigger Snark + Voice
         if (typeof CipherAudio !== 'undefined') {
           CipherAudio.buzz();
           CipherAudio.speak("Nice try, human bean. That code did not compute.");
@@ -120,24 +147,20 @@ const CipherCore = (function () {
       persistLocal();
     },
 
-    // Feed Part to C.I.P.H.E.R. (Soft-Lock Protected)
     feedItemToCipher: function (itemId) {
       const itemIndex = state.inventory.findIndex(i => i.id === itemId);
       if (itemIndex === -1) return { success: false, reason: 'Item not in pack.' };
 
       const item = state.inventory[itemIndex];
 
-      // Anti-Softlock Rule: Block KEYS and TOOLS
       if (item.type !== 'PART' || !item.consumable) {
         return { success: false, reason: 'Terminal rejects item. Only [PART] components can be fed to C.I.P.H.E.R.' };
       }
 
-      // Upgrade hardware
       if (item.targetUpgrade === 'ramKB') {
         state.hardware.ramKB = item.upgradeVal;
       }
 
-      // Remove from pack
       state.inventory.splice(itemIndex, 1);
       persistLocal();
 
@@ -146,7 +169,6 @@ const CipherCore = (function () {
         CipherAudio.speak(`Hardware upgraded. System RAM now ${state.hardware.ramKB} kilobytes.`);
       }
 
-      // Milestone commit
       this.commitMilestone('FEED_HARDWARE', { itemId: item.id, newRam: state.hardware.ramKB });
 
       return {
@@ -155,7 +177,6 @@ const CipherCore = (function () {
       };
     },
 
-    // Milestone Cloud Commit (Local-First Guard against Apps Script Race Conditions)
     commitMilestone: function (actionType, payload) {
       persistLocal();
 
@@ -172,7 +193,6 @@ const CipherCore = (function () {
         })
       };
 
-      // Background Non-blocking commit
       fetch(CLOUD_ENDPOINT, {
         method: 'POST',
         mode: 'no-cors',
@@ -184,3 +204,7 @@ const CipherCore = (function () {
     }
   };
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+  CipherCore.applyUserPreferences();
+});
